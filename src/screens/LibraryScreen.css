@@ -1,0 +1,94 @@
+.library-screen {
+    padding: 24px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    height: calc(100vh - 72px);
+}
+
+.library-section {
+    display: flex;
+    flex-direction: column;
+    background-color: #2a2a2a;
+    border-radius: 8px;
+    padding: 20px;
+    overflow: hidden;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.section-header h2 {
+    margin: 0;
+    font-size: 20px;
+}
+
+.search-input {
+    margin-bottom: 16px;
+    width: 100%;
+}
+
+.items-list {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.list-item {
+    background-color: #3a3a3a;
+    border-radius: 6px;
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s;
+}
+
+.list-item:hover {
+    background-color: #4a4a4a;
+}
+
+.item-info {
+    flex: 1;
+}
+
+.item-name {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: #ffffff;
+}
+
+.item-details {
+    font-size: 13px;
+    color: #a0a0a0;
+}
+
+.item-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.item-actions button {
+    padding: 6px 12px;
+    font-size: 13px;
+}
+
+.file-picker {
+    display: flex;
+    gap: 8px;
+}
+
+.file-picker input {
+    flex: 1;
+}
+
+.file-picker button {
+    white-space: nowrap;
+}
