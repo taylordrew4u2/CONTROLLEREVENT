@@ -17,12 +17,12 @@ function LiveControllerScreen() {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const fadeOutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Convert file path to file:// URL for browser playback
+  // Convert file path to local-audio:// protocol for Electron playback
   const getAudioURL = (filePath: string): string => {
     if (!filePath) return '';
-    if (filePath.startsWith('file://')) return filePath;
-    // Convert absolute path to file:// URL
-    return `file://${filePath.replace(/\\/g, '/')}`;
+    if (filePath.startsWith('local-audio://')) return filePath;
+    // Convert absolute path to local-audio:// protocol
+    return `local-audio://${encodeURIComponent(filePath)}`;
   };
 
   // Fade out audio over specified duration (in seconds)

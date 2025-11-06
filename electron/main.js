@@ -1,7 +1,8 @@
 42
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, protocol } = require('electron');
 const path = require('path');
 const Database = require('better-sqlite3');
+const fs = require('fs');
 
 let mainWindow;
 let db;
@@ -111,7 +112,8 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js')
+      preload: path.join(__dirname, 'preload.js'),
+      webSecurity: true
     }
   });
 
@@ -124,6 +126,13 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  // Register local-audio protocol for secure file access
+  protocol.registerFileProtocol('local-audio', (request, callback) => {
+    const url = request.url.replace('local-audio://', '');
+    const decodedPath = decodeURIComponent(url);
+    callback({ path: decodedPath });
+  });
+
   createDatabase();
   createWindow();
 
