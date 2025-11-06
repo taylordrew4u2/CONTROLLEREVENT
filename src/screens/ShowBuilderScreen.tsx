@@ -136,6 +136,16 @@ function ShowBuilderScreen() {
     }
   };
 
+  const handleAddAudioToSegment = async (segmentIndex: number) => {
+    const filePath = await window.electronAPI.pickAudioFile();
+    if (filePath) {
+      handleUpdateSegment(segmentIndex, {
+        audioFilePath: filePath
+      });
+      console.log('Audio file added to segment:', filePath);
+    }
+  };
+
   const handleSaveShow = async () => {
     if (!showName.trim()) {
       alert('Please enter a show name');
@@ -256,7 +266,10 @@ function ShowBuilderScreen() {
                     autoFocus
                   />
                 ) : (
-                  <span onClick={() => setEditingSegment(index)}>{segment.name}</span>
+                  <div>
+                    <span onClick={() => setEditingSegment(index)}>{segment.name}</span>
+                    {segment.audioFilePath && <span className="audio-indicator" title={segment.audioFilePath}> 🔊</span>}
+                  </div>
                 )}
               </div>
               <div className="col-duration">
@@ -270,6 +283,14 @@ function ShowBuilderScreen() {
                 <span>min</span>
               </div>
               <div className="col-actions">
+                <button
+                  className="btn-icon"
+                  onClick={() => handleAddAudioToSegment(index)}
+                  title="Add/Change Audio File"
+                >
+                  🎵
+                </button>
+                
                 <select
                   onChange={(e) => {
                     const value = e.target.value;

@@ -92,6 +92,12 @@
     background-color: #4a4a4a;
 }
 
+.audio-indicator {
+    font-size: 12px;
+    margin-left: 6px;
+    cursor: help;
+}
+
 .col-duration {
     display: flex;
     align-items: center;
