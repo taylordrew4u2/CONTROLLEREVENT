@@ -9,6 +9,7 @@ function LiveControllerScreen() {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
   const [volume, setVolume] = useState(0.8);
+  const [fadeOutDuration, setFadeOutDuration] = useState(2);
   const [showScheduleOverlay, setShowScheduleOverlay] = useState(false);
   const [showLoadModal, setShowLoadModal] = useState(false);
   
@@ -16,6 +17,16 @@ function LiveControllerScreen() {
   const nextAudioRef = useRef<HTMLAudioElement | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const fadeOutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Load settings
+  useEffect(() => {
+    const savedSettings = localStorage.getItem('appSettings');
+    if (savedSettings) {
+      const settings = JSON.parse(savedSettings);
+      setVolume(settings.audioVolume || 0.8);
+      setFadeOutDuration(settings.fadeOutDuration || 2);
+    }
+  }, []);
 
   // Convert file path to local-audio:// protocol for Electron playback
   const getAudioURL = (filePath: string): string => {
@@ -53,7 +64,7 @@ function LiveControllerScreen() {
     
     // Fade out current audio
     if (audioRef.current) {
-      fadeOutAudio(audioRef.current, 2);
+      fadeOutAudio(audioRef.current, fadeOutDuration);
     }
     
     // Move to next segment
@@ -70,10 +81,26 @@ function LiveControllerScreen() {
         audioRef.current.play();
       }
     }
-  }, [currentShow, currentSegmentIndex, isRunning]);
+  }, [currentShow, currentSegmentIndex, isRunning, fadeOutDuration]);
 
   useEffect(() => {
     loadShows();
+  }, []);
+
+  // Cleanup audio on unmount
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        fadeOutAudio(audioRef.current, 0.5);
+      }
+      if (nextAudioRef.current) {
+        nextAudioRef.current.pause();
+        nextAudioRef.current = null;
+      }
+      if (fadeOutRef.current) {
+        clearInterval(fadeOutRef.current);
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -162,27 +189,25 @@ function LiveControllerScreen() {
       });
       
       if (audioRef.current.src !== audioPath) {
-        audioRef.current.src = audioPath;
-        audioRef.current.load();
+        // Fade out old audio if playing
+        if (!audioRef.current.paused) {
+          fadeOutAudio(audioRef.current, 0.5);
+          // Wait for fade to complete before loading new audio
+          setTimeout(() => {
+            if (audioRef.current) {
+              audioRef.current.src = audioPath;
+              audioRef.current.load();
+              startAudioPlayback();
+            }
+          }, 500);
+        } else {
+          audioRef.current.src = audioPath;
+          audioRef.current.load();
+          startAudioPlayback();
+        }
+      } else {
+        startAudioPlayback();
       }
-      
-      // Set volume
-      audioRef.current.volume = volume;
-      
-      // Add event listeners for debugging
-      audioRef.current.onloadstart = () => console.log('Audio: loadstart');
-      audioRef.current.onloadeddata = () => console.log('Audio: loadeddata');
-      audioRef.current.oncanplay = () => console.log('Audio: canplay');
-      audioRef.current.onplay = () => console.log('Audio: playing');
-      audioRef.current.onerror = (e) => console.error('Audio error:', e, audioRef.current?.error);
-      
-      // Add small delay to ensure audio is ready
-      setTimeout(() => {
-        console.log('Attempting to play audio...');
-        audioRef.current?.play()
-          .then(() => console.log('Audio playback started successfully'))
-          .catch(err => console.error('Audio play error:', err));
-      }, 100);
     } else {
       console.warn('No audio to play:', {
         hasAudioRef: !!audioRef.current,
@@ -193,10 +218,32 @@ function LiveControllerScreen() {
     }
   };
 
+  const startAudioPlayback = () => {
+    if (!audioRef.current) return;
+    
+    // Set volume
+    audioRef.current.volume = volume;
+    
+    // Add event listeners for debugging
+    audioRef.current.onloadstart = () => console.log('Audio: loadstart');
+    audioRef.current.onloadeddata = () => console.log('Audio: loadeddata');
+    audioRef.current.oncanplay = () => console.log('Audio: canplay');
+    audioRef.current.onplay = () => console.log('Audio: playing');
+    audioRef.current.onerror = (e) => console.error('Audio error:', e, audioRef.current?.error);
+    
+    // Add small delay to ensure audio is ready
+    setTimeout(() => {
+      console.log('Attempting to play audio...');
+      audioRef.current?.play()
+        .then(() => console.log('Audio playback started successfully'))
+        .catch(err => console.error('Audio play error:', err));
+    }, 100);
+  };
+
   const handlePause = () => {
     setIsRunning(false);
     if (audioRef.current) {
-      fadeOutAudio(audioRef.current, 1);
+      fadeOutAudio(audioRef.current, fadeOutDuration);
     }
   };
 
@@ -204,7 +251,7 @@ function LiveControllerScreen() {
     if (!currentShow) return;
     
     if (audioRef.current) {
-      fadeOutAudio(audioRef.current, 1);
+      fadeOutAudio(audioRef.current, fadeOutDuration);
     }
     
     setCurrentSegmentIndex(index);
@@ -246,7 +293,7 @@ function LiveControllerScreen() {
   const handleEmergencyStop = () => {
     setIsRunning(false);
     if (audioRef.current) {
-      fadeOutAudio(audioRef.current, 0.5);
+      fadeOutAudio(audioRef.current, 0.5); // Quick fade for emergency
     }
   };
 
