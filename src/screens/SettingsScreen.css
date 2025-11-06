@@ -150,6 +150,34 @@
     font-style: italic;
 }
 
+.audio-device-controls {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.btn-secondary {
+    padding: 8px 16px;
+    background: rgba(76, 175, 80, 0.2);
+    border: 1px solid rgba(76, 175, 80, 0.5);
+    color: #4caf50;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+    background: rgba(76, 175, 80, 0.4);
+    border-color: #4caf50;
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+}
+
+.btn-secondary:active {
+    transform: scale(0.98);
+}
+
 .info-item {
     padding: 10px 0;
 }

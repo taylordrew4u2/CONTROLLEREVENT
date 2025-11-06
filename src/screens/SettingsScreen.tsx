@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './SettingsScreen.css';
 
 interface Settings {
@@ -7,6 +7,12 @@ interface Settings {
   autoAdvanceSegments: boolean;
   showWarnings: boolean;
   fadeOutDuration: number;
+}
+
+interface AudioDevice {
+  deviceId: string;
+  label: string;
+  kind: string;
 }
 
 interface SettingsScreenProps {
@@ -25,11 +31,49 @@ function SettingsScreen({ onSettingsChange }: SettingsScreenProps) {
     };
   });
 
+  const [audioDevices, setAudioDevices] = useState<AudioDevice[]>([]);
+
+  useEffect(() => {
+    // Get available audio output devices
+    const getAudioDevices = async () => {
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const audioOutputs = devices.filter(device => device.kind === 'audiooutput');
+        setAudioDevices(audioOutputs);
+      } catch (err) {
+        console.error('Error getting audio devices:', err);
+        // Fallback devices if enumeration fails
+        setAudioDevices([
+          { deviceId: 'default', label: 'System Default', kind: 'audiooutput' },
+          { deviceId: 'speaker', label: 'Speaker', kind: 'audiooutput' },
+          { deviceId: 'headphones', label: 'Headphones', kind: 'audiooutput' }
+        ]);
+      }
+    };
+
+    getAudioDevices();
+
+    // Listen for device changes
+    navigator.mediaDevices.addEventListener('devicechange', getAudioDevices);
+    return () => {
+      navigator.mediaDevices.removeEventListener('devicechange', getAudioDevices);
+    };
+  }, []);
+
   const handleSettingChange = (key: keyof Settings, value: any) => {
     const updated = { ...settings, [key]: value };
     setSettings(updated);
     localStorage.setItem('appSettings', JSON.stringify(updated));
     onSettingsChange(updated);
+  };
+
+  const testAudio = () => {
+    const audio = new Audio('data:audio/wav;base64,UklGRiYAAABXQVZFZm10IBAAAAABAAEAQB8AAAB9AAACABAAZGF0YQIAAAAAAA==');
+    audio.volume = settings.audioVolume;
+    if (settings.audioOutput && settings.audioOutput !== 'default') {
+      (audio as any).setSinkId?.(settings.audioOutput);
+    }
+    audio.play().catch(err => console.error('Test audio failed:', err));
   };
 
   return (
@@ -74,10 +118,18 @@ function SettingsScreen({ onSettingsChange }: SettingsScreenProps) {
               onChange={(e) => handleSettingChange('audioOutput', e.target.value)}
             >
               <option value="default">System Default</option>
-              <option value="speaker">Speaker</option>
-              <option value="headphones">Headphones</option>
+              {audioDevices.map(device => (
+                <option key={device.deviceId} value={device.deviceId}>
+                  {device.label || `Audio Device ${device.deviceId}`}
+                </option>
+              ))}
             </select>
-            <p className="setting-help">Select where audio should play</p>
+            <div className="audio-device-controls">
+              <button className="btn-secondary" onClick={testAudio}>
+                🔊 Test Audio
+              </button>
+            </div>
+            <p className="setting-help">Select where audio should play. Click "Test Audio" to verify output.</p>
           </div>
         </div>
 
@@ -110,7 +162,7 @@ function SettingsScreen({ onSettingsChange }: SettingsScreenProps) {
         <div className="settings-section">
           <h2>Application Info</h2>
           <div className="info-item">
-            <p><strong>Version:</strong> 1.0.3</p>
+            <p><strong>Version:</strong> 1.0.4</p>
             <p><strong>Works Offline:</strong> Yes</p>
             <p><strong>Database:</strong> SQLite (Local)</p>
           </div>
