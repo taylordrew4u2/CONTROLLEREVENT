@@ -210,18 +210,29 @@ app.on('window-all-closed', () => {
 
 // Comedians
 ipcMain.handle('get-comedians', () => {
-  return db.prepare('SELECT * FROM comedians ORDER BY name').all();
+  const comedians = db.prepare('SELECT * FROM comedians ORDER BY name').all();
+  // Map snake_case database fields to camelCase for React
+  return comedians.map(c => ({
+    id: c.id,
+    name: c.name,
+    audioFilePath: c.audio_file_path,
+    defaultDuration: c.default_duration
+  }));
 });
 
 ipcMain.handle('add-comedian', (event, comedian) => {
+  console.log('Adding comedian:', comedian);
   const stmt = db.prepare('INSERT INTO comedians (name, audio_file_path, default_duration) VALUES (?, ?, ?)');
-  const result = stmt.run(comedian.name, comedian.audioFilePath, comedian.defaultDuration);
+  const result = stmt.run(comedian.name, comedian.audioFilePath || null, comedian.defaultDuration);
+  console.log('Comedian added with ID:', result.lastInsertRowid);
   return { id: result.lastInsertRowid, ...comedian };
 });
 
 ipcMain.handle('update-comedian', (event, id, comedian) => {
+  console.log('Updating comedian:', id, comedian);
   const stmt = db.prepare('UPDATE comedians SET name = ?, audio_file_path = ?, default_duration = ? WHERE id = ?');
-  stmt.run(comedian.name, comedian.audioFilePath, comedian.defaultDuration, id);
+  stmt.run(comedian.name, comedian.audioFilePath || null, comedian.defaultDuration, id);
+  console.log('Comedian updated');
   return { id, ...comedian };
 });
 
@@ -232,18 +243,30 @@ ipcMain.handle('delete-comedian', (event, id) => {
 
 // Templates
 ipcMain.handle('get-templates', () => {
-  return db.prepare('SELECT * FROM templates ORDER BY name').all();
+  const templates = db.prepare('SELECT * FROM templates ORDER BY name').all();
+  // Map snake_case database fields to camelCase for React
+  return templates.map(t => ({
+    id: t.id,
+    name: t.name,
+    audioFilePath: t.audio_file_path,
+    defaultDuration: t.default_duration,
+    type: t.type
+  }));
 });
 
 ipcMain.handle('add-template', (event, template) => {
+  console.log('Adding template:', template);
   const stmt = db.prepare('INSERT INTO templates (name, audio_file_path, default_duration, type) VALUES (?, ?, ?, ?)');
-  const result = stmt.run(template.name, template.audioFilePath, template.defaultDuration, template.type);
+  const result = stmt.run(template.name, template.audioFilePath || null, template.defaultDuration, template.type);
+  console.log('Template added with ID:', result.lastInsertRowid);
   return { id: result.lastInsertRowid, ...template };
 });
 
 ipcMain.handle('update-template', (event, id, template) => {
+  console.log('Updating template:', id, template);
   const stmt = db.prepare('UPDATE templates SET name = ?, audio_file_path = ?, default_duration = ?, type = ? WHERE id = ?');
-  stmt.run(template.name, template.audioFilePath, template.defaultDuration, template.type, id);
+  stmt.run(template.name, template.audioFilePath || null, template.defaultDuration, template.type, id);
+  console.log('Template updated');
   return { id, ...template };
 });
 
