@@ -17,6 +17,14 @@ function LiveControllerScreen() {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const fadeOutRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Convert file path to file:// URL for browser playback
+  const getAudioURL = (filePath: string): string => {
+    if (!filePath) return '';
+    if (filePath.startsWith('file://')) return filePath;
+    // Convert absolute path to file:// URL
+    return `file://${filePath.replace(/\\/g, '/')}`;
+  };
+
   // Fade out audio over specified duration (in seconds)
   const fadeOutAudio = (audio: HTMLAudioElement, duration: number = 2) => {
     if (!audio) return;
@@ -111,7 +119,7 @@ function LiveControllerScreen() {
     if (currentShow && currentSegmentIndex < currentShow.segments.length - 1) {
       const nextSegment = currentShow.segments[currentSegmentIndex + 1];
       if (nextSegment.audioFilePath) {
-        nextAudioRef.current = new Audio(nextSegment.audioFilePath);
+        nextAudioRef.current = new Audio(getAudioURL(nextSegment.audioFilePath));
         nextAudioRef.current.volume = volume;
         nextAudioRef.current.load();
       }
@@ -135,7 +143,7 @@ function LiveControllerScreen() {
       // Initialize first segment audio
       if (show.segments[0]?.audioFilePath) {
         audioRef.current = new Audio();
-        audioRef.current.src = show.segments[0].audioFilePath;
+        audioRef.current.src = getAudioURL(show.segments[0].audioFilePath);
         audioRef.current.volume = volume;
         audioRef.current.load();
       }
@@ -146,7 +154,7 @@ function LiveControllerScreen() {
     setIsRunning(true);
     if (audioRef.current && currentShow?.segments[currentSegmentIndex]?.audioFilePath) {
       // Ensure audio source is set
-      const audioPath = currentShow.segments[currentSegmentIndex].audioFilePath;
+      const audioPath = getAudioURL(currentShow.segments[currentSegmentIndex].audioFilePath);
       if (audioRef.current.src !== audioPath) {
         audioRef.current.src = audioPath;
         audioRef.current.load();
@@ -177,7 +185,7 @@ function LiveControllerScreen() {
     
     // Load new audio
     if (currentShow.segments[index].audioFilePath) {
-      audioRef.current = new Audio(currentShow.segments[index].audioFilePath);
+      audioRef.current = new Audio(getAudioURL(currentShow.segments[index].audioFilePath));
       audioRef.current.volume = volume;
       
       if (isRunning) {
