@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Show } from '../types';
 import './LiveControllerScreen.css';
 
@@ -40,6 +40,30 @@ function LiveControllerScreen() {
     }, 50);
   };
 
+  const handleNextSegment = useCallback(() => {
+    if (!currentShow || currentSegmentIndex >= currentShow.segments.length - 1) return;
+    
+    // Fade out current audio
+    if (audioRef.current) {
+      fadeOutAudio(audioRef.current, 2);
+    }
+    
+    // Move to next segment
+    const nextIndex = currentSegmentIndex + 1;
+    setCurrentSegmentIndex(nextIndex);
+    setElapsedSeconds(currentShow.segments[nextIndex].calculatedStartTime * 60);
+    
+    // Use preloaded audio
+    if (nextAudioRef.current) {
+      audioRef.current = nextAudioRef.current;
+      nextAudioRef.current = null;
+      
+      if (isRunning) {
+        audioRef.current.play();
+      }
+    }
+  }, [currentShow, currentSegmentIndex, isRunning]);
+
   useEffect(() => {
     loadShows();
   }, []);
@@ -80,7 +104,7 @@ function LiveControllerScreen() {
         clearInterval(timerRef.current);
       }
     };
-  }, [isRunning, currentSegmentIndex, currentShow]);
+  }, [isRunning, currentSegmentIndex, currentShow, handleNextSegment]);
 
   useEffect(() => {
     // Preload next audio
@@ -127,30 +151,6 @@ function LiveControllerScreen() {
     setIsRunning(false);
     if (audioRef.current) {
       fadeOutAudio(audioRef.current, 1);
-    }
-  };
-
-  const handleNextSegment = () => {
-    if (!currentShow || currentSegmentIndex >= currentShow.segments.length - 1) return;
-    
-    // Fade out current audio
-    if (audioRef.current) {
-      fadeOutAudio(audioRef.current, 2);
-    }
-    
-    // Move to next segment
-    const nextIndex = currentSegmentIndex + 1;
-    setCurrentSegmentIndex(nextIndex);
-    setElapsedSeconds(currentShow.segments[nextIndex].calculatedStartTime * 60);
-    
-    // Use preloaded audio
-    if (nextAudioRef.current) {
-      audioRef.current = nextAudioRef.current;
-      nextAudioRef.current = null;
-      
-      if (isRunning) {
-        audioRef.current.play();
-      }
     }
   };
 
