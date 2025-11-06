@@ -3,6 +3,21 @@ const { app, BrowserWindow, ipcMain, dialog, protocol } = require('electron');
 const path = require('path');
 const Database = require('better-sqlite3');
 const fs = require('fs');
+const { URL } = require('url');
+
+// Register protocol before app is ready
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: 'local-audio',
+    privileges: {
+      bypassCSP: true,
+      supportFetchAPI: true,
+      stream: true,
+      corsEnabled: false,
+      secure: true
+    }
+  }
+]);
 
 let mainWindow;
 let db;
@@ -113,8 +128,16 @@ function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
-      webSecurity: true
+      webSecurity: false, // Disable for local protocol access
+      allowRunningInsecureContent: false
     }
+  });
+
+  // Allow audio autoplay
+  mainWindow.webContents.on('did-finish-load', () => {
+    mainWindow.webContents.executeJavaScript(`
+      console.log('Renderer loaded, audio system ready');
+    `);
   });
 
   if (process.env.NODE_ENV === 'development' || !app.isPackaged) {
@@ -126,11 +149,48 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
-  // Register local-audio protocol for secure file access
-  protocol.registerFileProtocol('local-audio', (request, callback) => {
-    const url = request.url.replace('local-audio://', '');
-    const decodedPath = decodeURIComponent(url);
-    callback({ path: decodedPath });
+  // Register local-audio protocol handler with stream support
+  protocol.handle('local-audio', async (request) => {
+    try {
+      const url = request.url;
+      const filePath = decodeURIComponent(url.replace('local-audio://', ''));
+      
+      console.log('Loading audio file:', filePath);
+      
+      // Check if file exists
+      if (!fs.existsSync(filePath)) {
+        console.error('Audio file not found:', filePath);
+        return new Response('File not found', { status: 404 });
+      }
+      
+      // Read file and return as response with proper headers
+      const data = fs.readFileSync(filePath);
+      const ext = path.extname(filePath).toLowerCase();
+      
+      // Determine MIME type
+      const mimeTypes = {
+        '.mp3': 'audio/mpeg',
+        '.wav': 'audio/wav',
+        '.ogg': 'audio/ogg',
+        '.m4a': 'audio/mp4',
+        '.aac': 'audio/aac',
+        '.flac': 'audio/flac'
+      };
+      
+      const mimeType = mimeTypes[ext] || 'audio/mpeg';
+      
+      return new Response(data, {
+        status: 200,
+        headers: {
+          'Content-Type': mimeType,
+          'Content-Length': data.length.toString(),
+          'Accept-Ranges': 'bytes'
+        }
+      });
+    } catch (error) {
+      console.error('Error loading audio:', error);
+      return new Response('Error loading audio', { status: 500 });
+    }
   });
 
   createDatabase();

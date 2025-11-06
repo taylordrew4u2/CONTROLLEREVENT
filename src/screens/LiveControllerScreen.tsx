@@ -155,14 +155,41 @@ function LiveControllerScreen() {
     if (audioRef.current && currentShow?.segments[currentSegmentIndex]?.audioFilePath) {
       // Ensure audio source is set
       const audioPath = getAudioURL(currentShow.segments[currentSegmentIndex].audioFilePath);
+      console.log('Starting audio playback:', {
+        originalPath: currentShow.segments[currentSegmentIndex].audioFilePath,
+        convertedURL: audioPath,
+        currentSrc: audioRef.current.src
+      });
+      
       if (audioRef.current.src !== audioPath) {
         audioRef.current.src = audioPath;
         audioRef.current.load();
       }
+      
+      // Set volume
+      audioRef.current.volume = volume;
+      
+      // Add event listeners for debugging
+      audioRef.current.onloadstart = () => console.log('Audio: loadstart');
+      audioRef.current.onloadeddata = () => console.log('Audio: loadeddata');
+      audioRef.current.oncanplay = () => console.log('Audio: canplay');
+      audioRef.current.onplay = () => console.log('Audio: playing');
+      audioRef.current.onerror = (e) => console.error('Audio error:', e, audioRef.current?.error);
+      
       // Add small delay to ensure audio is ready
       setTimeout(() => {
-        audioRef.current?.play().catch(err => console.error('Audio play error:', err));
+        console.log('Attempting to play audio...');
+        audioRef.current?.play()
+          .then(() => console.log('Audio playback started successfully'))
+          .catch(err => console.error('Audio play error:', err));
       }, 100);
+    } else {
+      console.warn('No audio to play:', {
+        hasAudioRef: !!audioRef.current,
+        hasShow: !!currentShow,
+        segmentIndex: currentSegmentIndex,
+        audioPath: currentShow?.segments[currentSegmentIndex]?.audioFilePath
+      });
     }
   };
 

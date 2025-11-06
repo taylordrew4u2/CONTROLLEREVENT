@@ -68,12 +68,24 @@ function SettingsScreen({ onSettingsChange }: SettingsScreenProps) {
   };
 
   const testAudio = () => {
-    const audio = new Audio('data:audio/wav;base64,UklGRiYAAABXQVZFZm10IBAAAAABAAEAQB8AAAB9AAACABAAZGF0YQIAAAAAAA==');
-    audio.volume = settings.audioVolume;
-    if (settings.audioOutput && settings.audioOutput !== 'default') {
-      (audio as any).setSinkId?.(settings.audioOutput);
-    }
-    audio.play().catch(err => console.error('Test audio failed:', err));
+    console.log('Testing audio with volume:', settings.audioVolume);
+    
+    // Create a simple beep sound using Web Audio API
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.frequency.value = 440; // A4 note
+    gainNode.gain.value = settings.audioVolume;
+    
+    oscillator.start();
+    setTimeout(() => {
+      oscillator.stop();
+      console.log('Test audio played');
+    }, 500);
   };
 
   return (
