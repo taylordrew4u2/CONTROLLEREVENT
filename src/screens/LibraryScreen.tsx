@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Comedian, Template } from '../types';
 import './LibraryScreen.css';
 

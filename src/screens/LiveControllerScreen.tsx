@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Show, Segment } from '../types';
+import { useState, useEffect, useRef } from 'react';
+import { Show } from '../types';
 import './LiveControllerScreen.css';
 
 function LiveControllerScreen() {
@@ -411,7 +411,7 @@ interface ScheduleOverlayProps {
   onClose: () => void;
 }
 
-function ScheduleOverlay({ show, currentSegmentIndex, elapsedSeconds, onJumpTo, onClose }: ScheduleOverlayProps) {
+function ScheduleOverlay({ show, currentSegmentIndex, onJumpTo, onClose }: ScheduleOverlayProps) {
   const formatTime = (minutes: number) => {
     const h = Math.floor(minutes / 60);
     const m = minutes % 60;

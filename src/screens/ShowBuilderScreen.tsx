@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Segment, Comedian, Template, Show } from '../types';
 import './ShowBuilderScreen.css';
 
@@ -185,8 +185,7 @@ function ShowBuilderScreen() {
       await window.electronAPI.saveShowTemplate(name, segments.map(seg => ({
         name: seg.name,
         duration: seg.duration,
-        orderIndex: seg.orderIndex,
-        segmentType: seg.segmentType
+        orderIndex: seg.orderIndex
       })));
       alert('Template saved as default!');
     }
