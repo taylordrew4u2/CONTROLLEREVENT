@@ -325,9 +325,14 @@ ipcMain.handle('get-show', (event, id) => {
 
 ipcMain.handle('save-show', (event, show) => {
   try {
+    console.log('Saving show:', show);
+    
+    // Ensure totalDuration is a valid number
+    const totalDuration = show.totalDuration || 0;
+    
     const transaction = db.transaction(() => {
       const stmt = db.prepare('INSERT INTO shows (name, created_date, total_duration) VALUES (?, ?, ?)');
-      const result = stmt.run(show.name, new Date().toISOString(), show.totalDuration);
+      const result = stmt.run(show.name, new Date().toISOString(), totalDuration);
       const showId = result.lastInsertRowid;
       
       const insertSegment = db.prepare(
@@ -359,8 +364,13 @@ ipcMain.handle('save-show', (event, show) => {
 
 ipcMain.handle('update-show', (event, id, show) => {
   try {
+    console.log('Updating show:', id, show);
+    
+    // Ensure totalDuration is a valid number
+    const totalDuration = show.totalDuration || 0;
+    
     const transaction = db.transaction(() => {
-      db.prepare('UPDATE shows SET name = ?, total_duration = ? WHERE id = ?').run(show.name, show.totalDuration, id);
+      db.prepare('UPDATE shows SET name = ?, total_duration = ? WHERE id = ?').run(show.name, totalDuration, id);
       db.prepare('DELETE FROM segments WHERE show_id = ?').run(id);
       
       const insertSegment = db.prepare(

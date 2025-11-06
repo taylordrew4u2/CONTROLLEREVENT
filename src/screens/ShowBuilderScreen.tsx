@@ -142,11 +142,18 @@ function ShowBuilderScreen() {
       return;
     }
 
+    if (segments.length === 0) {
+      alert('Please add at least one segment to the show');
+      return;
+    }
+
     try {
+      const totalDuration = getTotalDuration();
+      
       const show: Show = {
         name: showName,
         createdDate: new Date().toISOString(),
-        totalDuration: getTotalDuration(),
+        totalDuration: totalDuration || 0, // Ensure it's never null/undefined
         segments: segments
       };
 
