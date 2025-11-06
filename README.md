@@ -1,66 +1,58 @@
+````markdown
 # Pins & Needles Show Controller
 
-A desktop application for managing and controlling live comedy shows. Built with Electron, React, and TypeScript for offline use.
+A professional desktop application for managing and controlling live comedy shows on macOS. Built with Electron, React, and TypeScript for 100% offline use.
 
 ## Features
 
-### 📚 Library Management
+### � Audio Output Control
+- **Audio Device Selection**: Switch between speakers, headphones, AirPods, and other connected audio devices
+- **Master Volume Control**: Precise volume adjustment (0-100%)
+- **Test Audio**: Verify your selected audio output before the show
+- **Fade-Out Effects**: Smooth audio transitions between segments (0.5-5 seconds configurable)
 
+### �📚 Library Management
 - **Comedian Database**: Add/edit/delete comedians with custom walk-on audio and default set durations
 - **Segment Templates**: Pre-configured show segment types (Host Intro, Opening Act, Transitions, etc.)
 - **Searchable Lists**: Quick filtering for easy management
 
 ### 🎭 Show Builder
-
 - **Default Template**: Pre-loaded 60-minute show structure
-- **Drag & Reorder**: Rearrange segments with automatic timestamp recalculation
+- **Reorder Segments**: Rearrange with automatic timestamp recalculation
 - **Assign Comedians/Templates**: Click to assign performers and load their audio
 - **Duration Editing**: Adjust segment lengths with real-time timeline updates
-- **Save/Load Shows**: Persist complete show configurations
+- **Save/Load Shows**: Persist complete show configurations to local database
 - **Custom Templates**: Save your lineup as the new default template
 
 ### 🎬 Live Show Controller
-
-- **Large Timer Display**: Countdown timer with segment time remaining (120pt font)
+- **Large Timer Display**: Countdown timer with 120pt font
 - **Auto-Advance**: Automatically moves to next segment when time expires
-- **Audio Playback**: Plays walk-on/segment audio with preloading for seamless transitions
+- **Audio Playback**: Plays audio from your selected device with seamless transitions
 - **Real-Time Adjustments**: +2/-2 minute buttons, skip segment, pause/resume
 - **Schedule Status**: Shows if running ahead/behind schedule
 - **30-Second Warning**: Haptic feedback when segment is ending
 - **Full Schedule Overlay**: View and jump to any segment during live show
 - **Emergency Stop**: Instantly pause timer and audio
 
+### ⚙️ Settings
+- Master volume and fade-out duration
+- Auto-advance and warning preferences
+- Audio device selection with test function
+- Version and app information
+
 ## Installation
 
-### Prerequisites
+### Download
+1. Go to [Releases](https://github.com/taylordrew4u2/CONTROLLEREVENT/releases)
+2. Download `Pins & Needles Controller-1.0.0-mac.zip`
+3. Extract the ZIP file
+4. Double-click the app or drag to Applications folder
+5. Right-click → Open to bypass security warning first time
 
-- Node.js 18+ and npm
-
-### Setup
-
-```bash
-# Install dependencies
-npm install
-
-# Run in development mode
-npm run dev
-
-# Build installers for distribution
-npm run build          # All platforms
-npm run build:win      # Windows only
-npm run build:mac      # macOS only
-npm run build:linux    # Linux only
-```
-
-## Building for Distribution
-
-The app uses `electron-builder` to create installers:
-
-- **Windows**: Creates NSIS installer in `release/` folder
-- **macOS**: Creates DMG installer in `release/` folder
-- **Linux**: Creates AppImage in `release/` folder
-
-After building, you can install the app on your computer and use it completely offline.
+### Running from Applications
+1. Open Applications folder
+2. Double-click "Pins & Needles Controller"
+3. The app launches fully offline
 
 ## Usage
 
@@ -69,16 +61,24 @@ After building, you can install the app on your computer and use it completely o
 1. Navigate to **Library** screen
 2. Add comedians with their walk-on audio files
 3. Optionally customize segment templates
-4. Default show template is pre-loaded
+4. Default 60-minute show template is pre-loaded
 
 ### Creating a Show
 
 1. Go to **Show Builder** screen
-2. Default 60-minute template loads automatically
+2. Default template loads automatically
 3. Click segments to assign specific comedians
 4. Adjust durations as needed (timestamps auto-update)
-5. Drag segments to reorder
+5. Reorder segments as needed
 6. Click **Save Show** and name it
+
+### Configuring Audio
+
+1. Go to **Settings** screen
+2. Select your audio output device (speakers, headphones, AirPods, etc.)
+3. Adjust master volume
+4. Click **Test Audio** to verify output
+5. Adjust fade-out duration (default 2 seconds)
 
 ### Running a Live Show
 
@@ -92,13 +92,19 @@ After building, you can install the app on your computer and use it completely o
 
 ## Data Storage
 
-All data is stored locally using SQLite in your user data directory:
+All data is stored locally in your macOS user data directory:
 
-- **Windows**: `%APPDATA%/pins-needles-controller/showcontroller.db`
-- **macOS**: `~/Library/Application Support/pins-needles-controller/showcontroller.db`
-- **Linux**: `~/.config/pins-needles-controller/showcontroller.db`
+```
+~/Library/Application Support/pins-needles-controller/showcontroller.db
+```
 
-Audio files are referenced by path, not copied. Keep audio files in a stable location.
+This SQLite database stores:
+- Comedians and their information
+- Segment templates
+- All saved shows
+- Show settings
+
+**Audio files** are referenced by path, not copied. Keep audio files in a stable location.
 
 ## Technical Details
 
@@ -106,8 +112,9 @@ Audio files are referenced by path, not copied. Keep audio files in a stable loc
 - **Desktop Framework**: Electron 28
 - **Database**: better-sqlite3 (local SQLite)
 - **Build Tool**: Vite
-- **Audio**: HTML5 Audio API with preloading
-- **Styling**: CSS (no framework dependencies)
+- **Audio**: HTML5 Audio API with device selection
+- **Styling**: CSS Grid/Flexbox (responsive design)
+- **Platform**: macOS 10.13+
 
 ## Default Show Template
 
@@ -126,10 +133,35 @@ The app comes with a pre-configured 60-minute show structure:
 0:58-1:00 | Show close (2 min)
 ```
 
+## Troubleshooting
+
+### "Cannot verify" error on first launch
+This is normal for unsigned apps on macOS. Solution:
+1. Right-click the app
+2. Select **Open**
+3. Click **Open** in the dialog
+4. macOS will remember and open it normally next time
+
+### Audio not playing
+1. Go to **Settings** screen
+2. Click **Test Audio** to verify your device is working
+3. Make sure audio files are accessible (not on external drives that are disconnected)
+4. Check volume in Settings isn't at 0%
+
+### Shows not saving
+All save operations are logged to browser console (Cmd+Option+I if needed). Check:
+1. You entered a show name before saving
+2. Segments have durations set
+3. There's space on your disk
+
 ## Support
 
 This is a standalone desktop application that works completely offline. No internet connection required after installation.
 
+For issues or feature requests, visit the [GitHub repository](https://github.com/taylordrew4u2/CONTROLLEREVENT).
+
 ## License
 
 MIT
+
+````
