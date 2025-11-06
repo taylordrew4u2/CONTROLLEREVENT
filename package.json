@@ -7,11 +7,11 @@
     "dev": "concurrently \"npm run dev:react\" \"npm run dev:electron\"",
     "dev:react": "vite",
     "dev:electron": "wait-on http://localhost:5173 && electron .",
-    "build": "tsc && vite build && electron-builder",
-    "build:win": "tsc && vite build && electron-builder --win",
-    "build:mac": "tsc && vite build && electron-builder --mac",
-    "build:linux": "tsc && vite build && electron-builder --linux",
-    "package": "tsc && vite build"
+    "build": "mkdir -p dist && cp -r electron/* dist/ && vite build && electron-builder",
+    "build:win": "mkdir -p dist && cp -r electron/* dist/ && vite build && electron-builder --win",
+    "build:mac": "mkdir -p dist && cp -r electron/* dist/ && vite build && electron-builder --mac",
+    "build:linux": "mkdir -p dist && cp -r electron/* dist/ && vite build && electron-builder --linux",
+    "package": "mkdir -p dist && cp -r electron/* dist/ && vite build"
   },
   "keywords": ["show", "controller", "comedy", "event"],
   "author": "",
@@ -48,18 +48,15 @@
       "package.json"
     ],
     "win": {
-      "target": ["nsis"],
-      "icon": "assets/icon.ico"
+      "target": ["nsis"]
     },
     "mac": {
-      "target": ["dmg"],
-      "icon": "assets/icon.icns",
-      "category": "public.app-category.productivity"
+      "target": ["zip"],
+      "category": "public.app-category.productivity",
+      "type": "distribution"
     },
     "linux": {
-      "target": ["AppImage"],
-      "icon": "assets/icon.png",
-      "category": "Utility"
+      "target": ["AppImage"]
     }
   }
 }
