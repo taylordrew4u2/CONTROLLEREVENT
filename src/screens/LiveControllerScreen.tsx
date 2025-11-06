@@ -432,6 +432,12 @@ function LiveControllerScreen() {
                 <div className="status-value audio-path">{currentSegment.audioFilePath}</div>
               </div>
             )}
+            {currentSegment.notes && (
+              <div className="status-item full-width notes-section">
+                <div className="status-label">📝 Notes</div>
+                <div className="status-value notes-content">{currentSegment.notes}</div>
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -79,6 +79,7 @@ function createDatabase() {
       calculated_start_time INTEGER NOT NULL,
       comedian_id INTEGER,
       template_id INTEGER,
+      notes TEXT,
       FOREIGN KEY (show_id) REFERENCES shows(id) ON DELETE CASCADE,
       FOREIGN KEY (comedian_id) REFERENCES comedians(id),
       FOREIGN KEY (template_id) REFERENCES templates(id)
@@ -87,6 +88,15 @@ function createDatabase() {
     CREATE INDEX IF NOT EXISTS idx_segments_show_id ON segments(show_id);
     CREATE INDEX IF NOT EXISTS idx_show_template_segments_template_id ON show_template_segments(show_template_id);
   `);
+
+  // Add notes column if it doesn't exist (migration for existing databases)
+  try {
+    db.exec('ALTER TABLE segments ADD COLUMN notes TEXT');
+    console.log('Added notes column to segments table');
+  } catch (err) {
+    // Column already exists or error - ignore
+    console.log('Notes column already exists or error:', err.message);
+  }
 
   // Insert default show template if it doesn't exist
   const defaultTemplate = db.prepare('SELECT id FROM show_templates WHERE is_default = 1').get();
@@ -335,7 +345,8 @@ ipcMain.handle('get-show', (event, id) => {
     calculatedStartTime: seg.calculated_start_time,
     comedianId: seg.comedian_id,
     templateId: seg.template_id,
-    showId: seg.show_id
+    showId: seg.show_id,
+    notes: seg.notes
   }));
   
   return {
@@ -359,7 +370,7 @@ ipcMain.handle('save-show', (event, show) => {
       const showId = result.lastInsertRowid;
       
       const insertSegment = db.prepare(
-        'INSERT INTO segments (show_id, name, duration, audio_file_path, order_index, calculated_start_time, comedian_id, template_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+        'INSERT INTO segments (show_id, name, duration, audio_file_path, order_index, calculated_start_time, comedian_id, template_id, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
       );
       
       show.segments.forEach((seg, index) => {
@@ -371,7 +382,8 @@ ipcMain.handle('save-show', (event, show) => {
           index,
           seg.calculatedStartTime || 0,
           seg.comedianId || null,
-          seg.templateId || null
+          seg.templateId || null,
+          seg.notes || null
         );
       });
       
@@ -397,7 +409,7 @@ ipcMain.handle('update-show', (event, id, show) => {
       db.prepare('DELETE FROM segments WHERE show_id = ?').run(id);
       
       const insertSegment = db.prepare(
-        'INSERT INTO segments (show_id, name, duration, audio_file_path, order_index, calculated_start_time, comedian_id, template_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+        'INSERT INTO segments (show_id, name, duration, audio_file_path, order_index, calculated_start_time, comedian_id, template_id, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
       );
       
       show.segments.forEach((seg, index) => {
@@ -409,7 +421,8 @@ ipcMain.handle('update-show', (event, id, show) => {
           index,
           seg.calculatedStartTime || 0,
           seg.comedianId || null,
-          seg.templateId || null
+          seg.templateId || null,
+          seg.notes || null
         );
       });
       

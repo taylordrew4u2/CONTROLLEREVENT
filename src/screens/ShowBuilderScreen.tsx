@@ -12,6 +12,7 @@ function ShowBuilderScreen() {
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [showLoadModal, setShowLoadModal] = useState(false);
   const [editingSegment, setEditingSegment] = useState<number | null>(null);
+  const [editingNotesIndex, setEditingNotesIndex] = useState<number | null>(null);
 
   useEffect(() => {
     loadDefaultTemplate();
@@ -285,6 +286,13 @@ function ShowBuilderScreen() {
               <div className="col-actions">
                 <button
                   className="btn-icon"
+                  onClick={() => setEditingNotesIndex(index)}
+                  title="Add/Edit Notes"
+                >
+                  📝
+                </button>
+                <button
+                  className="btn-icon"
                   onClick={() => handleAddAudioToSegment(index)}
                   title="Add/Change Audio File"
                 >
@@ -398,6 +406,29 @@ function ShowBuilderScreen() {
             <div className="form-actions">
               <button className="btn-secondary" onClick={() => setShowLoadModal(false)}>
                 Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {editingNotesIndex !== null && (
+        <div className="modal-overlay" onClick={() => setEditingNotesIndex(null)}>
+          <div className="modal notes-modal" onClick={(e) => e.stopPropagation()}>
+            <h2>Segment Notes</h2>
+            <h3>{segments[editingNotesIndex]?.name}</h3>
+            <p className="notes-help">Use this space for credits, talking points, or reminders for this segment</p>
+            <textarea
+              className="notes-textarea"
+              value={segments[editingNotesIndex]?.notes || ''}
+              onChange={(e) => handleUpdateSegment(editingNotesIndex, { notes: e.target.value })}
+              placeholder="e.g., Credits: John Smith from Boston&#10;Mention: New show dates next weekend&#10;Setup: Introduce headliner's special achievement"
+              rows={10}
+              autoFocus
+            />
+            <div className="form-actions">
+              <button className="btn-primary" onClick={() => setEditingNotesIndex(null)}>
+                Done
               </button>
             </div>
           </div>

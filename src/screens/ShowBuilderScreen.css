@@ -173,3 +173,42 @@
     font-size: 13px;
     color: #a0a0a0;
 }
+
+.notes-modal {
+    min-width: 600px;
+}
+
+.notes-modal h3 {
+    margin: 10px 0;
+    color: #00aaff;
+    font-size: 18px;
+}
+
+.notes-help {
+    font-size: 13px;
+    color: #a0a0a0;
+    margin-bottom: 16px;
+}
+
+.notes-textarea {
+    width: 100%;
+    min-height: 200px;
+    padding: 12px;
+    background-color: #1a1a1a;
+    border: 1px solid #4a4a4a;
+    border-radius: 4px;
+    color: #e0e0e0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    resize: vertical;
+}
+
+.notes-textarea:focus {
+    outline: none;
+    border-color: #00aaff;
+}
+
+.notes-textarea::placeholder {
+    color: #666;
+}

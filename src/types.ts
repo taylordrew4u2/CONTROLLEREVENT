@@ -40,6 +40,7 @@ export interface Segment {
   calculatedStartTime: number;
   comedianId?: number;
   templateId?: number;
+  notes?: string;
 }
 
 export interface Show {
