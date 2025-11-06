@@ -219,7 +219,12 @@ ipcMain.handle('save-show-template', (event, name, segments) => {
 
 // Shows
 ipcMain.handle('get-shows', () => {
-  return db.prepare('SELECT * FROM shows ORDER BY created_date DESC').all();
+  const shows = db.prepare('SELECT * FROM shows ORDER BY created_date DESC').all();
+  return shows.map(show => ({
+    ...show,
+    createdDate: show.created_date,
+    totalDuration: show.total_duration
+  }));
 });
 
 ipcMain.handle('get-show', (event, id) => {
@@ -227,64 +232,93 @@ ipcMain.handle('get-show', (event, id) => {
   if (!show) return null;
   
   const segments = db.prepare('SELECT * FROM segments WHERE show_id = ? ORDER BY order_index').all(id);
-  return { ...show, segments };
+  
+  // Map snake_case database fields to camelCase for React
+  const mappedSegments = segments.map(seg => ({
+    id: seg.id,
+    name: seg.name,
+    duration: seg.duration,
+    audioFilePath: seg.audio_file_path,
+    orderIndex: seg.order_index,
+    calculatedStartTime: seg.calculated_start_time,
+    comedianId: seg.comedian_id,
+    templateId: seg.template_id,
+    showId: seg.show_id
+  }));
+  
+  return {
+    ...show,
+    createdDate: show.created_date,
+    totalDuration: show.total_duration,
+    segments: mappedSegments
+  };
 });
 
 ipcMain.handle('save-show', (event, show) => {
-  const transaction = db.transaction(() => {
-    const stmt = db.prepare('INSERT INTO shows (name, created_date, total_duration) VALUES (?, ?, ?)');
-    const result = stmt.run(show.name, new Date().toISOString(), show.totalDuration);
-    const showId = result.lastInsertRowid;
-    
-    const insertSegment = db.prepare(
-      'INSERT INTO segments (show_id, name, duration, audio_file_path, order_index, calculated_start_time, comedian_id, template_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
-    );
-    
-    show.segments.forEach((seg, index) => {
-      insertSegment.run(
-        showId,
-        seg.name,
-        seg.duration,
-        seg.audioFilePath,
-        index,
-        seg.calculatedStartTime,
-        seg.comedianId || null,
-        seg.templateId || null
+  try {
+    const transaction = db.transaction(() => {
+      const stmt = db.prepare('INSERT INTO shows (name, created_date, total_duration) VALUES (?, ?, ?)');
+      const result = stmt.run(show.name, new Date().toISOString(), show.totalDuration);
+      const showId = result.lastInsertRowid;
+      
+      const insertSegment = db.prepare(
+        'INSERT INTO segments (show_id, name, duration, audio_file_path, order_index, calculated_start_time, comedian_id, template_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
       );
+      
+      show.segments.forEach((seg, index) => {
+        insertSegment.run(
+          showId,
+          seg.name || '',
+          seg.duration || 1,
+          seg.audioFilePath || null,
+          index,
+          seg.calculatedStartTime || 0,
+          seg.comedianId || null,
+          seg.templateId || null
+        );
+      });
+      
+      return showId;
     });
     
-    return showId;
-  });
-  
-  return transaction();
+    return transaction();
+  } catch (err) {
+    console.error('Error saving show:', err);
+    throw err;
+  }
 });
 
 ipcMain.handle('update-show', (event, id, show) => {
-  const transaction = db.transaction(() => {
-    db.prepare('UPDATE shows SET name = ?, total_duration = ? WHERE id = ?').run(show.name, show.totalDuration, id);
-    db.prepare('DELETE FROM segments WHERE show_id = ?').run(id);
-    
-    const insertSegment = db.prepare(
-      'INSERT INTO segments (show_id, name, duration, audio_file_path, order_index, calculated_start_time, comedian_id, template_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
-    );
-    
-    show.segments.forEach((seg, index) => {
-      insertSegment.run(
-        id,
-        seg.name,
-        seg.duration,
-        seg.audioFilePath,
-        index,
-        seg.calculatedStartTime,
-        seg.comedianId || null,
-        seg.templateId || null
+  try {
+    const transaction = db.transaction(() => {
+      db.prepare('UPDATE shows SET name = ?, total_duration = ? WHERE id = ?').run(show.name, show.totalDuration, id);
+      db.prepare('DELETE FROM segments WHERE show_id = ?').run(id);
+      
+      const insertSegment = db.prepare(
+        'INSERT INTO segments (show_id, name, duration, audio_file_path, order_index, calculated_start_time, comedian_id, template_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
       );
+      
+      show.segments.forEach((seg, index) => {
+        insertSegment.run(
+          id,
+          seg.name || '',
+          seg.duration || 1,
+          seg.audioFilePath || null,
+          index,
+          seg.calculatedStartTime || 0,
+          seg.comedianId || null,
+          seg.templateId || null
+        );
+      });
+      
+      return id;
     });
     
-    return id;
-  });
-  
-  return transaction();
+    return transaction();
+  } catch (err) {
+    console.error('Error updating show:', err);
+    throw err;
+  }
 });
 
 ipcMain.handle('delete-show', (event, id) => {
