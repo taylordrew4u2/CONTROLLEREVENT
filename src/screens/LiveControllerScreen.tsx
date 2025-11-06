@@ -15,6 +15,30 @@ function LiveControllerScreen() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const nextAudioRef = useRef<HTMLAudioElement | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const fadeOutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Fade out audio over specified duration (in seconds)
+  const fadeOutAudio = (audio: HTMLAudioElement, duration: number = 2) => {
+    if (!audio) return;
+    
+    const startVolume = audio.volume;
+    const startTime = Date.now();
+    const endTime = startTime + (duration * 1000);
+    
+    if (fadeOutRef.current) clearInterval(fadeOutRef.current);
+    
+    fadeOutRef.current = setInterval(() => {
+      const now = Date.now();
+      if (now >= endTime) {
+        audio.volume = 0;
+        audio.pause();
+        clearInterval(fadeOutRef.current as NodeJS.Timeout);
+      } else {
+        const progress = (now - startTime) / (duration * 1000);
+        audio.volume = startVolume * (1 - progress);
+      }
+    }, 50);
+  };
 
   useEffect(() => {
     loadShows();
@@ -102,17 +126,16 @@ function LiveControllerScreen() {
   const handlePause = () => {
     setIsRunning(false);
     if (audioRef.current) {
-      audioRef.current.pause();
+      fadeOutAudio(audioRef.current, 1);
     }
   };
 
   const handleNextSegment = () => {
     if (!currentShow || currentSegmentIndex >= currentShow.segments.length - 1) return;
     
-    // Stop current audio
+    // Fade out current audio
     if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
+      fadeOutAudio(audioRef.current, 2);
     }
     
     // Move to next segment
@@ -135,8 +158,7 @@ function LiveControllerScreen() {
     if (!currentShow) return;
     
     if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
+      fadeOutAudio(audioRef.current, 1);
     }
     
     setCurrentSegmentIndex(index);
@@ -178,7 +200,7 @@ function LiveControllerScreen() {
   const handleEmergencyStop = () => {
     setIsRunning(false);
     if (audioRef.current) {
-      audioRef.current.pause();
+      fadeOutAudio(audioRef.current, 0.5);
     }
   };
 
