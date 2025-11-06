@@ -44,7 +44,7 @@ A professional desktop application for managing and controlling live comedy show
 
 ### Download
 1. Go to [Releases](https://github.com/taylordrew4u2/CONTROLLEREVENT/releases)
-2. Download `Pins & Needles Controller-1.0.0-mac.zip`
+2. Download `Pins & Needles Controller-1.0.4-mac.zip`
 3. Extract the ZIP file
 4. Double-click the app or drag to Applications folder
 5. Right-click → Open to bypass security warning first time
