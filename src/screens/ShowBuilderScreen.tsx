@@ -142,23 +142,32 @@ function ShowBuilderScreen() {
       return;
     }
 
-    const show: Show = {
-      name: showName,
-      createdDate: new Date().toISOString(),
-      totalDuration: getTotalDuration(),
-      segments: segments
-    };
+    try {
+      const show: Show = {
+        name: showName,
+        createdDate: new Date().toISOString(),
+        totalDuration: getTotalDuration(),
+        segments: segments
+      };
 
-    if (currentShowId) {
-      await window.electronAPI.updateShow(currentShowId, show);
-    } else {
-      const id = await window.electronAPI.saveShow(show);
-      setCurrentShowId(id);
+      console.log('Saving show:', show);
+
+      if (currentShowId) {
+        await window.electronAPI.updateShow(currentShowId, show);
+        console.log('Show updated:', currentShowId);
+      } else {
+        const id = await window.electronAPI.saveShow(show);
+        console.log('Show saved with ID:', id);
+        setCurrentShowId(id);
+      }
+
+      setShowSaveModal(false);
+      await loadShows();
+      alert('Show saved successfully!');
+    } catch (err) {
+      console.error('Error saving show:', err);
+      alert('Error saving show: ' + (err instanceof Error ? err.message : String(err)));
     }
-
-    setShowSaveModal(false);
-    loadShows();
-    alert('Show saved successfully!');
   };
 
   const handleLoadShow = async (showId: number) => {

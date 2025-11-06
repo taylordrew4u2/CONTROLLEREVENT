@@ -132,10 +132,12 @@ function LiveControllerScreen() {
       setIsRunning(false);
       setShowLoadModal(false);
       
-      // Load first segment audio
+      // Initialize first segment audio
       if (show.segments[0]?.audioFilePath) {
-        audioRef.current = new Audio(show.segments[0].audioFilePath);
+        audioRef.current = new Audio();
+        audioRef.current.src = show.segments[0].audioFilePath;
         audioRef.current.volume = volume;
+        audioRef.current.load();
       }
     }
   };
@@ -143,7 +145,16 @@ function LiveControllerScreen() {
   const handleStart = () => {
     setIsRunning(true);
     if (audioRef.current && currentShow?.segments[currentSegmentIndex]?.audioFilePath) {
-      audioRef.current.play();
+      // Ensure audio source is set
+      const audioPath = currentShow.segments[currentSegmentIndex].audioFilePath;
+      if (audioRef.current.src !== audioPath) {
+        audioRef.current.src = audioPath;
+        audioRef.current.load();
+      }
+      // Add small delay to ensure audio is ready
+      setTimeout(() => {
+        audioRef.current?.play().catch(err => console.error('Audio play error:', err));
+      }, 100);
     }
   };
 
