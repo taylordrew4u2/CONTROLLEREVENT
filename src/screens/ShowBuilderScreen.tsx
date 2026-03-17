@@ -218,16 +218,16 @@ function ShowBuilderScreen() {
         </div>
         <div className="header-actions">
           <button className="btn-secondary" onClick={handleUseTemplate}>
-            Use Default Template
+            🔄 Reset Template
           </button>
           <button className="btn-secondary" onClick={handleSaveAsTemplate}>
-            Save as Template
+            📋 Save as Template
           </button>
           <button className="btn-secondary" onClick={() => setShowLoadModal(true)}>
-            Load Show
+            📂 Load Show
           </button>
           <button className="btn-primary" onClick={() => setShowSaveModal(true)}>
-            Save Show
+            💾 Save Show
           </button>
         </div>
       </div>
@@ -241,6 +241,12 @@ function ShowBuilderScreen() {
             <span className="col-actions">Actions</span>
           </div>
 
+          {segments.length === 0 && (
+            <div className="empty-state">
+              <span className="empty-icon">🎭</span>
+              <p>No segments yet.<br/>Tap <strong>+ Add Segment</strong> or <strong>🔄 Reset Template</strong> to load the default 60-minute show.</p>
+            </div>
+          )}
           {segments.map((segment, index) => (
             <div key={index} className="segment-row">
               <div className="col-time">
@@ -345,6 +351,9 @@ function ShowBuilderScreen() {
           <button className="btn-primary" onClick={handleAddSegment}>
             + Add Segment
           </button>
+          <div className="builder-tip">
+            💡 Tap a segment name to rename it. Use "Assign" to replace with a comedian or template.
+          </div>
         </div>
       </div>
 
@@ -378,6 +387,12 @@ function ShowBuilderScreen() {
         <div className="modal-overlay" onClick={() => setShowLoadModal(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <h2>Load Show</h2>
+            {shows.length === 0 ? (
+              <div className="empty-state">
+                <span className="empty-icon">📂</span>
+                <p>No saved shows yet. Build a show and save it first!</p>
+              </div>
+            ) : (
             <div className="shows-list">
               {shows.map(show => (
                 <div
@@ -391,8 +406,7 @@ function ShowBuilderScreen() {
                   </div>
                 </div>
               ))}
-            </div>
-            <div className="form-actions">
+            </div>            )}            <div className="form-actions">
               <button className="btn-secondary" onClick={() => setShowLoadModal(false)}>
                 Cancel
               </button>

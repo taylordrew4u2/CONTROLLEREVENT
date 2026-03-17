@@ -40,7 +40,17 @@
     min-height: 44px;
     display: flex;
     align-items: center;
+    gap: 6px;
     white-space: nowrap;
+}
+
+.nav-icon {
+    font-size: 18px;
+    line-height: 1;
+}
+
+.nav-label {
+    font-size: 15px;
 }
 
 .nav-link:active {
@@ -90,6 +100,15 @@
         text-align: center;
         flex: 1;
         justify-content: center;
+        gap: 2px;
+    }
+
+    .nav-icon {
+        font-size: 22px;
+    }
+
+    .nav-label {
+        font-size: 11px;
     }
 }
 

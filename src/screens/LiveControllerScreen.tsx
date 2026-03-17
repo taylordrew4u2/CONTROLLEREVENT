@@ -343,11 +343,13 @@ function LiveControllerScreen() {
     return (
       <div className="live-controller-screen">
         <div className="no-show">
-          <h2>No Show Loaded</h2>
-          <p>Please load a show to begin</p>
-          <button className="btn-primary" onClick={() => setShowLoadModal(true)}>
-            Load Show
+          <span className="no-show-icon">🎬</span>
+          <h2>Ready to Run a Show</h2>
+          <p>Load a saved show from the Builder to get started.</p>
+          <button className="btn-primary btn-large" onClick={() => setShowLoadModal(true)}>
+            📂 Load Show
           </button>
+          <p className="no-show-hint">Don't have a show yet? Go to <strong>Builder</strong> to create one.</p>
         </div>
         
         {showLoadModal && (
@@ -457,10 +459,10 @@ function LiveControllerScreen() {
               +2 Min
             </button>
             <button className="btn-secondary" onClick={() => handleAdjustTime(-2)}>
-              -2 Min
+              −2 Min
             </button>
             <button className="btn-primary" onClick={handleNextSegment}>
-              Skip Segment →
+              Next ⏭
             </button>
           </div>
         </div>
@@ -489,13 +491,13 @@ function LiveControllerScreen() {
         <div className="control-section full-width">
           <div className="control-buttons">
             <button className="btn-danger btn-large" onClick={handleEmergencyStop}>
-              ⏹ EMERGENCY STOP
+              ⏹ STOP
             </button>
             <button className="btn-primary" onClick={() => setShowScheduleOverlay(true)}>
-              📋 View Full Schedule
+              📋 Schedule
             </button>
             <button className="btn-secondary" onClick={() => setShowLoadModal(true)}>
-              Load Different Show
+              📂 Switch Show
             </button>
           </div>
         </div>
@@ -577,6 +579,12 @@ function LoadShowModal({ shows, onLoad, onClose }: LoadShowModalProps) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <h2>Load Show</h2>
+        {shows.length === 0 ? (
+          <div className="no-shows-message">
+            <p>No saved shows yet.</p>
+            <p>Go to <strong>Builder</strong> to create and save a show first.</p>
+          </div>
+        ) : (
         <div className="shows-list">
           {shows.map(show => (
             <div
@@ -591,6 +599,7 @@ function LoadShowModal({ shows, onLoad, onClose }: LoadShowModalProps) {
             </div>
           ))}
         </div>
+        )}
         <div className="form-actions">
           <button className="btn-secondary" onClick={onClose}>
             Cancel

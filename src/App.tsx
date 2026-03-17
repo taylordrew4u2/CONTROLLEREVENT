@@ -12,10 +12,22 @@ function App() {
         <nav className="app-nav">
           <h1>P&N Controller</h1>
           <div className="nav-links">
-            <NavLink to="/" end className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>Library</NavLink>
-            <NavLink to="/builder" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>Builder</NavLink>
-            <NavLink to="/controller" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>Live</NavLink>
-            <NavLink to="/settings" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>Settings</NavLink>
+            <NavLink to="/" end className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>
+              <span className="nav-icon">📚</span>
+              <span className="nav-label">Library</span>
+            </NavLink>
+            <NavLink to="/builder" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>
+              <span className="nav-icon">🎭</span>
+              <span className="nav-label">Builder</span>
+            </NavLink>
+            <NavLink to="/controller" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>
+              <span className="nav-icon">🎬</span>
+              <span className="nav-label">Live</span>
+            </NavLink>
+            <NavLink to="/settings" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>
+              <span className="nav-icon">⚙️</span>
+              <span className="nav-label">Settings</span>
+            </NavLink>
           </div>
         </nav>
         

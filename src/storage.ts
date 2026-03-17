@@ -159,6 +159,7 @@ const BACKUP_KEYS = [
   "shows",
   "shows_id",
   "appSettings",
+  "seeded",
 ];
 
 export function exportAllData(): string {
@@ -176,4 +177,61 @@ export function importAllData(json: string): void {
       localStorage.setItem(key, data[key] as string);
     }
   }
+}
+
+// ── Seed data (first-launch only) ──────────────────────────
+
+export function seedIfEmpty(): void {
+  if (localStorage.getItem("seeded")) return;
+
+  // Seed segment templates
+  if (getTemplates().length === 0) {
+    const defaultTemplates: Omit<Template, "id">[] = [
+      { name: "Host Intro", type: "Host Intro", defaultDuration: 5 },
+      { name: "Opening Act", type: "Opening Act", defaultDuration: 8 },
+      { name: "Host Transition", type: "Host Transition", defaultDuration: 1 },
+      {
+        name: "Extended Host Bit",
+        type: "Extended Host Bit",
+        defaultDuration: 11,
+      },
+      { name: "Headliner Intro", type: "Headliner Intro", defaultDuration: 1 },
+      { name: "Headliner Set", type: "Headliner Set", defaultDuration: 15 },
+      { name: "Show Close", type: "Show Close", defaultDuration: 2 },
+    ];
+    for (const t of defaultTemplates) {
+      addTemplate(t as Template);
+    }
+  }
+
+  // Seed example comedians
+  if (getComedians().length === 0) {
+    const exampleComedians: Omit<Comedian, "id">[] = [
+      { name: "Example - Opener 1", defaultDuration: 8 },
+      { name: "Example - Opener 2", defaultDuration: 8 },
+      { name: "Example - Opener 3", defaultDuration: 8 },
+      { name: "Example - Headliner", defaultDuration: 15 },
+    ];
+    for (const c of exampleComedians) {
+      addComedian(c as Comedian);
+    }
+  }
+
+  // Seed 60-min default show template
+  if (!getDefaultShowTemplate()) {
+    saveShowTemplate("Standard 60-Min Show", [
+      { name: "Show Open + Host Intro", duration: 5, orderIndex: 0 },
+      { name: "Opening Act 1", duration: 8, orderIndex: 1 },
+      { name: "Host Transition", duration: 1, orderIndex: 2 },
+      { name: "Opening Act 2", duration: 8, orderIndex: 3 },
+      { name: "Host Transition", duration: 1, orderIndex: 4 },
+      { name: "Opening Act 3", duration: 8, orderIndex: 5 },
+      { name: "Extended Host Bit", duration: 11, orderIndex: 6 },
+      { name: "Headliner Intro", duration: 1, orderIndex: 7 },
+      { name: "Headliner Set", duration: 15, orderIndex: 8 },
+      { name: "Show Close", duration: 2, orderIndex: 9 },
+    ]);
+  }
+
+  localStorage.setItem("seeded", "1");
 }

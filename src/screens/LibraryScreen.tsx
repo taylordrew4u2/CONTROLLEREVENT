@@ -120,13 +120,19 @@ function LibraryScreen() {
         />
 
         <div className="items-list">
+          {filteredComedians.length === 0 && (
+            <div className="empty-state">
+              <span className="empty-icon">🎤</span>
+              <p>{comedians.length === 0 ? 'No comedians yet — tap "+ Add Comedian" to get started' : 'No results match your search'}</p>
+            </div>
+          )}
           {filteredComedians.map(comedian => (
             <div key={comedian.id} className="list-item">
               <div className="item-info">
                 <div className="item-name">{comedian.name}</div>
                 <div className="item-details">
-                  Duration: {comedian.defaultDuration} min
-                  {comedian.audioFilePath && ' • Has audio'}
+                  {comedian.defaultDuration} min set
+                  {comedian.audioFilePath && ' • 🔊 Audio'}
                 </div>
               </div>
               <div className="item-actions">
@@ -134,13 +140,13 @@ function LibraryScreen() {
                   className="btn-secondary"
                   onClick={() => handleEditComedian(comedian)}
                 >
-                  Edit
+                  ✏️ Edit
                 </button>
                 <button
                   className="btn-danger"
                   onClick={() => handleDeleteComedian(comedian.id!)}
                 >
-                  Delete
+                  🗑
                 </button>
               </div>
             </div>
@@ -165,13 +171,19 @@ function LibraryScreen() {
         />
 
         <div className="items-list">
+          {filteredTemplates.length === 0 && (
+            <div className="empty-state">
+              <span className="empty-icon">🎭</span>
+              <p>{templates.length === 0 ? 'No templates yet — tap "+ Add Template" to get started' : 'No results match your search'}</p>
+            </div>
+          )}
           {filteredTemplates.map(template => (
             <div key={template.id} className="list-item">
               <div className="item-info">
                 <div className="item-name">{template.name}</div>
                 <div className="item-details">
-                  Type: {template.type} • Duration: {template.defaultDuration} min
-                  {template.audioFilePath && ' • Has audio'}
+                  {template.type} • {template.defaultDuration} min
+                  {template.audioFilePath && ' • 🔊 Audio'}
                 </div>
               </div>
               <div className="item-actions">
@@ -179,13 +191,13 @@ function LibraryScreen() {
                   className="btn-secondary"
                   onClick={() => handleEditTemplate(template)}
                 >
-                  Edit
+                  ✏️ Edit
                 </button>
                 <button
                   className="btn-danger"
                   onClick={() => handleDeleteTemplate(template.id!)}
                 >
-                  Delete
+                  🗑
                 </button>
               </div>
             </div>
