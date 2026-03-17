@@ -170,4 +170,18 @@
 .info-item strong {
     color: #4caf50;
 }
+
+.backup-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+}
+
+.backup-status {
+    margin-top: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #4caf50;
+}
 }

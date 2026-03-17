@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { exportAllData, importAllData } from '../storage';
 import './SettingsScreen.css';
 
 interface Settings {
@@ -32,6 +33,37 @@ function SettingsScreen({ onSettingsChange }: SettingsScreenProps) {
   });
 
   const [audioDevices, setAudioDevices] = useState<AudioDevice[]>([]);
+  const [backupStatus, setBackupStatus] = useState<string>('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleExport = () => {
+    const data = exportAllData();
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `show-controller-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setBackupStatus('✅ Data exported successfully');
+  };
+
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        importAllData(ev.target?.result as string);
+        setBackupStatus('✅ Data imported — reloading...');
+        setTimeout(() => window.location.reload(), 1000);
+      } catch {
+        setBackupStatus('❌ Invalid backup file');
+      }
+    };
+    reader.readAsText(file);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   useEffect(() => {
     // Get available audio output devices
@@ -172,11 +204,29 @@ function SettingsScreen({ onSettingsChange }: SettingsScreenProps) {
         </div>
 
         <div className="settings-section">
+          <h2>Backup & Restore</h2>
+          <p className="setting-help" style={{marginTop: 0}}>Export your data to a file so you never lose it. Import to restore on this or another device.</p>
+          <div className="backup-actions">
+            <button className="btn-primary" onClick={handleExport}>📥 Export Data</button>
+            <button className="btn-secondary" onClick={() => fileInputRef.current?.click()}>📤 Import Data</button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json"
+              style={{display: 'none'}}
+              onChange={handleImport}
+            />
+          </div>
+          {backupStatus && <p className="backup-status">{backupStatus}</p>}
+        </div>
+
+        <div className="settings-section">
           <h2>Application Info</h2>
           <div className="info-item">
             <p><strong>Version:</strong> 2.0.0</p>
             <p><strong>Works Offline:</strong> Yes (PWA)</p>
-            <p><strong>Storage:</strong> Local (localStorage)</p>
+            <p><strong>Storage:</strong> Local (persistent)</p>
+            <p><strong>Data Protection:</strong> Persistent storage requested — browser won't auto-delete your data</p>
           </div>
         </div>
       </div>

@@ -139,3 +139,41 @@ export function deleteShow(id: number): boolean {
   setStore("shows", list);
   return true;
 }
+
+// ── Persistent storage & backup ────────────────────────────
+
+export async function requestPersistentStorage(): Promise<boolean> {
+  if (navigator.storage && navigator.storage.persist) {
+    return navigator.storage.persist();
+  }
+  return false;
+}
+
+const BACKUP_KEYS = [
+  "comedians",
+  "comedians_id",
+  "templates",
+  "templates_id",
+  "showTemplates",
+  "showTemplates_id",
+  "shows",
+  "shows_id",
+  "appSettings",
+];
+
+export function exportAllData(): string {
+  const data: Record<string, string | null> = {};
+  for (const key of BACKUP_KEYS) {
+    data[key] = localStorage.getItem(key);
+  }
+  return JSON.stringify(data, null, 2);
+}
+
+export function importAllData(json: string): void {
+  const data: Record<string, string | null> = JSON.parse(json);
+  for (const key of BACKUP_KEYS) {
+    if (key in data && data[key] !== null) {
+      localStorage.setItem(key, data[key] as string);
+    }
+  }
+}
