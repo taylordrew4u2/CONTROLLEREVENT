@@ -1,124 +1,99 @@
 ````markdown
 # Pins & Needles Show Controller
 
-A professional desktop application for managing and controlling live comedy shows on macOS. Built with Electron, React, and TypeScript for 100% offline use.
+A touch-friendly PWA for managing and controlling live comedy shows. Built with React, TypeScript, and Vite. Runs on any device with a browser — optimized for Amazon Fire tablets.
+
+**Live app:** [https://taylordrew4u2.github.io/CONTROLLEREVENT/](https://taylordrew4u2.github.io/CONTROLLEREVENT/)
 
 ## Features
 
-### � Audio Output Control
-- **Audio Device Selection**: Switch between speakers, headphones, AirPods, and other connected audio devices
-- **Master Volume Control**: Precise volume adjustment (0-100%)
-- **Test Audio**: Verify your selected audio output before the show
-- **Fade-Out Effects**: Smooth audio transitions between segments (0.5-5 seconds configurable)
-
-### �📚 Library Management
-- **Comedian Database**: Add/edit/delete comedians with custom walk-on audio and default set durations
+### 📚 Library Management
+- **Comedian Database**: Add/edit/delete comedians with default set durations
 - **Segment Templates**: Pre-configured show segment types (Host Intro, Opening Act, Transitions, etc.)
 - **Searchable Lists**: Quick filtering for easy management
 
 ### 🎭 Show Builder
 - **Default Template**: Pre-loaded 60-minute show structure
 - **Reorder Segments**: Rearrange with automatic timestamp recalculation
-- **Assign Comedians/Templates**: Click to assign performers and load their audio
+- **Assign Comedians/Templates**: Tap to assign performers
 - **Duration Editing**: Adjust segment lengths with real-time timeline updates
-- **Save/Load Shows**: Persist complete show configurations to local database
+- **Save/Load Shows**: Persist complete show configurations locally
 - **Custom Templates**: Save your lineup as the new default template
 
 ### 🎬 Live Show Controller
-- **Large Timer Display**: Countdown timer with 120pt font
+- **Large Timer Display**: Responsive countdown timer
 - **Auto-Advance**: Automatically moves to next segment when time expires
-- **Audio Playback**: Plays audio from your selected device with seamless transitions
 - **Real-Time Adjustments**: +2/-2 minute buttons, skip segment, pause/resume
 - **Schedule Status**: Shows if running ahead/behind schedule
-- **30-Second Warning**: Haptic feedback when segment is ending
+- **30-Second Warning**: Visual alert when segment is ending
 - **Full Schedule Overlay**: View and jump to any segment during live show
-- **Emergency Stop**: Instantly pause timer and audio
+- **Emergency Stop**: Instantly pause timer
 
 ### ⚙️ Settings
-- Master volume and fade-out duration
 - Auto-advance and warning preferences
-- Audio device selection with test function
-- Version and app information
+- Volume and fade-out duration
+- App info and version
 
-## Installation
+## Using the App
 
-### Download
-1. Go to [Releases](https://github.com/taylordrew4u2/CONTROLLEREVENT/releases)
-2. Download `Pins & Needles Controller-1.0.4-mac.zip`
-3. Extract the ZIP file
-4. Double-click the app or drag to Applications folder
-5. Right-click → Open to bypass security warning first time
+### On an Amazon Fire Tablet (recommended)
 
-### Running from Applications
-1. Open Applications folder
-2. Double-click "Pins & Needles Controller"
-3. The app launches fully offline
+1. Open **Silk Browser**
+2. Go to **https://taylordrew4u2.github.io/CONTROLLEREVENT/**
+3. Tap the **menu** (⋮) → **Add to Home Screen**
+4. Name it (e.g., "Show Controller") and tap **Add**
+5. Launch from the home screen icon — it opens fullscreen like a native app
 
-## Usage
+### On Any Device
 
-### First-Time Setup
+Open **https://taylordrew4u2.github.io/CONTROLLEREVENT/** in any modern browser (Chrome, Safari, Firefox, Edge). Works on phones, tablets, and desktops.
 
-1. Navigate to **Library** screen
-2. Add comedians with their walk-on audio files
-3. Optionally customize segment templates
-4. Default 60-minute show template is pre-loaded
+## Quick Start
 
-### Creating a Show
-
-1. Go to **Show Builder** screen
-2. Default template loads automatically
-3. Click segments to assign specific comedians
-4. Adjust durations as needed (timestamps auto-update)
-5. Reorder segments as needed
-6. Click **Save Show** and name it
-
-### Configuring Audio
-
-1. Go to **Settings** screen
-2. Select your audio output device (speakers, headphones, AirPods, etc.)
-3. Adjust master volume
-4. Click **Test Audio** to verify output
-5. Adjust fade-out duration (default 2 seconds)
-
-### Running a Live Show
-
-1. Go to **Live Controller** screen
-2. Click **Load Show** and select your saved show
-3. Review the full schedule before starting
-4. Click **▶ Start** to begin
-5. Timer counts down, audio plays automatically
-6. Make real-time adjustments as needed
-7. View schedule status (ahead/behind)
+1. Go to **Library** and add your comedians with default set durations
+2. Go to **Builder** — the default 60-minute template loads automatically
+3. Tap segments to assign comedians, adjust durations as needed
+4. Tap **Save Show** and name it
+5. Go to **Live** → **Load Show** → select your show → **Start**
 
 ## Data Storage
 
-All data is stored locally in your macOS user data directory:
+All data is stored locally in the browser's `localStorage`. Nothing is sent to a server. Data persists across sessions on the same device and browser.
 
-```
-~/Library/Application Support/pins-needles-controller/showcontroller.db
-```
-
-This SQLite database stores:
+Stored data includes:
 - Comedians and their information
 - Segment templates
-- All saved shows
-- Show settings
+- All saved shows and show templates
 
-**Audio files** are referenced by path, not copied. Keep audio files in a stable location.
+## Deployment
+
+The app auto-deploys to GitHub Pages on every push to `main` via GitHub Actions.
+
+### Manual build
+
+```bash
+npm install
+npm run build     # outputs to dist/
+npm run preview   # local preview of production build
+```
+
+### GitHub Pages setup (one-time)
+
+1. Go to **Settings → Pages** in the GitHub repo
+2. Under **Source**, select **GitHub Actions**
+3. Push to `main` — the workflow builds and deploys automatically
 
 ## Technical Details
 
 - **Frontend**: React 18 + TypeScript
-- **Desktop Framework**: Electron 28
-- **Database**: better-sqlite3 (local SQLite)
-- **Build Tool**: Vite
-- **Audio**: HTML5 Audio API with device selection
-- **Styling**: CSS Grid/Flexbox (responsive design)
-- **Platform**: macOS 10.13+
+- **Build Tool**: Vite 5
+- **Routing**: HashRouter (GitHub Pages compatible)
+- **Storage**: localStorage (local-only, no backend)
+- **PWA**: Service worker + manifest for offline use and home screen install
+- **Hosting**: GitHub Pages (static)
+- **CI/CD**: GitHub Actions (auto-deploy on push to `main`)
 
 ## Default Show Template
-
-The app comes with a pre-configured 60-minute show structure:
 
 ```
 0:00-0:05 | Show open + host intro (5 min)
@@ -135,30 +110,18 @@ The app comes with a pre-configured 60-minute show structure:
 
 ## Troubleshooting
 
-### "Cannot verify" error on first launch
-This is normal for unsigned apps on macOS. Solution:
-1. Right-click the app
-2. Select **Open**
-3. Click **Open** in the dialog
-4. macOS will remember and open it normally next time
+### App not installing to home screen
+- Make sure you're visiting the HTTPS URL (not HTTP)
+- Use Silk Browser on Fire tablet or Chrome on Android
+- On iOS, use Safari → Share → Add to Home Screen
 
-### Audio not playing
-1. Go to **Settings** screen
-2. Click **Test Audio** to verify your device is working
-3. Make sure audio files are accessible (not on external drives that are disconnected)
-4. Check volume in Settings isn't at 0%
+### Data disappeared
+- localStorage is per-browser, per-device. Clearing browser data will erase saved shows
+- Private/incognito mode does not persist data
 
-### Shows not saving
-All save operations are logged to browser console (Cmd+Option+I if needed). Check:
-1. You entered a show name before saving
-2. Segments have durations set
-3. There's space on your disk
-
-## Support
-
-This is a standalone desktop application that works completely offline. No internet connection required after installation.
-
-For issues or feature requests, visit the [GitHub repository](https://github.com/taylordrew4u2/CONTROLLEREVENT).
+### App not loading offline
+- Visit the app once while online so the service worker caches the files
+- After that, it works offline
 
 ## License
 
