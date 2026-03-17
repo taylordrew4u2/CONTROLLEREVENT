@@ -50,32 +50,3 @@ export interface Show {
   totalDuration: number;
   segments: Segment[];
 }
-
-export interface ElectronAPI {
-  getComedians: () => Promise<Comedian[]>;
-  addComedian: (comedian: Comedian) => Promise<Comedian>;
-  updateComedian: (id: number, comedian: Comedian) => Promise<Comedian>;
-  deleteComedian: (id: number) => Promise<boolean>;
-  
-  getTemplates: () => Promise<Template[]>;
-  addTemplate: (template: Template) => Promise<Template>;
-  updateTemplate: (id: number, template: Template) => Promise<Template>;
-  deleteTemplate: (id: number) => Promise<boolean>;
-  
-  getDefaultShowTemplate: () => Promise<ShowTemplate | null>;
-  saveShowTemplate: (name: string, segments: ShowTemplateSegment[]) => Promise<number>;
-  
-  getShows: () => Promise<Show[]>;
-  getShow: (id: number) => Promise<Show | null>;
-  saveShow: (show: Show) => Promise<number>;
-  updateShow: (id: number, show: Show) => Promise<number>;
-  deleteShow: (id: number) => Promise<boolean>;
-  
-  pickAudioFile: () => Promise<string | null>;
-}
-
-declare global {
-  interface Window {
-    electronAPI: ElectronAPI;
-  }
-}

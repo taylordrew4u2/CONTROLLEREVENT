@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Comedian, Template } from '../types';
+import * as storage from '../storage';
 import './LibraryScreen.css';
 
 const TEMPLATE_TYPES = [
@@ -28,14 +29,12 @@ function LibraryScreen() {
     loadTemplates();
   }, []);
 
-  const loadComedians = async () => {
-    const data = await window.electronAPI.getComedians();
-    setComedians(data);
+  const loadComedians = () => {
+    setComedians(storage.getComedians());
   };
 
-  const loadTemplates = async () => {
-    const data = await window.electronAPI.getTemplates();
-    setTemplates(data);
+  const loadTemplates = () => {
+    setTemplates(storage.getTemplates());
   };
 
   const handleAddComedian = () => {
@@ -48,20 +47,20 @@ function LibraryScreen() {
     setShowComedianModal(true);
   };
 
-  const handleSaveComedian = async (comedian: Comedian) => {
+  const handleSaveComedian = (comedian: Comedian) => {
     if (comedian.id) {
-      await window.electronAPI.updateComedian(comedian.id, comedian);
+      storage.updateComedian(comedian.id, comedian);
     } else {
-      await window.electronAPI.addComedian(comedian);
+      storage.addComedian(comedian);
     }
     setShowComedianModal(false);
     setEditingComedian(null);
     loadComedians();
   };
 
-  const handleDeleteComedian = async (id: number) => {
+  const handleDeleteComedian = (id: number) => {
     if (confirm('Delete this comedian?')) {
-      await window.electronAPI.deleteComedian(id);
+      storage.deleteComedian(id);
       loadComedians();
     }
   };
@@ -76,20 +75,20 @@ function LibraryScreen() {
     setShowTemplateModal(true);
   };
 
-  const handleSaveTemplate = async (template: Template) => {
+  const handleSaveTemplate = (template: Template) => {
     if (template.id) {
-      await window.electronAPI.updateTemplate(template.id, template);
+      storage.updateTemplate(template.id, template);
     } else {
-      await window.electronAPI.addTemplate(template);
+      storage.addTemplate(template);
     }
     setShowTemplateModal(false);
     setEditingTemplate(null);
     loadTemplates();
   };
 
-  const handleDeleteTemplate = async (id: number) => {
+  const handleDeleteTemplate = (id: number) => {
     if (confirm('Delete this template?')) {
-      await window.electronAPI.deleteTemplate(id);
+      storage.deleteTemplate(id);
       loadTemplates();
     }
   };
@@ -228,13 +227,6 @@ interface ComedianModalProps {
 function ComedianModal({ comedian, onSave, onClose }: ComedianModalProps) {
   const [formData, setFormData] = useState(comedian);
 
-  const handlePickAudio = async () => {
-    const filePath = await window.electronAPI.pickAudioFile();
-    if (filePath) {
-      setFormData({ ...formData, audioFilePath: filePath });
-    }
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.name.trim()) {
@@ -269,21 +261,6 @@ function ComedianModal({ comedian, onSave, onClose }: ComedianModalProps) {
             />
           </div>
 
-          <div className="form-group">
-            <label>Walk-on Audio</label>
-            <div className="file-picker">
-              <input
-                type="text"
-                value={formData.audioFilePath || ''}
-                readOnly
-                placeholder="No file selected"
-              />
-              <button type="button" className="btn-secondary" onClick={handlePickAudio}>
-                Browse...
-              </button>
-            </div>
-          </div>
-
           <div className="form-actions">
             <button type="button" className="btn-secondary" onClick={onClose}>
               Cancel
@@ -306,13 +283,6 @@ interface TemplateModalProps {
 
 function TemplateModal({ template, onSave, onClose }: TemplateModalProps) {
   const [formData, setFormData] = useState(template);
-
-  const handlePickAudio = async () => {
-    const filePath = await window.electronAPI.pickAudioFile();
-    if (filePath) {
-      setFormData({ ...formData, audioFilePath: filePath });
-    }
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -359,21 +329,6 @@ function TemplateModal({ template, onSave, onClose }: TemplateModalProps) {
               onChange={(e) => setFormData({ ...formData, defaultDuration: parseInt(e.target.value) })}
               required
             />
-          </div>
-
-          <div className="form-group">
-            <label>Audio File</label>
-            <div className="file-picker">
-              <input
-                type="text"
-                value={formData.audioFilePath || ''}
-                readOnly
-                placeholder="No file selected"
-              />
-              <button type="button" className="btn-secondary" onClick={handlePickAudio}>
-                Browse...
-              </button>
-            </div>
           </div>
 
           <div className="form-actions">

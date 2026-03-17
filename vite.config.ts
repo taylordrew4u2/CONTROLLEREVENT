@@ -1,17 +1,13 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import { fileURLToPath } from 'node:url'
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
-  base: './',
+  base: "./",
   build: {
-    outDir: 'dist/renderer',
-    rollupOptions: {
-      external: ['better-sqlite3', 'electron-store'],
-    }
+    outDir: "dist",
   },
   server: {
     port: 5173,
   },
-})
+});

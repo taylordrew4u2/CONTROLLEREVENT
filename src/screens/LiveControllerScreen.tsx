@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Show } from '../types';
+import * as storage from '../storage';
 import './LiveControllerScreen.css';
 
 function LiveControllerScreen() {
@@ -15,8 +16,8 @@ function LiveControllerScreen() {
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const nextAudioRef = useRef<HTMLAudioElement | null>(null);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const fadeOutRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const fadeOutRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Load settings
   useEffect(() => {
@@ -28,12 +29,10 @@ function LiveControllerScreen() {
     }
   }, []);
 
-  // Convert file path to local-audio:// protocol for Electron playback
+  // Convert file path to URL for playback
   const getAudioURL = (filePath: string): string => {
     if (!filePath) return '';
-    if (filePath.startsWith('local-audio://')) return filePath;
-    // Convert absolute path to local-audio:// protocol
-    return `local-audio://${encodeURIComponent(filePath)}`;
+    return filePath;
   };
 
   // Fade out audio over specified duration (in seconds)
@@ -51,7 +50,7 @@ function LiveControllerScreen() {
       if (now >= endTime) {
         audio.volume = 0;
         audio.pause();
-        clearInterval(fadeOutRef.current as NodeJS.Timeout);
+        clearInterval(fadeOutRef.current!);
       } else {
         const progress = (now - startTime) / (duration * 1000);
         audio.volume = startVolume * (1 - progress);
@@ -153,13 +152,12 @@ function LiveControllerScreen() {
     }
   }, [currentSegmentIndex, currentShow, volume]);
 
-  const loadShows = async () => {
-    const data = await window.electronAPI.getShows();
-    setShows(data);
+  const loadShows = () => {
+    setShows(storage.getShows());
   };
 
-  const handleLoadShow = async (showId: number) => {
-    const show = await window.electronAPI.getShow(showId);
+  const handleLoadShow = (showId: number) => {
+    const show = storage.getShow(showId);
     if (show) {
       setCurrentShow(show);
       setCurrentSegmentIndex(0);

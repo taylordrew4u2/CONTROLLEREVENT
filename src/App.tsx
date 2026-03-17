@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
 import LibraryScreen from './screens/LibraryScreen';
 import ShowBuilderScreen from './screens/ShowBuilderScreen';
 import LiveControllerScreen from './screens/LiveControllerScreen';
@@ -10,12 +10,12 @@ function App() {
     <Router>
       <div className="app">
         <nav className="app-nav">
-          <h1>Pins & Needles Show Controller</h1>
+          <h1>P&N Controller</h1>
           <div className="nav-links">
-            <Link to="/" className="nav-link">Library</Link>
-            <Link to="/builder" className="nav-link">Show Builder</Link>
-            <Link to="/controller" className="nav-link">Live Controller</Link>
-            <Link to="/settings" className="nav-link">⚙️ Settings</Link>
+            <NavLink to="/" end className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>Library</NavLink>
+            <NavLink to="/builder" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>Builder</NavLink>
+            <NavLink to="/controller" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>Live</NavLink>
+            <NavLink to="/settings" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>Settings</NavLink>
           </div>
         </nav>
         

@@ -1,9 +1,11 @@
 .library-screen {
-    padding: 24px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
-    height: calc(100vh - 72px);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    height: 100%;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .library-section {
@@ -11,51 +13,51 @@
     flex-direction: column;
     background-color: #2a2a2a;
     border-radius: 8px;
-    padding: 20px;
-    overflow: hidden;
+    padding: 16px;
+    min-height: 0;
 }
 
 .section-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
+    gap: 12px;
 }
 
 .section-header h2 {
     margin: 0;
-    font-size: 20px;
+    font-size: 18px;
 }
 
 .search-input {
-    margin-bottom: 16px;
+    margin-bottom: 12px;
     width: 100%;
 }
 
 .items-list {
-    flex: 1;
-    overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
 }
 
 .list-item {
     background-color: #3a3a3a;
-    border-radius: 6px;
-    padding: 16px;
+    border-radius: 8px;
+    padding: 14px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    transition: all 0.2s;
+    gap: 12px;
 }
 
-.list-item:hover {
+.list-item:active {
     background-color: #4a4a4a;
 }
 
 .item-info {
     flex: 1;
+    min-width: 0;
 }
 
 .item-name {
@@ -66,18 +68,20 @@
 }
 
 .item-details {
-    font-size: 13px;
+    font-size: 14px;
     color: #a0a0a0;
 }
 
 .item-actions {
     display: flex;
     gap: 8px;
+    flex-shrink: 0;
 }
 
 .item-actions button {
-    padding: 6px 12px;
-    font-size: 13px;
+    padding: 10px 16px;
+    font-size: 14px;
+    min-height: 44px;
 }
 
 .file-picker {
@@ -91,4 +95,23 @@
 
 .file-picker button {
     white-space: nowrap;
+}
+
+/* Landscape tablet: side-by-side */
+@media (min-width: 769px) {
+    .library-screen {
+        flex-direction: row;
+        overflow: hidden;
+    }
+
+    .library-section {
+        flex: 1;
+        overflow: hidden;
+    }
+
+    .items-list {
+        flex: 1;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
 }

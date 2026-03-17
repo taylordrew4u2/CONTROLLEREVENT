@@ -174,9 +174,9 @@ function SettingsScreen({ onSettingsChange }: SettingsScreenProps) {
         <div className="settings-section">
           <h2>Application Info</h2>
           <div className="info-item">
-            <p><strong>Version:</strong> 1.0.4</p>
-            <p><strong>Works Offline:</strong> Yes</p>
-            <p><strong>Database:</strong> SQLite (Local)</p>
+            <p><strong>Version:</strong> 2.0.0</p>
+            <p><strong>Works Offline:</strong> Yes (PWA)</p>
+            <p><strong>Storage:</strong> Local (localStorage)</p>
           </div>
         </div>
       </div>

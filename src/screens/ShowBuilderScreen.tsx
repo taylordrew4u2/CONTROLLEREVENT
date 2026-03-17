@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Segment, Comedian, Template, Show } from '../types';
+import * as storage from '../storage';
 import './ShowBuilderScreen.css';
 
 function ShowBuilderScreen() {
@@ -21,8 +22,8 @@ function ShowBuilderScreen() {
     loadShows();
   }, []);
 
-  const loadDefaultTemplate = async () => {
-    const template = await window.electronAPI.getDefaultShowTemplate();
+  const loadDefaultTemplate = () => {
+    const template = storage.getDefaultShowTemplate();
     if (template && template.segments) {
       const newSegments = template.segments.map((seg, index) => ({
         name: seg.name,
@@ -36,19 +37,16 @@ function ShowBuilderScreen() {
     }
   };
 
-  const loadComedians = async () => {
-    const data = await window.electronAPI.getComedians();
-    setComedians(data);
+  const loadComedians = () => {
+    setComedians(storage.getComedians());
   };
 
-  const loadTemplates = async () => {
-    const data = await window.electronAPI.getTemplates();
-    setTemplates(data);
+  const loadTemplates = () => {
+    setTemplates(storage.getTemplates());
   };
 
-  const loadShows = async () => {
-    const data = await window.electronAPI.getShows();
-    setShows(data);
+  const loadShows = () => {
+    setShows(storage.getShows());
   };
 
   const recalculateTimestamps = (segs: Segment[]) => {
@@ -137,14 +135,9 @@ function ShowBuilderScreen() {
     }
   };
 
-  const handleAddAudioToSegment = async (segmentIndex: number) => {
-    const filePath = await window.electronAPI.pickAudioFile();
-    if (filePath) {
-      handleUpdateSegment(segmentIndex, {
-        audioFilePath: filePath
-      });
-      console.log('Audio file added to segment:', filePath);
-    }
+  const handleAddAudioToSegment = (_segmentIndex: number) => {
+    // Audio file picking not available in PWA mode
+    alert('Audio file picking is not available in this version.');
   };
 
   const handleSaveShow = async () => {
@@ -164,23 +157,19 @@ function ShowBuilderScreen() {
       const show: Show = {
         name: showName,
         createdDate: new Date().toISOString(),
-        totalDuration: totalDuration || 0, // Ensure it's never null/undefined
+        totalDuration: totalDuration || 0,
         segments: segments
       };
 
-      console.log('Saving show:', show);
-
       if (currentShowId) {
-        await window.electronAPI.updateShow(currentShowId, show);
-        console.log('Show updated:', currentShowId);
+        storage.updateShow(currentShowId, show);
       } else {
-        const id = await window.electronAPI.saveShow(show);
-        console.log('Show saved with ID:', id);
+        const id = storage.saveShow(show);
         setCurrentShowId(id);
       }
 
       setShowSaveModal(false);
-      await loadShows();
+      loadShows();
       alert('Show saved successfully!');
     } catch (err) {
       console.error('Error saving show:', err);
@@ -188,8 +177,8 @@ function ShowBuilderScreen() {
     }
   };
 
-  const handleLoadShow = async (showId: number) => {
-    const show = await window.electronAPI.getShow(showId);
+  const handleLoadShow = (showId: number) => {
+    const show = storage.getShow(showId);
     if (show) {
       setSegments(show.segments);
       setShowName(show.name);
@@ -206,10 +195,10 @@ function ShowBuilderScreen() {
     }
   };
 
-  const handleSaveAsTemplate = async () => {
+  const handleSaveAsTemplate = () => {
     const name = prompt('Enter template name:');
     if (name) {
-      await window.electronAPI.saveShowTemplate(name, segments.map(seg => ({
+      storage.saveShowTemplate(name, segments.map(seg => ({
         name: seg.name,
         duration: seg.duration,
         orderIndex: seg.orderIndex
