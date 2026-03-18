@@ -3,6 +3,7 @@ import LibraryScreen from './screens/LibraryScreen';
 import ShowBuilderScreen from './screens/ShowBuilderScreen';
 import LiveControllerScreen from './screens/LiveControllerScreen';
 import SettingsScreen from './screens/SettingsScreen';
+import ToastContainer from './components/Toast';
 import './App.css';
 
 function NavIcon({ type }: { type: 'library' | 'builder' | 'live' | 'settings' }) {
@@ -53,6 +54,7 @@ function App() {
             <Route path="/settings" element={<SettingsScreen onSettingsChange={() => {}} />} />
           </Routes>
         </div>
+        <ToastContainer />
       </div>
     </Router>
   );

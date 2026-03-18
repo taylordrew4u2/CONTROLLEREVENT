@@ -3,6 +3,8 @@ import { Comedian, Template } from '../types';
 import * as storage from '../storage';
 import Modal from '../components/Modal';
 import EmptyState from '../components/EmptyState';
+import ConfirmDialog from '../components/ConfirmDialog';
+import { showToast } from '../components/Toast';
 import './LibraryScreen.css';
 
 const TEMPLATE_TYPES = [
@@ -25,6 +27,7 @@ function LibraryScreen() {
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [editingComedian, setEditingComedian] = useState<Comedian | null>(null);
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ type: 'comedian' | 'template'; id: number; name: string } | null>(null);
 
   useEffect(() => {
     loadComedians();
@@ -47,19 +50,32 @@ function LibraryScreen() {
   const handleSaveComedian = (comedian: Comedian) => {
     if (comedian.id) {
       storage.updateComedian(comedian.id, comedian);
+      showToast('Comedian updated', 'success');
     } else {
       storage.addComedian(comedian);
+      showToast('Comedian added', 'success');
     }
     setShowComedianModal(false);
     setEditingComedian(null);
     loadComedians();
   };
 
-  const handleDeleteComedian = (id: number) => {
-    if (confirm('Delete this comedian?')) {
-      storage.deleteComedian(id);
+  const handleDeleteComedian = (id: number, name: string) => {
+    setDeleteConfirm({ type: 'comedian', id, name });
+  };
+
+  const handleConfirmDelete = () => {
+    if (!deleteConfirm) return;
+    if (deleteConfirm.type === 'comedian') {
+      storage.deleteComedian(deleteConfirm.id);
       loadComedians();
+      showToast('Comedian deleted', 'success');
+    } else {
+      storage.deleteTemplate(deleteConfirm.id);
+      loadTemplates();
+      showToast('Template deleted', 'success');
     }
+    setDeleteConfirm(null);
   };
 
   const handleAddTemplate = () => {
@@ -75,19 +91,18 @@ function LibraryScreen() {
   const handleSaveTemplate = (template: Template) => {
     if (template.id) {
       storage.updateTemplate(template.id, template);
+      showToast('Template updated', 'success');
     } else {
       storage.addTemplate(template);
+      showToast('Template added', 'success');
     }
     setShowTemplateModal(false);
     setEditingTemplate(null);
     loadTemplates();
   };
 
-  const handleDeleteTemplate = (id: number) => {
-    if (confirm('Delete this template?')) {
-      storage.deleteTemplate(id);
-      loadTemplates();
-    }
+  const handleDeleteTemplate = (id: number, name: string) => {
+    setDeleteConfirm({ type: 'template', id, name });
   };
 
   const filteredComedians = comedians.filter(c =>
@@ -132,7 +147,7 @@ function LibraryScreen() {
                 </div>
                 <div className="item-actions">
                   <button className="btn-secondary" onClick={() => handleEditComedian(comedian)}>Edit</button>
-                  <button className="btn-danger" onClick={() => handleDeleteComedian(comedian.id!)}>Delete</button>
+                  <button className="btn-danger" onClick={() => handleDeleteComedian(comedian.id!, comedian.name)}>Delete</button>
                 </div>
               </div>
             ))
@@ -172,7 +187,7 @@ function LibraryScreen() {
                 </div>
                 <div className="item-actions">
                   <button className="btn-secondary" onClick={() => handleEditTemplate(template)}>Edit</button>
-                  <button className="btn-danger" onClick={() => handleDeleteTemplate(template.id!)}>Delete</button>
+                  <button className="btn-danger" onClick={() => handleDeleteTemplate(template.id!, template.name)}>Delete</button>
                 </div>
               </div>
             ))
@@ -195,6 +210,17 @@ function LibraryScreen() {
           onClose={() => { setShowTemplateModal(false); setEditingTemplate(null); }}
         />
       )}
+
+      {deleteConfirm && (
+        <ConfirmDialog
+          title={`Delete ${deleteConfirm.type === 'comedian' ? 'Comedian' : 'Template'}?`}
+          message={`Are you sure you want to delete "${deleteConfirm.name}"? This cannot be undone.`}
+          confirmLabel="Delete"
+          danger
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setDeleteConfirm(null)}
+        />
+      )}
     </div>
   );
 }
@@ -207,10 +233,19 @@ interface ComedianModalProps {
 
 function ComedianModal({ comedian, onSave, onClose }: ComedianModalProps) {
   const [formData, setFormData] = useState(comedian);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const validate = () => {
+    const e: Record<string, string> = {};
+    if (!formData.name.trim()) e.name = 'Name is required';
+    if (!formData.defaultDuration || formData.defaultDuration < 1) e.duration = 'Duration must be at least 1 minute';
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.name.trim()) {
+    if (validate()) {
       onSave(formData);
     }
   };
@@ -223,10 +258,12 @@ function ComedianModal({ comedian, onSave, onClose }: ComedianModalProps) {
           <input
             type="text"
             value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            required
+            onChange={(e) => { setFormData({ ...formData, name: e.target.value }); setErrors(prev => ({ ...prev, name: '' })); }}
+            placeholder="e.g. John Smith"
             autoFocus
+            className={errors.name ? 'input-error' : ''}
           />
+          {errors.name && <span className="field-error">{errors.name}</span>}
         </div>
 
         <div className="form-group">
@@ -235,9 +272,11 @@ function ComedianModal({ comedian, onSave, onClose }: ComedianModalProps) {
             type="number"
             min="1"
             value={formData.defaultDuration}
-            onChange={(e) => setFormData({ ...formData, defaultDuration: parseInt(e.target.value) })}
-            required
+            onChange={(e) => { setFormData({ ...formData, defaultDuration: parseInt(e.target.value) || 0 }); setErrors(prev => ({ ...prev, duration: '' })); }}
+            className={errors.duration ? 'input-error' : ''}
           />
+          {errors.duration && <span className="field-error">{errors.duration}</span>}
+          <span className="field-hint">How many minutes this comedian typically performs</span>
         </div>
 
         <div className="form-actions">
@@ -257,10 +296,19 @@ interface TemplateModalProps {
 
 function TemplateModal({ template, onSave, onClose }: TemplateModalProps) {
   const [formData, setFormData] = useState(template);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const validate = () => {
+    const e: Record<string, string> = {};
+    if (!formData.name.trim()) e.name = 'Name is required';
+    if (!formData.defaultDuration || formData.defaultDuration < 1) e.duration = 'Duration must be at least 1 minute';
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.name.trim()) {
+    if (validate()) {
       onSave(formData);
     }
   };
@@ -273,10 +321,12 @@ function TemplateModal({ template, onSave, onClose }: TemplateModalProps) {
           <input
             type="text"
             value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            required
+            onChange={(e) => { setFormData({ ...formData, name: e.target.value }); setErrors(prev => ({ ...prev, name: '' })); }}
+            placeholder="e.g. Host Intro"
             autoFocus
+            className={errors.name ? 'input-error' : ''}
           />
+          {errors.name && <span className="field-error">{errors.name}</span>}
         </div>
 
         <div className="form-group">
@@ -284,12 +334,12 @@ function TemplateModal({ template, onSave, onClose }: TemplateModalProps) {
           <select
             value={formData.type}
             onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-            required
           >
             {TEMPLATE_TYPES.map(type => (
               <option key={type} value={type}>{type}</option>
             ))}
           </select>
+          <span className="field-hint">What kind of segment this is</span>
         </div>
 
         <div className="form-group">
@@ -298,9 +348,10 @@ function TemplateModal({ template, onSave, onClose }: TemplateModalProps) {
             type="number"
             min="1"
             value={formData.defaultDuration}
-            onChange={(e) => setFormData({ ...formData, defaultDuration: parseInt(e.target.value) })}
-            required
+            onChange={(e) => { setFormData({ ...formData, defaultDuration: parseInt(e.target.value) || 0 }); setErrors(prev => ({ ...prev, duration: '' })); }}
+            className={errors.duration ? 'input-error' : ''}
           />
+          {errors.duration && <span className="field-error">{errors.duration}</span>}
         </div>
 
         <div className="form-actions">

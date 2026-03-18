@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { exportAllData, importAllData } from '../storage';
+import { showToast } from '../components/Toast';
 import './SettingsScreen.css';
 
 interface Settings {
@@ -33,7 +34,6 @@ function SettingsScreen({ onSettingsChange }: SettingsScreenProps) {
   });
 
   const [audioDevices, setAudioDevices] = useState<AudioDevice[]>([]);
-  const [backupStatus, setBackupStatus] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleExport = () => {
@@ -45,7 +45,7 @@ function SettingsScreen({ onSettingsChange }: SettingsScreenProps) {
     a.download = `show-controller-backup-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    setBackupStatus('Data exported successfully');
+    showToast('Data exported successfully', 'success');
   };
 
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -55,10 +55,10 @@ function SettingsScreen({ onSettingsChange }: SettingsScreenProps) {
     reader.onload = (ev) => {
       try {
         importAllData(ev.target?.result as string);
-        setBackupStatus('Data imported — reloading...');
+        showToast('Data imported — reloading...', 'success');
         setTimeout(() => window.location.reload(), 1000);
       } catch {
-        setBackupStatus('Invalid backup file');
+        showToast('Invalid backup file', 'error');
       }
     };
     reader.readAsText(file);
@@ -221,7 +221,6 @@ function SettingsScreen({ onSettingsChange }: SettingsScreenProps) {
               onChange={handleImport}
             />
           </div>
-          {backupStatus && <p className="backup-status">{backupStatus}</p>}
         </div>
 
         <div className="settings-section">

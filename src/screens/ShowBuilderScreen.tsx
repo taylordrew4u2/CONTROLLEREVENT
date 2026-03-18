@@ -3,6 +3,8 @@ import { Segment, Comedian, Template, Show } from '../types';
 import * as storage from '../storage';
 import Modal from '../components/Modal';
 import EmptyState from '../components/EmptyState';
+import ConfirmDialog from '../components/ConfirmDialog';
+import { showToast } from '../components/Toast';
 import './ShowBuilderScreen.css';
 
 function ShowBuilderScreen() {
@@ -16,6 +18,10 @@ function ShowBuilderScreen() {
   const [showLoadModal, setShowLoadModal] = useState(false);
   const [editingSegment, setEditingSegment] = useState<number | null>(null);
   const [editingNotesIndex, setEditingNotesIndex] = useState<number | null>(null);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [showDeleteSegmentConfirm, setShowDeleteSegmentConfirm] = useState<number | null>(null);
+  const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
+  const [templateName, setTemplateName] = useState('');
 
   useEffect(() => {
     loadDefaultTemplate();
@@ -85,10 +91,17 @@ function ShowBuilderScreen() {
   };
 
   const handleDeleteSegment = (index: number) => {
-    const newSegments = segments.filter((_, i) => i !== index)
+    setShowDeleteSegmentConfirm(index);
+  };
+
+  const confirmDeleteSegment = () => {
+    if (showDeleteSegmentConfirm === null) return;
+    const newSegments = segments.filter((_, i) => i !== showDeleteSegmentConfirm)
       .map((seg, i) => ({ ...seg, orderIndex: i }));
     recalculateTimestamps(newSegments);
     setSegments(newSegments);
+    showToast('Segment removed', 'success');
+    setShowDeleteSegmentConfirm(null);
   };
 
   const handleMoveSegment = (fromIndex: number, toIndex: number) => {
@@ -126,16 +139,16 @@ function ShowBuilderScreen() {
   };
 
   const handleAddAudioToSegment = (_segmentIndex: number) => {
-    alert('Audio file picking is not available in this version.');
+    showToast('Audio file picking is not available in this version', 'warning');
   };
 
   const handleSaveShow = async () => {
     if (!showName.trim()) {
-      alert('Please enter a show name');
+      showToast('Please enter a show name', 'warning');
       return;
     }
     if (segments.length === 0) {
-      alert('Please add at least one segment to the show');
+      showToast('Add at least one segment before saving', 'warning');
       return;
     }
     try {
@@ -154,10 +167,10 @@ function ShowBuilderScreen() {
       }
       setShowSaveModal(false);
       loadShows();
-      alert('Show saved successfully!');
+      showToast('Show saved!', 'success');
     } catch (err) {
       console.error('Error saving show:', err);
-      alert('Error saving show: ' + (err instanceof Error ? err.message : String(err)));
+      showToast('Error saving show: ' + (err instanceof Error ? err.message : String(err)), 'error');
     }
   };
 
@@ -172,23 +185,34 @@ function ShowBuilderScreen() {
   };
 
   const handleUseTemplate = () => {
-    if (confirm('Reset to default template? This will clear current lineup.')) {
-      loadDefaultTemplate();
-      setShowName('');
-      setCurrentShowId(null);
-    }
+    setShowResetConfirm(true);
+  };
+
+  const confirmReset = () => {
+    loadDefaultTemplate();
+    setShowName('');
+    setCurrentShowId(null);
+    setShowResetConfirm(false);
+    showToast('Reset to default template', 'info');
   };
 
   const handleSaveAsTemplate = () => {
-    const name = prompt('Enter template name:');
-    if (name) {
-      storage.saveShowTemplate(name, segments.map(seg => ({
-        name: seg.name,
-        duration: seg.duration,
-        orderIndex: seg.orderIndex
-      })));
-      alert('Template saved as default!');
+    setTemplateName('');
+    setShowSaveTemplateModal(true);
+  };
+
+  const confirmSaveTemplate = () => {
+    if (!templateName.trim()) {
+      showToast('Please enter a template name', 'warning');
+      return;
     }
+    storage.saveShowTemplate(templateName, segments.map(seg => ({
+      name: seg.name,
+      duration: seg.duration,
+      orderIndex: seg.orderIndex
+    })));
+    setShowSaveTemplateModal(false);
+    showToast('Template saved as default!', 'success');
   };
 
   return (
@@ -260,14 +284,16 @@ function ShowBuilderScreen() {
                   <button
                     className="btn-icon"
                     onClick={() => setEditingNotesIndex(index)}
-                    title="Notes"
+                    title="Add notes or talking points for this segment"
+                    aria-label="Notes"
                   >
                     N
                   </button>
                   <button
                     className="btn-icon"
                     onClick={() => handleAddAudioToSegment(index)}
-                    title="Audio"
+                    title="Attach an audio file to play during this segment"
+                    aria-label="Audio"
                   >
                     A
                   </button>
@@ -302,7 +328,8 @@ function ShowBuilderScreen() {
                     className="btn-icon"
                     onClick={() => handleMoveSegment(index, index - 1)}
                     disabled={index === 0}
-                    title="Move up"
+                    title="Move this segment earlier in the show"
+                    aria-label="Move up"
                   >
                     &#8593;
                   </button>
@@ -310,14 +337,16 @@ function ShowBuilderScreen() {
                     className="btn-icon"
                     onClick={() => handleMoveSegment(index, index + 1)}
                     disabled={index === segments.length - 1}
-                    title="Move down"
+                    title="Move this segment later in the show"
+                    aria-label="Move down"
                   >
                     &#8595;
                   </button>
                   <button
                     className="btn-danger btn-icon"
                     onClick={() => handleDeleteSegment(index)}
-                    title="Delete"
+                    title="Remove this segment from the show"
+                    aria-label="Delete segment"
                   >
                     &#10005;
                   </button>
@@ -388,6 +417,48 @@ function ShowBuilderScreen() {
           />
           <div className="form-actions">
             <button className="btn-primary" onClick={() => setEditingNotesIndex(null)}>Done</button>
+          </div>
+        </Modal>
+      )}
+
+      {showResetConfirm && (
+        <ConfirmDialog
+          title="Reset to Default Template?"
+          message="This will clear your entire current lineup and replace it with the default show template. Any unsaved changes will be lost."
+          confirmLabel="Reset"
+          danger
+          onConfirm={confirmReset}
+          onCancel={() => setShowResetConfirm(false)}
+        />
+      )}
+
+      {showDeleteSegmentConfirm !== null && (
+        <ConfirmDialog
+          title="Delete Segment?"
+          message={`Are you sure you want to remove "${segments[showDeleteSegmentConfirm]?.name}" from the show?`}
+          confirmLabel="Delete"
+          danger
+          onConfirm={confirmDeleteSegment}
+          onCancel={() => setShowDeleteSegmentConfirm(null)}
+        />
+      )}
+
+      {showSaveTemplateModal && (
+        <Modal title="Save as Template" onClose={() => setShowSaveTemplateModal(false)}>
+          <p className="confirm-message">This will save the current segment layout as the new default template.</p>
+          <div className="form-group">
+            <label>Template Name</label>
+            <input
+              type="text"
+              value={templateName}
+              onChange={(e) => setTemplateName(e.target.value)}
+              placeholder="e.g. Friday Night 60-Min"
+              autoFocus
+            />
+          </div>
+          <div className="form-actions">
+            <button className="btn-secondary" onClick={() => setShowSaveTemplateModal(false)}>Cancel</button>
+            <button className="btn-primary" onClick={confirmSaveTemplate}>Save Template</button>
           </div>
         </Modal>
       )}

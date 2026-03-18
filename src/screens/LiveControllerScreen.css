@@ -24,6 +24,13 @@
     text-align: center;
 }
 
+.no-show-icon {
+    font-size: 48px;
+    opacity: 0.15;
+    color: var(--text-muted);
+    line-height: 1;
+}
+
 .no-show h2 {
     margin: 0;
     color: var(--text-primary);
@@ -38,6 +45,29 @@
     font-size: var(--text-base);
     line-height: var(--leading-relaxed);
     max-width: 360px;
+}
+
+.no-show-steps {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
+    margin-top: var(--sp-4);
+    text-align: left;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--sp-4) var(--sp-5);
+}
+
+.no-show-steps .step {
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: var(--leading-relaxed);
+}
+
+.no-show-steps .step strong {
+    color: var(--text-primary);
 }
 
 .no-show .hint {

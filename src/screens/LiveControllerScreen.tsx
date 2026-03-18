@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Show } from '../types';
 import * as storage from '../storage';
 import Modal from '../components/Modal';
+import ConfirmDialog from '../components/ConfirmDialog';
 import './LiveControllerScreen.css';
 
 function LiveControllerScreen() {
@@ -14,6 +15,7 @@ function LiveControllerScreen() {
   const [fadeOutDuration, setFadeOutDuration] = useState(2);
   const [showScheduleOverlay, setShowScheduleOverlay] = useState(false);
   const [showLoadModal, setShowLoadModal] = useState(false);
+  const [showEmergencyConfirm, setShowEmergencyConfirm] = useState(false);
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const nextAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -290,10 +292,15 @@ function LiveControllerScreen() {
   };
 
   const handleEmergencyStop = () => {
+    setShowEmergencyConfirm(true);
+  };
+
+  const confirmEmergencyStop = () => {
     setIsRunning(false);
     if (audioRef.current) {
-      fadeOutAudio(audioRef.current, 0.5); // Quick fade for emergency
+      fadeOutAudio(audioRef.current, 0.5);
     }
+    setShowEmergencyConfirm(false);
   };
 
   const formatTime = (seconds: number) => {
@@ -344,12 +351,17 @@ function LiveControllerScreen() {
     return (
       <div className="live-controller-screen">
         <div className="no-show">
+          <div className="no-show-icon" aria-hidden="true">&#9654;</div>
           <h2>Ready to Run a Show</h2>
           <p>Load a saved show from the Builder to get started.</p>
           <button className="btn-primary btn-large" onClick={() => setShowLoadModal(true)}>
             Load Show
           </button>
-          <p className="hint">Don't have a show yet? Go to <strong>Builder</strong> to create one.</p>
+          <div className="no-show-steps">
+            <p className="step"><strong>Step 1:</strong> Go to <strong>Library</strong> and add your comedians</p>
+            <p className="step"><strong>Step 2:</strong> Go to <strong>Builder</strong> to create &amp; save a show</p>
+            <p className="step"><strong>Step 3:</strong> Come back here and tap <strong>Load Show</strong></p>
+          </div>
         </div>
         
         {showLoadModal && (
@@ -519,6 +531,17 @@ function LiveControllerScreen() {
           shows={shows}
           onLoad={handleLoadShow}
           onClose={() => setShowLoadModal(false)}
+        />
+      )}
+
+      {showEmergencyConfirm && (
+        <ConfirmDialog
+          title="Emergency Stop?"
+          message="This will immediately stop the timer and fade out all audio. Are you sure?"
+          confirmLabel="Stop Everything"
+          danger
+          onConfirm={confirmEmergencyStop}
+          onCancel={() => setShowEmergencyConfirm(false)}
         />
       )}
     </div>
