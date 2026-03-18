@@ -1,11 +1,10 @@
-# 🍎 BUILD ON MAC - SIMPLE GUIDE
+# 🖥️ BUILD DESKTOP APP - SIMPLE GUIDE
 
-## Steps to Build on Mac
+## Build on Mac (creates macOS app)
 
-### 1. Get the Code on Your Mac
+### 1. Get the Code
 
 ```bash
-# Clone or download the repository to your Mac
 git clone https://github.com/taylordrew4u2/CONTROLLEREVENT.git
 cd CONTROLLEREVENT
 ```
@@ -47,9 +46,59 @@ Look in the `release/` folder for:
 
 ---
 
-## That's It
+## Build on Windows (creates Windows app)
 
-Your app now works completely offline on your Mac! 🎉
+### 1. Get the Code
+
+```bash
+git clone https://github.com/taylordrew4u2/CONTROLLEREVENT.git
+cd CONTROLLEREVENT
+```
+
+### 2. Install Dependencies
+
+```bash
+npm install
+```
+
+### 3. Build for Windows
+
+```bash
+npm run build:win
+```
+
+**Wait 2-3 minutes** while it builds...
+
+### 4. Find Your App
+
+Look in the `release/` folder for:
+
+- `Pins & Needles Controller Setup.exe` (installer)
+- `Pins & Needles Controller.exe` (portable, no install needed)
+
+### 5. Install & Use
+
+**Option A - Installer (.exe Setup):**
+
+1. Double-click the Setup `.exe` file
+2. Follow the install wizard
+3. Launch from Start Menu or Desktop shortcut
+
+**Option B - Portable (.exe):**
+
+1. Just double-click and run — no installation needed
+
+---
+
+## Build for Both at Once
+
+If you're on a Mac and want to build for both platforms:
+
+```bash
+npm run build:all
+```
+
+> **Note:** Cross-compiling Windows from Mac works for most cases. For best results, build Windows on a Windows machine.
 
 ---
 
@@ -68,15 +117,19 @@ Your app now works completely offline on your Mac! 🎉
 → Make sure build finished without errors
 → Look in the same folder as this file
 
-### Permission denied
+### Permission denied (Mac)
 
 → Run: `chmod +x *.dmg` in the release folder
+
+### Windows SmartScreen warning
+
+→ Click "More info" → "Run anyway" (the app is not signed with a certificate)
 
 ---
 
 ## Need Help?
 
-See `START_HERE.md` or `SIMPLE_BUILD_GUIDE.md` for more details.
+See `README.md` for more details.
 
 ---
 

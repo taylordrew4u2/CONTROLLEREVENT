@@ -1,17 +1,23 @@
 {
   "name": "pins-needles-controller",
   "version": "2.0.0",
-  "description": "Show management PWA for live comedy events",
+  "description": "Show management app for live comedy events",
   "private": true,
+  "main": "electron/main.js",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "electron:dev": "vite build && electron .",
+    "build:mac": "vite build && electron-builder --mac",
+    "build:win": "vite build && electron-builder --win",
+    "build:all": "vite build && electron-builder --mac --win"
   },
-  "keywords": ["show", "controller", "comedy", "event", "pwa"],
+  "keywords": ["show", "controller", "comedy", "event"],
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "better-sqlite3": "^11.7.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.20.0"
@@ -20,7 +26,43 @@
     "@types/react": "^18.2.43",
     "@types/react-dom": "^18.2.17",
     "@vitejs/plugin-react": "^4.2.1",
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8",
     "typescript": "^5.3.3",
     "vite": "^5.0.8"
+  },
+  "build": {
+    "appId": "com.pinsneedles.controller",
+    "productName": "Pins & Needles Controller",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*"
+    ],
+    "extraMetadata": {
+      "main": "electron/main.js"
+    },
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "icon": "assets/icon.png",
+      "category": "public.app-category.entertainment"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "assets/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true
+    }
   }
 }
