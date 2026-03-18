@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Segment, Comedian, Template, Show } from '../types';
 import * as storage from '../storage';
+import Modal from '../components/Modal';
+import EmptyState from '../components/EmptyState';
 import './ShowBuilderScreen.css';
 
 function ShowBuilderScreen() {
@@ -37,17 +39,9 @@ function ShowBuilderScreen() {
     }
   };
 
-  const loadComedians = () => {
-    setComedians(storage.getComedians());
-  };
-
-  const loadTemplates = () => {
-    setTemplates(storage.getTemplates());
-  };
-
-  const loadShows = () => {
-    setShows(storage.getShows());
-  };
+  const loadComedians = () => setComedians(storage.getComedians());
+  const loadTemplates = () => setTemplates(storage.getTemplates());
+  const loadShows = () => setShows(storage.getShows());
 
   const recalculateTimestamps = (segs: Segment[]) => {
     let currentTime = 0;
@@ -58,9 +52,7 @@ function ShowBuilderScreen() {
     return segs;
   };
 
-  const getTotalDuration = () => {
-    return segments.reduce((sum, seg) => sum + seg.duration, 0);
-  };
+  const getTotalDuration = () => segments.reduce((sum, seg) => sum + seg.duration, 0);
 
   const formatTime = (minutes: number) => {
     const hours = Math.floor(minutes / 60);
@@ -69,7 +61,7 @@ function ShowBuilderScreen() {
   };
 
   const formatTimeRange = (start: number, duration: number) => {
-    return `${formatTime(start)}-${formatTime(start + duration)}`;
+    return `${formatTime(start)}\u2013${formatTime(start + duration)}`;
   };
 
   const handleAddSegment = () => {
@@ -85,7 +77,7 @@ function ShowBuilderScreen() {
   };
 
   const handleUpdateSegment = (index: number, updates: Partial<Segment>) => {
-    const newSegments = segments.map((seg, i) => 
+    const newSegments = segments.map((seg, i) =>
       i === index ? { ...seg, ...updates } : seg
     );
     recalculateTimestamps(newSegments);
@@ -101,11 +93,9 @@ function ShowBuilderScreen() {
 
   const handleMoveSegment = (fromIndex: number, toIndex: number) => {
     if (toIndex < 0 || toIndex >= segments.length) return;
-    
     const newSegments = [...segments];
     const [moved] = newSegments.splice(fromIndex, 1);
     newSegments.splice(toIndex, 0, moved);
-    
     newSegments.forEach((seg, i) => seg.orderIndex = i);
     recalculateTimestamps(newSegments);
     setSegments(newSegments);
@@ -136,7 +126,6 @@ function ShowBuilderScreen() {
   };
 
   const handleAddAudioToSegment = (_segmentIndex: number) => {
-    // Audio file picking not available in PWA mode
     alert('Audio file picking is not available in this version.');
   };
 
@@ -145,29 +134,24 @@ function ShowBuilderScreen() {
       alert('Please enter a show name');
       return;
     }
-
     if (segments.length === 0) {
       alert('Please add at least one segment to the show');
       return;
     }
-
     try {
       const totalDuration = getTotalDuration();
-      
       const show: Show = {
         name: showName,
         createdDate: new Date().toISOString(),
         totalDuration: totalDuration || 0,
         segments: segments
       };
-
       if (currentShowId) {
         storage.updateShow(currentShowId, show);
       } else {
         const id = storage.saveShow(show);
         setCurrentShowId(id);
       }
-
       setShowSaveModal(false);
       loadShows();
       alert('Show saved successfully!');
@@ -213,22 +197,14 @@ function ShowBuilderScreen() {
         <div className="header-info">
           <h2>{showName || 'Untitled Show'}</h2>
           <div className="total-runtime">
-            Total Runtime: {formatTime(getTotalDuration())} ({getTotalDuration()} min)
+            Total: {formatTime(getTotalDuration())} ({getTotalDuration()} min)
           </div>
         </div>
         <div className="header-actions">
-          <button className="btn-secondary" onClick={handleUseTemplate}>
-            🔄 Reset Template
-          </button>
-          <button className="btn-secondary" onClick={handleSaveAsTemplate}>
-            📋 Save as Template
-          </button>
-          <button className="btn-secondary" onClick={() => setShowLoadModal(true)}>
-            📂 Load Show
-          </button>
-          <button className="btn-primary" onClick={() => setShowSaveModal(true)}>
-            💾 Save Show
-          </button>
+          <button className="btn-secondary" onClick={handleUseTemplate}>Reset</button>
+          <button className="btn-secondary" onClick={handleSaveAsTemplate}>Save Template</button>
+          <button className="btn-secondary" onClick={() => setShowLoadModal(true)}>Load</button>
+          <button className="btn-primary" onClick={() => setShowSaveModal(true)}>Save Show</button>
         </div>
       </div>
 
@@ -241,201 +217,176 @@ function ShowBuilderScreen() {
             <span className="col-actions">Actions</span>
           </div>
 
-          {segments.length === 0 && (
-            <div className="empty-state">
-              <span className="empty-icon">🎭</span>
-              <p>No segments yet.<br/>Tap <strong>+ Add Segment</strong> or <strong>🔄 Reset Template</strong> to load the default 60-minute show.</p>
-            </div>
-          )}
-          {segments.map((segment, index) => (
-            <div key={index} className="segment-row">
-              <div className="col-time">
-                {formatTimeRange(segment.calculatedStartTime, segment.duration)}
-              </div>
-              <div className="col-segment">
-                {editingSegment === index ? (
+          {segments.length === 0 ? (
+            <EmptyState
+              message="No segments yet"
+              hint='Tap "Add Segment" below or "Reset" to load the default show template.'
+            />
+          ) : (
+            segments.map((segment, index) => (
+              <div key={index} className="segment-row">
+                <div className="col-time">
+                  {formatTimeRange(segment.calculatedStartTime, segment.duration)}
+                </div>
+                <div className="col-segment">
+                  {editingSegment === index ? (
+                    <input
+                      type="text"
+                      value={segment.name}
+                      onChange={(e) => handleUpdateSegment(index, { name: e.target.value })}
+                      onBlur={() => setEditingSegment(null)}
+                      autoFocus
+                    />
+                  ) : (
+                    <div>
+                      <span onClick={() => setEditingSegment(index)}>{segment.name}</span>
+                      {segment.audioFilePath && <span className="audio-indicator"> (audio)</span>}
+                    </div>
+                  )}
+                </div>
+                <div className="col-duration">
                   <input
-                    type="text"
-                    value={segment.name}
-                    onChange={(e) => handleUpdateSegment(index, { name: e.target.value })}
-                    onBlur={() => setEditingSegment(null)}
-                    autoFocus
+                    type="number"
+                    min="1"
+                    value={segment.duration}
+                    onChange={(e) => handleUpdateSegment(index, { duration: parseInt(e.target.value) || 1 })}
+                    className="duration-input"
                   />
-                ) : (
-                  <div>
-                    <span onClick={() => setEditingSegment(index)}>{segment.name}</span>
-                    {segment.audioFilePath && <span className="audio-indicator" title={segment.audioFilePath}> 🔊</span>}
-                  </div>
-                )}
+                  <span>min</span>
+                </div>
+                <div className="col-actions">
+                  <button
+                    className="btn-icon"
+                    onClick={() => setEditingNotesIndex(index)}
+                    title="Notes"
+                  >
+                    N
+                  </button>
+                  <button
+                    className="btn-icon"
+                    onClick={() => handleAddAudioToSegment(index)}
+                    title="Audio"
+                  >
+                    A
+                  </button>
+
+                  <select
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value.startsWith('c-')) {
+                        handleAssignComedian(index, parseInt(value.substring(2)));
+                      } else if (value.startsWith('t-')) {
+                        handleAssignTemplate(index, parseInt(value.substring(2)));
+                      }
+                      e.target.value = '';
+                    }}
+                    defaultValue=""
+                  >
+                    <option value="">Assign...</option>
+                    <optgroup label="Comedians">
+                      {comedians.map(c => (
+                        <option key={`c-${c.id}`} value={`c-${c.id}`}>{c.name}</option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="Templates">
+                      {templates.map(t => (
+                        <option key={`t-${t.id}`} value={`t-${t.id}`}>{t.name}</option>
+                      ))}
+                    </optgroup>
+                  </select>
+
+                  <button
+                    className="btn-icon"
+                    onClick={() => handleMoveSegment(index, index - 1)}
+                    disabled={index === 0}
+                    title="Move up"
+                  >
+                    &#8593;
+                  </button>
+                  <button
+                    className="btn-icon"
+                    onClick={() => handleMoveSegment(index, index + 1)}
+                    disabled={index === segments.length - 1}
+                    title="Move down"
+                  >
+                    &#8595;
+                  </button>
+                  <button
+                    className="btn-danger btn-icon"
+                    onClick={() => handleDeleteSegment(index)}
+                    title="Delete"
+                  >
+                    &#10005;
+                  </button>
+                </div>
               </div>
-              <div className="col-duration">
-                <input
-                  type="number"
-                  min="1"
-                  value={segment.duration}
-                  onChange={(e) => handleUpdateSegment(index, { duration: parseInt(e.target.value) || 1 })}
-                  className="duration-input"
-                />
-                <span>min</span>
-              </div>
-              <div className="col-actions">
-                <button
-                  className="btn-icon"
-                  onClick={() => setEditingNotesIndex(index)}
-                  title="Add/Edit Notes"
-                >
-                  📝
-                </button>
-                <button
-                  className="btn-icon"
-                  onClick={() => handleAddAudioToSegment(index)}
-                  title="Add/Change Audio File"
-                >
-                  🎵
-                </button>
-                
-                <select
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    if (value.startsWith('c-')) {
-                      handleAssignComedian(index, parseInt(value.substring(2)));
-                    } else if (value.startsWith('t-')) {
-                      handleAssignTemplate(index, parseInt(value.substring(2)));
-                    }
-                    e.target.value = '';
-                  }}
-                  defaultValue=""
-                >
-                  <option value="">Assign...</option>
-                  <optgroup label="Comedians">
-                    {comedians.map(c => (
-                      <option key={`c-${c.id}`} value={`c-${c.id}`}>{c.name}</option>
-                    ))}
-                  </optgroup>
-                  <optgroup label="Templates">
-                    {templates.map(t => (
-                      <option key={`t-${t.id}`} value={`t-${t.id}`}>{t.name}</option>
-                    ))}
-                  </optgroup>
-                </select>
-                
-                <button
-                  className="btn-icon"
-                  onClick={() => handleMoveSegment(index, index - 1)}
-                  disabled={index === 0}
-                  title="Move up"
-                >
-                  ↑
-                </button>
-                <button
-                  className="btn-icon"
-                  onClick={() => handleMoveSegment(index, index + 1)}
-                  disabled={index === segments.length - 1}
-                  title="Move down"
-                >
-                  ↓
-                </button>
-                <button
-                  className="btn-danger btn-icon"
-                  onClick={() => handleDeleteSegment(index)}
-                  title="Delete"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
 
         <div className="add-segment-area">
-          <button className="btn-primary" onClick={handleAddSegment}>
-            + Add Segment
-          </button>
-          <div className="builder-tip">
-            💡 Tap a segment name to rename it. Use "Assign" to replace with a comedian or template.
-          </div>
+          <button className="btn-primary" onClick={handleAddSegment}>Add Segment</button>
+          <p className="builder-tip">Tap a segment name to rename it. Use "Assign" to fill from your library.</p>
         </div>
       </div>
 
       {showSaveModal && (
-        <div className="modal-overlay" onClick={() => setShowSaveModal(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <h2>Save Show</h2>
-            <div className="form-group">
-              <label>Show Name *</label>
-              <input
-                type="text"
-                value={showName}
-                onChange={(e) => setShowName(e.target.value)}
-                autoFocus
-                placeholder="Enter show name..."
-              />
-            </div>
-            <div className="form-actions">
-              <button className="btn-secondary" onClick={() => setShowSaveModal(false)}>
-                Cancel
-              </button>
-              <button className="btn-primary" onClick={handleSaveShow}>
-                Save
-              </button>
-            </div>
+        <Modal title="Save Show" onClose={() => setShowSaveModal(false)}>
+          <div className="form-group">
+            <label>Show Name</label>
+            <input
+              type="text"
+              value={showName}
+              onChange={(e) => setShowName(e.target.value)}
+              autoFocus
+              placeholder="Enter show name..."
+            />
           </div>
-        </div>
+          <div className="form-actions">
+            <button className="btn-secondary" onClick={() => setShowSaveModal(false)}>Cancel</button>
+            <button className="btn-primary" onClick={handleSaveShow}>Save</button>
+          </div>
+        </Modal>
       )}
 
       {showLoadModal && (
-        <div className="modal-overlay" onClick={() => setShowLoadModal(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <h2>Load Show</h2>
-            {shows.length === 0 ? (
-              <div className="empty-state">
-                <span className="empty-icon">📂</span>
-                <p>No saved shows yet. Build a show and save it first!</p>
-              </div>
-            ) : (
+        <Modal title="Load Show" onClose={() => setShowLoadModal(false)}>
+          {shows.length === 0 ? (
+            <EmptyState message="No saved shows yet" hint="Build a show and save it first." />
+          ) : (
             <div className="shows-list">
               {shows.map(show => (
-                <div
-                  key={show.id}
-                  className="show-item"
-                  onClick={() => handleLoadShow(show.id!)}
-                >
+                <div key={show.id} className="show-item" onClick={() => handleLoadShow(show.id!)}>
                   <div className="show-name">{show.name}</div>
                   <div className="show-info">
-                    {formatTime(show.totalDuration)} • {new Date(show.createdDate).toLocaleDateString()}
+                    {formatTime(show.totalDuration)} · {new Date(show.createdDate).toLocaleDateString()}
                   </div>
                 </div>
               ))}
-            </div>            )}            <div className="form-actions">
-              <button className="btn-secondary" onClick={() => setShowLoadModal(false)}>
-                Cancel
-              </button>
             </div>
+          )}
+          <div className="form-actions">
+            <button className="btn-secondary" onClick={() => setShowLoadModal(false)}>Cancel</button>
           </div>
-        </div>
+        </Modal>
       )}
 
       {editingNotesIndex !== null && (
-        <div className="modal-overlay" onClick={() => setEditingNotesIndex(null)}>
-          <div className="modal notes-modal" onClick={(e) => e.stopPropagation()}>
-            <h2>Segment Notes</h2>
-            <h3>{segments[editingNotesIndex]?.name}</h3>
-            <p className="notes-help">Use this space for credits, talking points, or reminders for this segment</p>
-            <textarea
-              className="notes-textarea"
-              value={segments[editingNotesIndex]?.notes || ''}
-              onChange={(e) => handleUpdateSegment(editingNotesIndex, { notes: e.target.value })}
-              placeholder="e.g., Credits: John Smith from Boston&#10;Mention: New show dates next weekend&#10;Setup: Introduce headliner's special achievement"
-              rows={10}
-              autoFocus
-            />
-            <div className="form-actions">
-              <button className="btn-primary" onClick={() => setEditingNotesIndex(null)}>
-                Done
-              </button>
-            </div>
+        <Modal title="Segment Notes" onClose={() => setEditingNotesIndex(null)}>
+          <h3 className="notes-segment-name">{segments[editingNotesIndex]?.name}</h3>
+          <p className="notes-help">Use this space for credits, talking points, or reminders for this segment.</p>
+          <textarea
+            className="notes-textarea"
+            value={segments[editingNotesIndex]?.notes || ''}
+            onChange={(e) => handleUpdateSegment(editingNotesIndex, { notes: e.target.value })}
+            placeholder={"e.g., Credits: John Smith from Boston\nMention: New show dates next weekend\nSetup: Introduce headliner's special achievement"}
+            rows={10}
+            autoFocus
+          />
+          <div className="form-actions">
+            <button className="btn-primary" onClick={() => setEditingNotesIndex(null)}>Done</button>
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

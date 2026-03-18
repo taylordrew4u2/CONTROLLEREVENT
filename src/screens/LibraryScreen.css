@@ -1,8 +1,8 @@
 .library-screen {
-    padding: 16px;
+    padding: var(--sp-4);
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: var(--sp-4);
     height: 100%;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
@@ -11,9 +11,10 @@
 .library-section {
     display: flex;
     flex-direction: column;
-    background-color: #2a2a2a;
-    border-radius: 8px;
-    padding: 16px;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--sp-5);
     min-height: 0;
 }
 
@@ -21,38 +22,42 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
-    gap: 12px;
+    margin-bottom: var(--sp-4);
+    gap: var(--sp-3);
 }
 
 .section-header h2 {
     margin: 0;
-    font-size: 18px;
+    font-size: var(--text-lg);
+    font-weight: 600;
+    color: var(--text-primary);
 }
 
 .search-input {
-    margin-bottom: 12px;
+    margin-bottom: var(--sp-3);
     width: 100%;
 }
 
 .items-list {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: var(--sp-2);
 }
 
 .list-item {
-    background-color: #3a3a3a;
-    border-radius: 8px;
-    padding: 14px;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: var(--sp-3) var(--sp-4);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 12px;
+    gap: var(--sp-3);
+    transition: background var(--transition-fast);
 }
 
 .list-item:active {
-    background-color: #4a4a4a;
+    background-color: var(--bg-hover);
 }
 
 .item-info {
@@ -61,64 +66,30 @@
 }
 
 .item-name {
-    font-size: 16px;
+    font-size: var(--text-base);
     font-weight: 600;
-    margin-bottom: 4px;
-    color: #ffffff;
+    color: var(--text-primary);
+    margin-bottom: 2px;
 }
 
 .item-details {
-    font-size: 14px;
-    color: #a0a0a0;
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
 }
 
 .item-actions {
     display: flex;
-    gap: 8px;
+    gap: var(--sp-2);
     flex-shrink: 0;
 }
 
 .item-actions button {
-    padding: 10px 16px;
-    font-size: 14px;
-    min-height: 44px;
+    padding: var(--sp-2) var(--sp-3);
+    font-size: var(--text-sm);
+    min-height: 40px;
 }
 
-.empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 32px 16px;
-    text-align: center;
-    color: #888;
-}
-
-.empty-icon {
-    font-size: 40px;
-    margin-bottom: 12px;
-}
-
-.empty-state p {
-    margin: 0;
-    font-size: 15px;
-    line-height: 1.4;
-}
-
-.file-picker {
-    display: flex;
-    gap: 8px;
-}
-
-.file-picker input {
-    flex: 1;
-}
-
-.file-picker button {
-    white-space: nowrap;
-}
-
-/* Landscape tablet: side-by-side */
+/* Landscape: side-by-side */
 @media (min-width: 769px) {
     .library-screen {
         flex-direction: row;

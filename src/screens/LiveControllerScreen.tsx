@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Show } from '../types';
 import * as storage from '../storage';
+import Modal from '../components/Modal';
 import './LiveControllerScreen.css';
 
 function LiveControllerScreen() {
@@ -343,13 +344,12 @@ function LiveControllerScreen() {
     return (
       <div className="live-controller-screen">
         <div className="no-show">
-          <span className="no-show-icon">🎬</span>
           <h2>Ready to Run a Show</h2>
           <p>Load a saved show from the Builder to get started.</p>
           <button className="btn-primary btn-large" onClick={() => setShowLoadModal(true)}>
-            📂 Load Show
+            Load Show
           </button>
-          <p className="no-show-hint">Don't have a show yet? Go to <strong>Builder</strong> to create one.</p>
+          <p className="hint">Don't have a show yet? Go to <strong>Builder</strong> to create one.</p>
         </div>
         
         {showLoadModal && (
@@ -434,7 +434,7 @@ function LiveControllerScreen() {
             )}
             {currentSegment.notes && (
               <div className="status-item full-width notes-section">
-                <div className="status-label">📝 Notes</div>
+                <div className="status-label">Notes</div>
                 <div className="status-value notes-content">{currentSegment.notes}</div>
               </div>
             )}
@@ -448,11 +448,11 @@ function LiveControllerScreen() {
           <div className="control-buttons">
             {!isRunning ? (
               <button className="btn-success btn-large" onClick={handleStart}>
-                ▶ Start
+                Start
               </button>
             ) : (
               <button className="btn-secondary btn-large" onClick={handlePause}>
-                ⏸ Pause
+                Pause
               </button>
             )}
             <button className="btn-secondary" onClick={() => handleAdjustTime(2)}>
@@ -462,7 +462,7 @@ function LiveControllerScreen() {
               −2 Min
             </button>
             <button className="btn-primary" onClick={handleNextSegment}>
-              Next ⏭
+              Next
             </button>
           </div>
         </div>
@@ -471,7 +471,7 @@ function LiveControllerScreen() {
           <h3>Audio Controls</h3>
           <div className="control-buttons">
             <button className="btn-secondary" onClick={handleRestartTrack}>
-              ⟲ Restart Track
+              Restart
             </button>
             <div className="volume-control">
               <label>Volume:</label>
@@ -491,13 +491,13 @@ function LiveControllerScreen() {
         <div className="control-section full-width">
           <div className="control-buttons">
             <button className="btn-danger btn-large" onClick={handleEmergencyStop}>
-              ⏹ STOP
+              Stop
             </button>
             <button className="btn-primary" onClick={() => setShowScheduleOverlay(true)}>
-              📋 Schedule
+              Schedule
             </button>
             <button className="btn-secondary" onClick={() => setShowLoadModal(true)}>
-              📂 Switch Show
+              Switch Show
             </button>
           </div>
         </div>
@@ -540,31 +540,26 @@ function ScheduleOverlay({ show, currentSegmentIndex, onJumpTo, onClose }: Sched
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal schedule-modal" onClick={(e) => e.stopPropagation()}>
-        <h2>Full Show Schedule - {show.name}</h2>
-        <div className="schedule-list">
-          {show.segments.map((segment, index) => (
-            <div
-              key={index}
-              className={`schedule-item ${index === currentSegmentIndex ? 'current' : ''}`}
-              onClick={() => onJumpTo(index)}
-            >
-              <div className="schedule-time">
-                {formatTime(segment.calculatedStartTime)}-{formatTime(segment.calculatedStartTime + segment.duration)}
-              </div>
-              <div className="schedule-name">{segment.name}</div>
-              <div className="schedule-duration">{segment.duration} min</div>
+    <Modal title={`Schedule \u2014 ${show.name}`} onClose={onClose} wide>
+      <div className="schedule-list">
+        {show.segments.map((segment, index) => (
+          <div
+            key={index}
+            className={`schedule-item ${index === currentSegmentIndex ? 'current' : ''}`}
+            onClick={() => onJumpTo(index)}
+          >
+            <div className="schedule-time">
+              {formatTime(segment.calculatedStartTime)}\u2013{formatTime(segment.calculatedStartTime + segment.duration)}
             </div>
-          ))}
-        </div>
-        <div className="form-actions">
-          <button className="btn-secondary" onClick={onClose}>
-            Close
-          </button>
-        </div>
+            <div className="schedule-name">{segment.name}</div>
+            <div className="schedule-duration">{segment.duration} min</div>
+          </div>
+        ))}
       </div>
-    </div>
+      <div className="form-actions">
+        <button className="btn-secondary" onClick={onClose}>Close</button>
+      </div>
+    </Modal>
   );
 }
 
@@ -576,15 +571,13 @@ interface LoadShowModalProps {
 
 function LoadShowModal({ shows, onLoad, onClose }: LoadShowModalProps) {
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <h2>Load Show</h2>
-        {shows.length === 0 ? (
-          <div className="no-shows-message">
-            <p>No saved shows yet.</p>
-            <p>Go to <strong>Builder</strong> to create and save a show first.</p>
-          </div>
-        ) : (
+    <Modal title="Load Show" onClose={onClose}>
+      {shows.length === 0 ? (
+        <div className="no-shows-message">
+          <p>No saved shows yet.</p>
+          <p>Go to <strong>Builder</strong> to create and save a show first.</p>
+        </div>
+      ) : (
         <div className="shows-list">
           {shows.map(show => (
             <div
@@ -594,19 +587,16 @@ function LoadShowModal({ shows, onLoad, onClose }: LoadShowModalProps) {
             >
               <div className="show-name">{show.name}</div>
               <div className="show-info">
-                {Math.floor(show.totalDuration / 60)}:{(show.totalDuration % 60).toString().padStart(2, '0')} • {new Date(show.createdDate).toLocaleDateString()}
+                {Math.floor(show.totalDuration / 60)}:{(show.totalDuration % 60).toString().padStart(2, '0')} \u00b7 {new Date(show.createdDate).toLocaleDateString()}
               </div>
             </div>
           ))}
         </div>
-        )}
-        <div className="form-actions">
-          <button className="btn-secondary" onClick={onClose}>
-            Cancel
-          </button>
-        </div>
+      )}
+      <div className="form-actions">
+        <button className="btn-secondary" onClick={onClose}>Cancel</button>
       </div>
-    </div>
+    </Modal>
   );
 }
 

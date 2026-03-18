@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Comedian, Template } from '../types';
 import * as storage from '../storage';
+import Modal from '../components/Modal';
+import EmptyState from '../components/EmptyState';
 import './LibraryScreen.css';
 
 const TEMPLATE_TYPES = [
@@ -29,13 +31,8 @@ function LibraryScreen() {
     loadTemplates();
   }, []);
 
-  const loadComedians = () => {
-    setComedians(storage.getComedians());
-  };
-
-  const loadTemplates = () => {
-    setTemplates(storage.getTemplates());
-  };
+  const loadComedians = () => setComedians(storage.getComedians());
+  const loadTemplates = () => setTemplates(storage.getTemplates());
 
   const handleAddComedian = () => {
     setEditingComedian({ name: '', defaultDuration: 8 });
@@ -105,12 +102,10 @@ function LibraryScreen() {
     <div className="library-screen">
       <div className="library-section">
         <div className="section-header">
-          <h2>Comedian Database</h2>
-          <button className="btn-primary" onClick={handleAddComedian}>
-            + Add Comedian
-          </button>
+          <h2>Comedians</h2>
+          <button className="btn-primary" onClick={handleAddComedian}>Add Comedian</button>
         </div>
-        
+
         <input
           type="text"
           placeholder="Search comedians..."
@@ -120,46 +115,35 @@ function LibraryScreen() {
         />
 
         <div className="items-list">
-          {filteredComedians.length === 0 && (
-            <div className="empty-state">
-              <span className="empty-icon">🎤</span>
-              <p>{comedians.length === 0 ? 'No comedians yet — tap "+ Add Comedian" to get started' : 'No results match your search'}</p>
-            </div>
-          )}
-          {filteredComedians.map(comedian => (
-            <div key={comedian.id} className="list-item">
-              <div className="item-info">
-                <div className="item-name">{comedian.name}</div>
-                <div className="item-details">
-                  {comedian.defaultDuration} min set
-                  {comedian.audioFilePath && ' • 🔊 Audio'}
+          {filteredComedians.length === 0 ? (
+            <EmptyState
+              message={comedians.length === 0 ? 'No comedians added yet' : 'No results match your search'}
+              hint={comedians.length === 0 ? 'Tap "Add Comedian" to get started.' : undefined}
+            />
+          ) : (
+            filteredComedians.map(comedian => (
+              <div key={comedian.id} className="list-item">
+                <div className="item-info">
+                  <div className="item-name">{comedian.name}</div>
+                  <div className="item-details">
+                    {comedian.defaultDuration} min set
+                    {comedian.audioFilePath && ' · Audio attached'}
+                  </div>
+                </div>
+                <div className="item-actions">
+                  <button className="btn-secondary" onClick={() => handleEditComedian(comedian)}>Edit</button>
+                  <button className="btn-danger" onClick={() => handleDeleteComedian(comedian.id!)}>Delete</button>
                 </div>
               </div>
-              <div className="item-actions">
-                <button
-                  className="btn-secondary"
-                  onClick={() => handleEditComedian(comedian)}
-                >
-                  ✏️ Edit
-                </button>
-                <button
-                  className="btn-danger"
-                  onClick={() => handleDeleteComedian(comedian.id!)}
-                >
-                  🗑
-                </button>
-              </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
 
       <div className="library-section">
         <div className="section-header">
           <h2>Segment Templates</h2>
-          <button className="btn-primary" onClick={handleAddTemplate}>
-            + Add Template
-          </button>
+          <button className="btn-primary" onClick={handleAddTemplate}>Add Template</button>
         </div>
 
         <input
@@ -171,37 +155,28 @@ function LibraryScreen() {
         />
 
         <div className="items-list">
-          {filteredTemplates.length === 0 && (
-            <div className="empty-state">
-              <span className="empty-icon">🎭</span>
-              <p>{templates.length === 0 ? 'No templates yet — tap "+ Add Template" to get started' : 'No results match your search'}</p>
-            </div>
-          )}
-          {filteredTemplates.map(template => (
-            <div key={template.id} className="list-item">
-              <div className="item-info">
-                <div className="item-name">{template.name}</div>
-                <div className="item-details">
-                  {template.type} • {template.defaultDuration} min
-                  {template.audioFilePath && ' • 🔊 Audio'}
+          {filteredTemplates.length === 0 ? (
+            <EmptyState
+              message={templates.length === 0 ? 'No templates added yet' : 'No results match your search'}
+              hint={templates.length === 0 ? 'Tap "Add Template" to get started.' : undefined}
+            />
+          ) : (
+            filteredTemplates.map(template => (
+              <div key={template.id} className="list-item">
+                <div className="item-info">
+                  <div className="item-name">{template.name}</div>
+                  <div className="item-details">
+                    {template.type} · {template.defaultDuration} min
+                    {template.audioFilePath && ' · Audio attached'}
+                  </div>
+                </div>
+                <div className="item-actions">
+                  <button className="btn-secondary" onClick={() => handleEditTemplate(template)}>Edit</button>
+                  <button className="btn-danger" onClick={() => handleDeleteTemplate(template.id!)}>Delete</button>
                 </div>
               </div>
-              <div className="item-actions">
-                <button
-                  className="btn-secondary"
-                  onClick={() => handleEditTemplate(template)}
-                >
-                  ✏️ Edit
-                </button>
-                <button
-                  className="btn-danger"
-                  onClick={() => handleDeleteTemplate(template.id!)}
-                >
-                  🗑
-                </button>
-              </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
 
@@ -209,10 +184,7 @@ function LibraryScreen() {
         <ComedianModal
           comedian={editingComedian}
           onSave={handleSaveComedian}
-          onClose={() => {
-            setShowComedianModal(false);
-            setEditingComedian(null);
-          }}
+          onClose={() => { setShowComedianModal(false); setEditingComedian(null); }}
         />
       )}
 
@@ -220,10 +192,7 @@ function LibraryScreen() {
         <TemplateModal
           template={editingTemplate}
           onSave={handleSaveTemplate}
-          onClose={() => {
-            setShowTemplateModal(false);
-            setEditingTemplate(null);
-          }}
+          onClose={() => { setShowTemplateModal(false); setEditingTemplate(null); }}
         />
       )}
     </div>
@@ -247,43 +216,36 @@ function ComedianModal({ comedian, onSave, onClose }: ComedianModalProps) {
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <h2>{comedian.id ? 'Edit Comedian' : 'Add Comedian'}</h2>
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>Name *</label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              required
-              autoFocus
-            />
-          </div>
+    <Modal title={comedian.id ? 'Edit Comedian' : 'Add Comedian'} onClose={onClose}>
+      <form onSubmit={handleSubmit}>
+        <div className="form-group">
+          <label>Name</label>
+          <input
+            type="text"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            required
+            autoFocus
+          />
+        </div>
 
-          <div className="form-group">
-            <label>Default Set Duration (minutes) *</label>
-            <input
-              type="number"
-              min="1"
-              value={formData.defaultDuration}
-              onChange={(e) => setFormData({ ...formData, defaultDuration: parseInt(e.target.value) })}
-              required
-            />
-          </div>
+        <div className="form-group">
+          <label>Default Set Duration (minutes)</label>
+          <input
+            type="number"
+            min="1"
+            value={formData.defaultDuration}
+            onChange={(e) => setFormData({ ...formData, defaultDuration: parseInt(e.target.value) })}
+            required
+          />
+        </div>
 
-          <div className="form-actions">
-            <button type="button" className="btn-secondary" onClick={onClose}>
-              Cancel
-            </button>
-            <button type="submit" className="btn-primary">
-              Save
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div className="form-actions">
+          <button type="button" className="btn-secondary" onClick={onClose}>Cancel</button>
+          <button type="submit" className="btn-primary">Save</button>
+        </div>
+      </form>
+    </Modal>
   );
 }
 
@@ -304,56 +266,49 @@ function TemplateModal({ template, onSave, onClose }: TemplateModalProps) {
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <h2>{template.id ? 'Edit Template' : 'Add Template'}</h2>
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>Name *</label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              required
-              autoFocus
-            />
-          </div>
+    <Modal title={template.id ? 'Edit Template' : 'Add Template'} onClose={onClose}>
+      <form onSubmit={handleSubmit}>
+        <div className="form-group">
+          <label>Name</label>
+          <input
+            type="text"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            required
+            autoFocus
+          />
+        </div>
 
-          <div className="form-group">
-            <label>Type *</label>
-            <select
-              value={formData.type}
-              onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-              required
-            >
-              {TEMPLATE_TYPES.map(type => (
-                <option key={type} value={type}>{type}</option>
-              ))}
-            </select>
-          </div>
+        <div className="form-group">
+          <label>Type</label>
+          <select
+            value={formData.type}
+            onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+            required
+          >
+            {TEMPLATE_TYPES.map(type => (
+              <option key={type} value={type}>{type}</option>
+            ))}
+          </select>
+        </div>
 
-          <div className="form-group">
-            <label>Default Duration (minutes) *</label>
-            <input
-              type="number"
-              min="1"
-              value={formData.defaultDuration}
-              onChange={(e) => setFormData({ ...formData, defaultDuration: parseInt(e.target.value) })}
-              required
-            />
-          </div>
+        <div className="form-group">
+          <label>Default Duration (minutes)</label>
+          <input
+            type="number"
+            min="1"
+            value={formData.defaultDuration}
+            onChange={(e) => setFormData({ ...formData, defaultDuration: parseInt(e.target.value) })}
+            required
+          />
+        </div>
 
-          <div className="form-actions">
-            <button type="button" className="btn-secondary" onClick={onClose}>
-              Cancel
-            </button>
-            <button type="submit" className="btn-primary">
-              Save
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div className="form-actions">
+          <button type="button" className="btn-secondary" onClick={onClose}>Cancel</button>
+          <button type="submit" className="btn-primary">Save</button>
+        </div>
+      </form>
+    </Modal>
   );
 }
 

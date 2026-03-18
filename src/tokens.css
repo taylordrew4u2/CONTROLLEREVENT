@@ -1,0 +1,64 @@
+:root {
+    /* ─── Backgrounds ─── */
+    --bg-base: #111316;
+    --bg-surface: #191b20;
+    --bg-card: #1f2128;
+    --bg-hover: #272a32;
+    --bg-input: #16181d;
+
+    /* ─── Text ─── */
+    --text-primary: #e8e9ed;
+    --text-secondary: #8b8f9a;
+    --text-muted: #5a5e68;
+
+    /* ─── Accent ─── */
+    --accent: #5b8def;
+    --accent-hover: #4b7dd9;
+    --accent-subtle: rgba(91, 141, 239, 0.12);
+
+    /* ─── Semantic ─── */
+    --success: #4ea88f;
+    --success-hover: #459a82;
+    --danger: #d45050;
+    --danger-hover: #c04848;
+    --danger-subtle: rgba(212, 80, 80, 0.10);
+
+    /* ─── Borders ─── */
+    --border: rgba(255, 255, 255, 0.08);
+    --border-active: rgba(255, 255, 255, 0.15);
+    --border-focus: var(--accent);
+
+    /* ─── Spacing (4px scale) ─── */
+    --sp-1: 4px;
+    --sp-2: 8px;
+    --sp-3: 12px;
+    --sp-4: 16px;
+    --sp-5: 20px;
+    --sp-6: 24px;
+    --sp-8: 32px;
+    --sp-10: 40px;
+
+    /* ─── Radius ─── */
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 10px;
+
+    /* ─── Typography ─── */
+    --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI',
+        system-ui, Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --font-mono: 'SF Mono', 'Cascadia Code', 'Fira Code', Consolas, 'Courier New',
+        monospace;
+
+    --text-xs: 11px;
+    --text-sm: 13px;
+    --text-base: 15px;
+    --text-lg: 17px;
+    --text-xl: 20px;
+    --text-2xl: 24px;
+
+    /* ─── Motion ─── */
+    --transition-fast: 120ms ease;
+
+    /* ─── Shadows ─── */
+    --shadow-overlay: 0 8px 30px rgba(0, 0, 0, 0.55);
+}

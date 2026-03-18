@@ -45,7 +45,7 @@ function SettingsScreen({ onSettingsChange }: SettingsScreenProps) {
     a.download = `show-controller-backup-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    setBackupStatus('✅ Data exported successfully');
+    setBackupStatus('Data exported successfully');
   };
 
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -55,10 +55,10 @@ function SettingsScreen({ onSettingsChange }: SettingsScreenProps) {
     reader.onload = (ev) => {
       try {
         importAllData(ev.target?.result as string);
-        setBackupStatus('✅ Data imported — reloading...');
+        setBackupStatus('Data imported — reloading...');
         setTimeout(() => window.location.reload(), 1000);
       } catch {
-        setBackupStatus('❌ Invalid backup file');
+        setBackupStatus('Invalid backup file');
       }
     };
     reader.readAsText(file);
@@ -170,7 +170,7 @@ function SettingsScreen({ onSettingsChange }: SettingsScreenProps) {
             </select>
             <div className="audio-device-controls">
               <button className="btn-secondary" onClick={testAudio}>
-                🔊 Test Audio
+                Test Audio
               </button>
             </div>
             <p className="setting-help">Select where audio should play. Click "Test Audio" to verify output.</p>
@@ -207,8 +207,8 @@ function SettingsScreen({ onSettingsChange }: SettingsScreenProps) {
           <h2>Backup & Restore</h2>
           <p className="setting-help" style={{marginTop: 0}}>Export your data to a file so you never lose it. Import to restore on this or another device.</p>
           <div className="backup-actions">
-            <button className="btn-primary" onClick={handleExport}>📥 Export Data</button>
-            <button className="btn-secondary" onClick={() => fileInputRef.current?.click()}>📤 Import Data</button>
+            <button className="btn-primary" onClick={handleExport}>Export Data</button>
+            <button className="btn-secondary" onClick={() => fileInputRef.current?.click()}>Import Data</button>
             <input
               ref={fileInputRef}
               type="file"
