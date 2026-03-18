@@ -14,7 +14,8 @@
     "build:all": "vite build && electron-builder --mac --win",
     "cap:sync": "vite build && npx cap sync",
     "cap:ios": "vite build && npx cap sync ios && npx cap open ios",
-    "cap:android": "vite build && npx cap sync android && npx cap open android"
+    "cap:android": "vite build && npx cap sync android && npx cap open android",
+    "build:android": "vite build && npx cap sync android && cd android && JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew assembleRelease && cd .."
   },
   "keywords": [
     "show",

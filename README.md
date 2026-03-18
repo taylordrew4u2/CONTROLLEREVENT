@@ -3,7 +3,7 @@
 
 This app runs your live comedy show for you. You put in your lineup, hit Start, and it counts down each comedian's time. It tells you who's up, who's next, and if you're running late.
 
-You download it and install it on your computer — just like any other app.
+You download it and install it on your computer or Android phone — just like any other app.
 
 ---
 
@@ -35,9 +35,23 @@ You download it and install it on your computer — just like any other app.
 - Click **More info**
 - Click **Run anyway**
 
-### If you have an iPhone, iPad, or Android phone:
+### If you have an Android phone or tablet:
 
-The mobile version is coming soon. For now, the app works on Mac and Windows computers.
+1. Click here → [**Download for Android**](https://github.com/taylordrew4u2/CONTROLLEREVENT/releases)
+2. Find the file that ends in **`.apk`** and tap it to download
+3. Your phone might say "This type of file can harm your device" — tap **Download anyway** (it's safe, it's just not from the Play Store)
+4. When it's done downloading, tap on the downloaded file (check your **notifications** or open your **Files** app → **Downloads**)
+5. If your phone says "Install unknown apps" is not allowed, it will take you to the setting — **turn it on**, then go back and tap the file again
+6. Tap **Install**
+7. When it's done, tap **Open** — you're all set!
+
+**Don't know how to find the downloaded file?** 
+- Pull down from the top of your screen to see your **notifications** — the download should be there
+- Or open the **Files** app (or **My Files** on Samsung) and tap **Downloads**
+
+### If you have an iPhone or iPad:
+
+The iPhone version is coming soon. For now, the app works on Mac, Windows, and Android.
 
 ---
 
@@ -193,7 +207,15 @@ npm run build:all   # both platforms at once
 
 Output goes to the `release/` folder. See [BUILD_ON_MAC.md](BUILD_ON_MAC.md) for detailed instructions.
 
-### Build Mobile App
+### Build Android APK
+
+Requires **JDK 21** and **Android SDK**.
+
+```bash
+npm run build:android   # → android/app/build/outputs/apk/release/app-release-unsigned.apk
+```
+
+### Build Mobile (Open in IDE)
 
 Requires **Xcode** (Mac only, for iOS) or **Android Studio** (for Android).
 
@@ -221,6 +243,7 @@ React 18, TypeScript, Vite 5, Electron 33, Capacitor 8, SQLite (desktop), localS
 - `npm install` fails → make sure Node.js is installed
 - Mac build fails with Python error → `brew install python-setuptools`
 - iOS build fails → need Mac + Xcode + signing certificate
+- Android APK build fails → need JDK 21 (`brew install --cask temurin@21`) + Android SDK
 - Android build fails → need Android Studio + SDK
 
 </details>
