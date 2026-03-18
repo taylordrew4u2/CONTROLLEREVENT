@@ -225,6 +225,37 @@ function SettingsScreen({ onSettingsChange }: SettingsScreenProps) {
         </div>
 
         <div className="settings-section">
+          <h2>Download Desktop App</h2>
+          <p className="setting-help backup-help">Install the full desktop version for Windows. Click a link below to download.</p>
+          <div className="download-options">
+            <a
+              href="https://github.com/taylordrew4u2/CONTROLLEREVENT/releases/latest/download/Pins.Needles.Controller.Setup.exe"
+              className="btn-download"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <span className="download-icon">⬇</span>
+              <span>
+                <strong>Windows Installer (.exe)</strong>
+                <small>Recommended — installs with shortcuts</small>
+              </span>
+            </a>
+            <a
+              href="https://github.com/taylordrew4u2/CONTROLLEREVENT/releases/latest"
+              className="btn-download btn-download-alt"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <span className="download-icon">📦</span>
+              <span>
+                <strong>All Downloads</strong>
+                <small>View all versions &amp; portable builds</small>
+              </span>
+            </a>
+          </div>
+        </div>
+
+        <div className="settings-section">
           <h2>Application Info</h2>
           <div className="info-item">
             <p><strong>Version:</strong> 2.0.0</p>
