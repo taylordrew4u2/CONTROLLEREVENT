@@ -11,18 +11,31 @@
     "electron:dev": "vite build && electron .",
     "build:mac": "vite build && electron-builder --mac",
     "build:win": "vite build && electron-builder --win",
-    "build:all": "vite build && electron-builder --mac --win"
+    "build:all": "vite build && electron-builder --mac --win",
+    "cap:sync": "vite build && npx cap sync",
+    "cap:ios": "vite build && npx cap sync ios && npx cap open ios",
+    "cap:android": "vite build && npx cap sync android && npx cap open android"
   },
-  "keywords": ["show", "controller", "comedy", "event"],
+  "keywords": [
+    "show",
+    "controller",
+    "comedy",
+    "event"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@capacitor/android": "^8.2.0",
+    "@capacitor/core": "^8.2.0",
+    "@capacitor/ios": "^8.2.0",
+    "@capacitor/preferences": "^8.0.1",
     "better-sqlite3": "^11.7.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.20.0"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.2.0",
     "@types/react": "^18.2.43",
     "@types/react-dom": "^18.2.17",
     "@vitejs/plugin-react": "^4.2.1",

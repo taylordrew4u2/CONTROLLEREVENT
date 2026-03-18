@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Pins &amp; Needles Controller</string>
+    <string name="title_activity_main">Pins &amp; Needles Controller</string>
+    <string name="package_name">com.pinsneedles.controller</string>
+    <string name="custom_url_scheme">com.pinsneedles.controller</string>
+</resources>
