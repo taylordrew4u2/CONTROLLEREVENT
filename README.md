@@ -1,25 +1,36 @@
 ````markdown
 # Pins & Needles Show Controller
 
-An app that helps you run live comedy shows. It has a timer, keeps track of your lineup, and tells you if you're running ahead or behind schedule.
+A downloadable app that helps you run live comedy shows. It has a timer, keeps track of your lineup, and tells you if you're running ahead or behind schedule.
 
-Works on phones, tablets, and computers. No account needed — your data stays on your device.
+Available for **Mac**, **Windows**, **iPhone**, and **Android**. No account needed — your data stays on your device.
 
 ---
 
-## 🚀 Just Want to Use It Right Now?
+## 📥 Download & Install
 
-**Go here:** [https://taylordrew4u2.github.io/CONTROLLEREVENT/](https://taylordrew4u2.github.io/CONTROLLEREVENT/)
+### Mac
 
-That's it. It works in any browser. No download required.
+1. Go to the [Releases](https://github.com/taylordrew4u2/CONTROLLEREVENT/releases) page
+2. Download the `.dmg` file
+3. Double-click the `.dmg` file
+4. Drag **Pins & Needles Controller** into your **Applications** folder
+5. Open it from Applications — done
 
-**Want it on your home screen like a real app?**
+### Windows
 
-- **iPhone / iPad:** Open the link in **Safari** → tap the **Share** button (square with arrow) → tap **Add to Home Screen**
-- **Android / Fire Tablet:** Open the link in **Chrome** or **Silk Browser** → tap the **three dots** (⋮) menu → tap **Add to Home Screen**
-- **Computer (Chrome):** Look for the little install icon in the address bar → click it
+1. Go to the [Releases](https://github.com/taylordrew4u2/CONTROLLEREVENT/releases) page
+2. Download the `.exe` file
+3. Double-click to install, or use the portable `.exe` to run without installing
+4. Launch from your Start Menu or Desktop shortcut
 
-Once added, it opens full screen like a regular app. It even works offline after the first visit.
+### iPhone / iPad
+
+Coming soon to the App Store. For now, developers can build from source (see [Building from Source](#-building-from-source) below).
+
+### Android
+
+Coming soon to the Google Play Store. For now, developers can build from source (see [Building from Source](#-building-from-source) below).
 
 ---
 
@@ -66,79 +77,22 @@ Tap **Settings** to change things like:
 
 ---
 
-## 🖥️ Want It as a Desktop App?
-
-You can download it as a standalone app for **Mac** or **Windows** so it runs outside the browser.
-
-### What You Need First
-
-1. **Node.js** — download it from [https://nodejs.org](https://nodejs.org) (pick the LTS version, install it like any other app)
-2. **The code** — download or clone this project to your computer
-
-### Build It
-
-Open **Terminal** (Mac) or **Command Prompt** (Windows) and run these commands one at a time:
-
-```bash
-cd CONTROLLEREVENT
-npm install
-npm run build:mac
-```
-
-Replace `build:mac` with `build:win` if you're on Windows.
-
-### Find Your App
-
-After it finishes (takes a couple minutes), look inside the `release` folder:
-
-- **Mac:** You'll see a `.dmg` file — double-click it, drag the app to Applications, done
-- **Windows:** You'll see a `.exe` file — double-click it to install, or use the portable version to run it without installing
-
-> 📄 For more detailed desktop build instructions, see [BUILD_ON_MAC.md](BUILD_ON_MAC.md)
-
----
-
-## 📱 Want It as a Mobile App?
-
-You can build native iOS and Android apps from this same code.
-
-> **This part is for developers.** You'll need Xcode (Mac only, for iOS) or Android Studio (for Android).
-
-```bash
-cd CONTROLLEREVENT
-npm install
-npm run cap:ios       # opens Xcode — build and run from there
-npm run cap:android   # opens Android Studio — build and run from there
-```
-
----
-
 ## ❓ Something Not Working?
 
-### "I added it to my home screen but it won't open"
-- Make sure you used the **https://** link (not http)
-- On iPhone, you **must** use Safari — Chrome won't let you add to home screen on iOS
-
 ### "My comedians / saved shows are gone"
-- Your data is saved in the browser on that specific device
-- If you cleared your browser data, it's gone — sorry
-- Using Private/Incognito mode? Data doesn't save in private mode
-- Switching to a different browser or device? Each one has its own separate data
-- **Tip:** Use **Settings → Backup** to save a copy of your data
-
-### "The app doesn't work offline"
-- You need to visit the app at least once while connected to the internet
-- After that first visit, it caches everything and works offline
+- Your data is saved on your device — if you uninstalled the app, it may be gone
+- **Tip:** Use **Settings → Backup** regularly to save a copy of your data so you can restore it later
 
 ### "The timer isn't making any sound"
-- Check that your device isn't on silent/mute
+- Check that your device isn't on silent / mute
 - Go to **Settings** in the app and check the volume slider
 
-### "I'm trying to build the desktop app and it's failing"
-- Make sure you ran `npm install` first
-- Make sure Node.js is installed (type `node --version` in Terminal to check)
-- On newer Macs, you might need to run: `brew install python-setuptools`
-- See [BUILD_ON_MAC.md](BUILD_ON_MAC.md) for step-by-step help
+### "The app won't open on Mac"
+- If macOS says the app is from an unidentified developer: right-click the app → **Open** → click **Open** again
+- Or go to **System Settings → Privacy & Security** and click **Open Anyway**
+
+### "The app won't open on Windows"
+- If Windows SmartScreen blocks it: click **More info** → **Run anyway**
 
 ---
 
@@ -161,25 +115,44 @@ The app comes pre-loaded with this 60-minute show structure. You can customize i
 
 ---
 
-## 🔧 For Developers
+## 🔧 Building from Source
 
 <details>
-<summary>Click to expand technical details</summary>
+<summary>Click to expand — for developers only</summary>
 
-### Tech Stack
+### Prerequisites
 
-| What | Technology |
-|------|-----------|
-| Frontend | React 18 + TypeScript |
-| Build | Vite 5 |
-| Routing | HashRouter |
-| Desktop | Electron 33 + electron-builder |
-| Mobile | Capacitor 8 (iOS + Android) |
-| Desktop Storage | SQLite (better-sqlite3) |
-| Web/Mobile Storage | localStorage |
-| PWA | Service worker + web manifest |
-| Hosting | GitHub Pages |
-| CI/CD | GitHub Actions |
+- **Node.js** — download from [https://nodejs.org](https://nodejs.org) (LTS version)
+- **Git** — to clone the repo
+
+### Clone & Install
+
+```bash
+git clone https://github.com/taylordrew4u2/CONTROLLEREVENT.git
+cd CONTROLLEREVENT
+npm install
+```
+
+### Build Desktop App
+
+```bash
+npm run build:mac   # macOS → release/*.dmg, *.zip
+npm run build:win   # Windows → release/*.exe
+npm run build:all   # both platforms at once
+```
+
+Output goes to the `release/` folder. See [BUILD_ON_MAC.md](BUILD_ON_MAC.md) for detailed instructions.
+
+### Build Mobile App
+
+Requires **Xcode** (Mac only, for iOS) or **Android Studio** (for Android).
+
+```bash
+npm run cap:ios       # build + sync + open Xcode
+npm run cap:android   # build + sync + open Android Studio
+```
+
+Then build and run from the native IDE onto a device or simulator.
 
 ### Development Commands
 
@@ -191,16 +164,28 @@ npm run electron:dev  # build + launch in Electron
 npm run cap:sync      # rebuild + push to native mobile projects
 ```
 
+### Tech Stack
+
+| What | Technology |
+|------|-----------|
+| Frontend | React 18 + TypeScript |
+| Build | Vite 5 |
+| Routing | HashRouter |
+| Desktop | Electron 33 + electron-builder |
+| Mobile | Capacitor 8 (iOS + Android) |
+| Desktop Storage | SQLite (better-sqlite3) |
+| Mobile Storage | localStorage |
+| CI/CD | GitHub Actions |
+
 ### Project Structure
 
 ```
-├── electron/          # Desktop app wrapper
-├── ios/               # iOS project (generated by Capacitor)
-├── android/           # Android project (generated by Capacitor)
-├── public/            # PWA manifest + service worker
+├── electron/          # Desktop app (main process + preload)
+├── ios/               # iOS native project
+├── android/           # Android native project
 ├── src/
 │   ├── components/    # Reusable UI (Modal, EmptyState)
-│   ├── screens/       # App screens (Library, Builder, Live, Settings)
+│   ├── screens/       # Library, ShowBuilder, LiveController, Settings
 │   ├── App.tsx        # Root component + navigation
 │   ├── storage.ts     # Data persistence layer
 │   ├── tokens.css     # Design system (colors, spacing, typography)
@@ -210,13 +195,12 @@ npm run cap:sync      # rebuild + push to native mobile projects
 └── package.json
 ```
 
-### Data Storage
+### Troubleshooting Builds
 
-- **Web / PWA:** `localStorage` — per-browser, per-device, nothing leaves the device
-- **Desktop (Electron):** SQLite database — stored in the OS user data folder
-- **Mobile (Capacitor):** `localStorage` — persisted by the native webview
-
-All data stays local. There is no server, no database, no cloud sync.
+- **"npm install fails"** — Make sure Node.js is installed (`node --version`)
+- **"Mac build fails with Python error"** — Run `brew install python-setuptools`
+- **"iOS build fails"** — You need a Mac with Xcode and a signing certificate
+- **"Android build fails"** — Make sure Android Studio and SDK are installed
 
 </details>
 
