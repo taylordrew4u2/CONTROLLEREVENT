@@ -1,107 +1,156 @@
 ````markdown
 # Pins & Needles Show Controller
 
-A downloadable app that helps you run live comedy shows. It has a timer, keeps track of your lineup, and tells you if you're running ahead or behind schedule.
+This app runs your live comedy show for you. You put in your lineup, hit Start, and it counts down each comedian's time. It tells you who's up, who's next, and if you're running late.
 
-Available for **Mac**, **Windows**, **iPhone**, and **Android**. No account needed — your data stays on your device.
-
----
-
-## 📥 Download & Install
-
-### Mac
-
-1. Go to the [Releases](https://github.com/taylordrew4u2/CONTROLLEREVENT/releases) page
-2. Download the `.dmg` file
-3. Double-click the `.dmg` file
-4. Drag **Pins & Needles Controller** into your **Applications** folder
-5. Open it from Applications — done
-
-### Windows
-
-1. Go to the [Releases](https://github.com/taylordrew4u2/CONTROLLEREVENT/releases) page
-2. Download the `.exe` file
-3. Double-click to install, or use the portable `.exe` to run without installing
-4. Launch from your Start Menu or Desktop shortcut
-
-### iPhone / iPad
-
-Coming soon to the App Store. For now, developers can build from source (see [Building from Source](#-building-from-source) below).
-
-### Android
-
-Coming soon to the Google Play Store. For now, developers can build from source (see [Building from Source](#-building-from-source) below).
+You download it and install it on your computer — just like any other app.
 
 ---
 
-## 📖 How to Use the App
+## 📥 How to Get the App
 
-### Step 1: Add Your Comedians
+### If you have a Mac:
 
-1. Open the app and tap **Library** at the bottom
-2. Tap **Add Comedian**
-3. Type the comedian's name and how many minutes their set is
-4. Tap **Save**
-5. Repeat for all your comedians
+1. Click here → [**Download for Mac**](https://github.com/taylordrew4u2/CONTROLLEREVENT/releases)
+2. Find the file that ends in **`.dmg`** and click it to download
+3. When it's done downloading, find the file (probably in your **Downloads** folder) and **double-click** it
+4. A window pops up — drag the app icon into the **Applications** folder
+5. Open your **Applications** folder and double-click **Pins & Needles Controller** to launch it
 
-### Step 2: Build Your Show
+**First time opening it?** Mac might say "this app is from an unidentified developer." That's normal. Here's what to do:
+- **Right-click** the app (or hold Control and click it)
+- Click **Open**
+- Click **Open** again when the warning pops up
+- It will open normally every time after that
 
-1. Tap **Builder** at the bottom
-2. A default 60-minute show template is already loaded for you
-3. Tap on a segment name to assign a comedian from your library
-4. Change the time for any segment by tapping the minutes number
-5. Use the arrow buttons to move segments up or down in the order
-6. When you're happy with the lineup, tap **Save Show** and give it a name
+### If you have a Windows PC:
 
-### Step 3: Run the Show Live
+1. Click here → [**Download for Windows**](https://github.com/taylordrew4u2/CONTROLLEREVENT/releases)
+2. Find the file that ends in **`.exe`** and click it to download
+3. When it's done downloading, find the file and **double-click** it
+4. Follow the installer steps — just keep clicking **Next** until it's done
+5. The app will be in your **Start Menu** and you might get a **Desktop shortcut** too
 
-1. Tap **Live** at the bottom
-2. Tap **Load Show** and pick the show you saved
-3. Tap **Start** — the countdown timer begins
-4. The app automatically moves to the next segment when time runs out
-5. Use **+2** / **-2** buttons if you need to add or remove time on the fly
-6. Use **Skip** to jump to the next segment early
-7. Use **Pause** if you need to stop the clock
+**Windows might show a blue popup** saying "Windows protected your PC." That's normal. Here's what to do:
+- Click **More info**
+- Click **Run anyway**
 
-**During the show, you can see:**
-- How much time is left in the current segment (big countdown timer)
-- Whether you're ahead or behind schedule (green = ahead, red = behind)
-- Who's up next
+### If you have an iPhone, iPad, or Android phone:
 
-### Step 4 (Optional): Tweak Settings
-
-Tap **Settings** to change things like:
-- Whether the timer auto-advances to the next segment
-- Volume for audio cues
-- Backup and restore your data
+The mobile version is coming soon. For now, the app works on Mac and Windows computers.
 
 ---
 
-## ❓ Something Not Working?
+## 📖 How to Use the App (Step by Step)
 
-### "My comedians / saved shows are gone"
-- Your data is saved on your device — if you uninstalled the app, it may be gone
-- **Tip:** Use **Settings → Backup** regularly to save a copy of your data so you can restore it later
+When you open the app, you'll see **four tabs at the bottom**: Library, Builder, Live, and Settings. Here's what each one does:
+
+---
+
+### Step 1: Add your comedians
+
+> You only have to do this once. After you add someone, they're saved.
+
+1. Tap **Library** (bottom of the screen)
+2. Tap the **Add Comedian** button
+3. Type the comedian's **name**
+4. Type how many **minutes** their set is (for example: `8` for an 8-minute set)
+5. Tap **Save**
+6. Do this for every comedian who might be in your shows
+
+**Want to change someone later?** Just tap their name in the list to edit them. Want to remove someone? Tap the delete button next to their name.
+
+---
+
+### Step 2: Build your show lineup
+
+> This is where you set up the order and timing for tonight's show.
+
+1. Tap **Builder** (bottom of the screen)
+2. The app already has a **default 60-minute show template** loaded — you don't have to start from scratch
+3. You'll see a list of segments like "Opening Act 1", "Host transition", "Headliner set", etc.
+4. **To assign a comedian to a segment:** Tap the segment name → pick a comedian from the dropdown
+5. **To change how long a segment is:** Tap the number next to it and type a new number
+6. **To rearrange the order:** Use the **up/down arrow buttons** on each segment
+7. **To add a new segment:** Tap the **Add Segment** button at the bottom
+8. **To remove a segment:** Tap the **delete button** (trash icon) on that segment
+9. When the lineup looks right, tap **Save Show** and give it a name (like "Friday Night Show" or "March 17th")
+
+> You can save as many different shows as you want. They'll all be there when you come back.
+
+---
+
+### Step 3: Run the show live
+
+> This is what you use during the actual show. It's basically a big countdown timer that knows your whole lineup.
+
+1. Tap **Live** (bottom of the screen)
+2. Tap **Load Show**
+3. Pick the show you saved in Step 2
+4. Tap **Start**
+
+**Now the timer is running.** Here's what you'll see:
+
+- **Big countdown timer** — shows how much time is left in the current segment
+- **Segment name** — shows who's on stage right now
+- **Ahead / Behind indicator** — green means you're ahead of schedule, red means you're behind
+
+**Buttons you can use during the show:**
+
+| Button | What it does |
+|--------|-------------|
+| **+2** | Adds 2 minutes to the current segment (comedian is killing it, give them more time) |
+| **-2** | Takes away 2 minutes (running long, need to speed things up) |
+| **Skip** | Immediately jumps to the next segment |
+| **Pause** | Stops the timer (emergency, technical difficulty, etc.) |
+
+**When a segment's time runs out,** the app automatically starts the next one. You don't have to touch anything — it just keeps going through your lineup.
+
+**Want to see the full schedule?** Tap the schedule button to see every segment, who's assigned, and what time each one starts.
+
+---
+
+### Step 4 (Optional): Settings
+
+Tap **Settings** (bottom of the screen) to change:
+
+- **Auto-advance** — whether the timer automatically moves to the next segment when time's up (on by default — leave it on)
+- **Volume** — how loud the audio cues are
+- **Backup** — **THIS IS IMPORTANT.** Tap Backup to save a copy of all your comedians and shows. If something ever goes wrong, you can restore from this backup.
+
+---
+
+## ❓ Problems? Read This First
+
+### "I can't find the app after I downloaded it"
+- Check your **Downloads** folder
+- On Mac: open **Finder** → click **Downloads** on the left
+- On Windows: open **File Explorer** → click **Downloads** on the left
+
+### "My comedians are gone" / "My saved shows disappeared"
+- Did you delete and reinstall the app? That erases your data.
+- **Prevent this from ever happening:** Go to **Settings → Backup** and save a backup. You can restore it later.
 
 ### "The timer isn't making any sound"
-- Check that your device isn't on silent / mute
-- Go to **Settings** in the app and check the volume slider
+- Is your computer on **mute**? Check your volume.
+- Open the app's **Settings** and make sure the volume slider isn't set to zero.
 
-### "The app won't open on Mac"
-- If macOS says the app is from an unidentified developer: right-click the app → **Open** → click **Open** again
-- Or go to **System Settings → Privacy & Security** and click **Open Anyway**
+### "I messed up the show template and want to start over"
+- Just make a new show in **Builder** — the default template loads fresh every time
+- Your old saved shows are still there under **Load Show**
 
-### "The app won't open on Windows"
-- If Windows SmartScreen blocks it: click **More info** → **Run anyway**
+### "I accidentally closed the app during a show"
+- Reopen the app, go to **Live**, and load your show again
+- You'll have to restart from the beginning (the timer doesn't save its place if you close the app)
 
 ---
 
-## 🎭 Default Show Template
+## 🎭 What the Default Show Looks Like
 
-The app comes pre-loaded with this 60-minute show structure. You can customize it however you want:
+The app comes with a pre-made 60-minute show template. You can change any of it:
 
-| Time | Segment | Duration |
-|------|---------|----------|
+| Time | What's happening | How long |
+|------|-----------------|----------|
 | 0:00 | Show open + host intro | 5 min |
 | 0:05 | Opening Act 1 | 8 min |
 | 0:13 | Host transition | 1 min |
@@ -112,18 +161,19 @@ The app comes pre-loaded with this 60-minute show structure. You can customize i
 | 0:42 | Headliner intro | 1 min |
 | 0:43 | Headliner set | 15 min |
 | 0:58 | Show close | 2 min |
+| | **Total** | **60 min** |
 
 ---
 
-## 🔧 Building from Source
+## 🔧 For Developers Only
 
 <details>
-<summary>Click to expand — for developers only</summary>
+<summary>Click here if you're a developer and want to build from source code</summary>
 
 ### Prerequisites
 
-- **Node.js** — download from [https://nodejs.org](https://nodejs.org) (LTS version)
-- **Git** — to clone the repo
+- [Node.js](https://nodejs.org) (LTS version)
+- Git
 
 ### Clone & Install
 
@@ -152,55 +202,26 @@ npm run cap:ios       # build + sync + open Xcode
 npm run cap:android   # build + sync + open Android Studio
 ```
 
-Then build and run from the native IDE onto a device or simulator.
-
 ### Development Commands
 
 ```bash
-npm run dev           # start local dev server (hot reload)
+npm run dev           # local dev server with hot reload
 npm run build         # production build → dist/
-npm run preview       # preview the production build locally
+npm run preview       # preview production build locally
 npm run electron:dev  # build + launch in Electron
-npm run cap:sync      # rebuild + push to native mobile projects
+npm run cap:sync      # rebuild + sync to native projects
 ```
 
 ### Tech Stack
 
-| What | Technology |
-|------|-----------|
-| Frontend | React 18 + TypeScript |
-| Build | Vite 5 |
-| Routing | HashRouter |
-| Desktop | Electron 33 + electron-builder |
-| Mobile | Capacitor 8 (iOS + Android) |
-| Desktop Storage | SQLite (better-sqlite3) |
-| Mobile Storage | localStorage |
-| CI/CD | GitHub Actions |
-
-### Project Structure
-
-```
-├── electron/          # Desktop app (main process + preload)
-├── ios/               # iOS native project
-├── android/           # Android native project
-├── src/
-│   ├── components/    # Reusable UI (Modal, EmptyState)
-│   ├── screens/       # Library, ShowBuilder, LiveController, Settings
-│   ├── App.tsx        # Root component + navigation
-│   ├── storage.ts     # Data persistence layer
-│   ├── tokens.css     # Design system (colors, spacing, typography)
-│   └── types.ts       # TypeScript type definitions
-├── capacitor.config.ts
-├── vite.config.ts
-└── package.json
-```
+React 18, TypeScript, Vite 5, Electron 33, Capacitor 8, SQLite (desktop), localStorage (mobile), GitHub Actions CI/CD.
 
 ### Troubleshooting Builds
 
-- **"npm install fails"** — Make sure Node.js is installed (`node --version`)
-- **"Mac build fails with Python error"** — Run `brew install python-setuptools`
-- **"iOS build fails"** — You need a Mac with Xcode and a signing certificate
-- **"Android build fails"** — Make sure Android Studio and SDK are installed
+- `npm install` fails → make sure Node.js is installed
+- Mac build fails with Python error → `brew install python-setuptools`
+- iOS build fails → need Mac + Xcode + signing certificate
+- Android build fails → need Android Studio + SDK
 
 </details>
 
