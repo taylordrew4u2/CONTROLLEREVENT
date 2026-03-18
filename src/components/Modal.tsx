@@ -14,7 +14,10 @@ export default function Modal({ title, children, onClose, wide }: ModalProps) {
         className={`modal${wide ? ' modal--wide' : ''}`}
         onClick={e => e.stopPropagation()}
       >
-        <h2>{title}</h2>
+        <div className="modal-header">
+          <h2>{title}</h2>
+          <button className="modal-close" onClick={onClose} aria-label="Close">×</button>
+        </div>
         {children}
       </div>
     </div>
