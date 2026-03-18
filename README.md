@@ -1,4 +1,3 @@
-````markdown
 # Pins & Needles Show Controller
 
 This app runs your live comedy show for you. You put in your lineup, hit Start, and it counts down each comedian's time. It tells you who's up, who's next, and if you're running late.
@@ -9,7 +8,7 @@ You download it and install it on your computer or Android phone — just like a
 
 ## 📥 How to Get the App
 
-### If you have a Mac:
+### If you have a Mac
 
 1. Click here → [**Download for Mac**](https://github.com/taylordrew4u2/CONTROLLEREVENT/releases)
 2. Find the file that ends in **`.dmg`** and click it to download
@@ -18,12 +17,13 @@ You download it and install it on your computer or Android phone — just like a
 5. Open your **Applications** folder and double-click **Pins & Needles Controller** to launch it
 
 **First time opening it?** Mac might say "this app is from an unidentified developer." That's normal. Here's what to do:
+
 - **Right-click** the app (or hold Control and click it)
 - Click **Open**
 - Click **Open** again when the warning pops up
 - It will open normally every time after that
 
-### If you have a Windows PC:
+### If you have a Windows PC
 
 1. Click here → [**Download for Windows**](https://github.com/taylordrew4u2/CONTROLLEREVENT/releases)
 2. Find the file that ends in **`.exe`** and click it to download
@@ -32,10 +32,11 @@ You download it and install it on your computer or Android phone — just like a
 5. The app will be in your **Start Menu** and you might get a **Desktop shortcut** too
 
 **Windows might show a blue popup** saying "Windows protected your PC." That's normal. Here's what to do:
+
 - Click **More info**
 - Click **Run anyway**
 
-### If you have an Android phone or tablet:
+### If you have an Android phone or tablet
 
 1. Click here → [**Download for Android**](https://github.com/taylordrew4u2/CONTROLLEREVENT/releases)
 2. Find the file that ends in **`.apk`** and tap it to download
@@ -45,11 +46,12 @@ You download it and install it on your computer or Android phone — just like a
 6. Tap **Install**
 7. When it's done, tap **Open** — you're all set!
 
-**Don't know how to find the downloaded file?** 
+**Don't know how to find the downloaded file?**
+
 - Pull down from the top of your screen to see your **notifications** — the download should be there
 - Or open the **Files** app (or **My Files** on Samsung) and tap **Downloads**
 
-### If you have an iPhone or iPad:
+### If you have an iPhone or iPad
 
 The iPhone version is coming soon. For now, the app works on Mac, Windows, and Android.
 
@@ -112,7 +114,7 @@ When you open the app, you'll see **four tabs at the bottom**: Library, Builder,
 **Buttons you can use during the show:**
 
 | Button | What it does |
-|--------|-------------|
+| ------ | ------------ |
 | **+2** | Adds 2 minutes to the current segment (comedian is killing it, give them more time) |
 | **-2** | Takes away 2 minutes (running long, need to speed things up) |
 | **Skip** | Immediately jumps to the next segment |
@@ -137,23 +139,28 @@ Tap **Settings** (bottom of the screen) to change:
 ## ❓ Problems? Read This First
 
 ### "I can't find the app after I downloaded it"
+
 - Check your **Downloads** folder
 - On Mac: open **Finder** → click **Downloads** on the left
 - On Windows: open **File Explorer** → click **Downloads** on the left
 
 ### "My comedians are gone" / "My saved shows disappeared"
+
 - Did you delete and reinstall the app? That erases your data.
 - **Prevent this from ever happening:** Go to **Settings → Backup** and save a backup. You can restore it later.
 
 ### "The timer isn't making any sound"
+
 - Is your computer on **mute**? Check your volume.
 - Open the app's **Settings** and make sure the volume slider isn't set to zero.
 
 ### "I messed up the show template and want to start over"
+
 - Just make a new show in **Builder** — the default template loads fresh every time
 - Your old saved shows are still there under **Load Show**
 
 ### "I accidentally closed the app during a show"
+
 - Reopen the app, go to **Live**, and load your show again
 - You'll have to restart from the beginning (the timer doesn't save its place if you close the app)
 
@@ -164,7 +171,7 @@ Tap **Settings** (bottom of the screen) to change:
 The app comes with a pre-made 60-minute show template. You can change any of it:
 
 | Time | What's happening | How long |
-|------|-----------------|----------|
+| ---- | ---------------- | -------- |
 | 0:00 | Show open + host intro | 5 min |
 | 0:05 | Opening Act 1 | 8 min |
 | 0:13 | Host transition | 1 min |
@@ -253,4 +260,3 @@ React 18, TypeScript, Vite 5, Electron 33, Capacitor 8, SQLite (desktop), localS
 ## License
 
 MIT
-````

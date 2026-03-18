@@ -4,7 +4,6 @@
     background-color: var(--bg-base);
     color: var(--text-primary);
     overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
 }
 
 .settings-container {
@@ -169,6 +168,14 @@
     color: var(--text-muted);
     margin-top: var(--sp-2);
     line-height: var(--leading-relaxed);
+}
+
+.backup-help {
+    margin-top: 0;
+}
+
+.file-input-hidden {
+    display: none;
 }
 
 /* ─── Audio device ─── */

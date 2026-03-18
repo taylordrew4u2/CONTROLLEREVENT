@@ -50,7 +50,6 @@
 .builder-content {
     flex: 1;
     overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
     padding: var(--sp-5);
     max-width: var(--content-max-width);
     margin: 0 auto;
@@ -211,7 +210,6 @@
 .shows-list {
     max-height: 60dvh;
     overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
 }
 
 .show-item {

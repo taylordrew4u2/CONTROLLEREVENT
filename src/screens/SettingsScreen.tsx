@@ -136,6 +136,7 @@ function SettingsScreen({ onSettingsChange }: SettingsScreenProps) {
                 min="0"
                 max="1"
                 step="0.1"
+                title="Master volume"
                 value={settings.audioVolume}
                 onChange={(e) => handleSettingChange('audioVolume', parseFloat(e.target.value))}
               />
@@ -150,6 +151,7 @@ function SettingsScreen({ onSettingsChange }: SettingsScreenProps) {
               min="0.5"
               max="5"
               step="0.5"
+              title="Fade-out duration in seconds"
               value={settings.fadeOutDuration}
               onChange={(e) => handleSettingChange('fadeOutDuration', parseFloat(e.target.value))}
             />
@@ -158,6 +160,7 @@ function SettingsScreen({ onSettingsChange }: SettingsScreenProps) {
           <div className="setting-item">
             <label>Audio Output Device</label>
             <select
+              title="Audio output device"
               value={settings.audioOutput}
               onChange={(e) => handleSettingChange('audioOutput', e.target.value)}
             >
@@ -205,7 +208,7 @@ function SettingsScreen({ onSettingsChange }: SettingsScreenProps) {
 
         <div className="settings-section">
           <h2>Backup & Restore</h2>
-          <p className="setting-help" style={{marginTop: 0}}>Export your data to a file so you never lose it. Import to restore on this or another device.</p>
+          <p className="setting-help backup-help">Export your data to a file so you never lose it. Import to restore on this or another device.</p>
           <div className="backup-actions">
             <button className="btn-primary" onClick={handleExport}>Export Data</button>
             <button className="btn-secondary" onClick={() => fileInputRef.current?.click()}>Import Data</button>
@@ -213,7 +216,8 @@ function SettingsScreen({ onSettingsChange }: SettingsScreenProps) {
               ref={fileInputRef}
               type="file"
               accept=".json"
-              style={{display: 'none'}}
+              title="Import backup file"
+              className="file-input-hidden"
               onChange={handleImport}
             />
           </div>

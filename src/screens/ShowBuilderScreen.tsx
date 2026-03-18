@@ -232,6 +232,7 @@ function ShowBuilderScreen() {
                   {editingSegment === index ? (
                     <input
                       type="text"
+                      title="Segment name"
                       value={segment.name}
                       onChange={(e) => handleUpdateSegment(index, { name: e.target.value })}
                       onBlur={() => setEditingSegment(null)}
@@ -248,6 +249,7 @@ function ShowBuilderScreen() {
                   <input
                     type="number"
                     min="1"
+                    title="Segment duration in minutes"
                     value={segment.duration}
                     onChange={(e) => handleUpdateSegment(index, { duration: parseInt(e.target.value) || 1 })}
                     className="duration-input"
@@ -271,6 +273,7 @@ function ShowBuilderScreen() {
                   </button>
 
                   <select
+                    title="Assign comedian or template"
                     onChange={(e) => {
                       const value = e.target.value;
                       if (value.startsWith('c-')) {

@@ -480,6 +480,7 @@ function LiveControllerScreen() {
                 min="0"
                 max="1"
                 step="0.1"
+                title="Volume"
                 value={volume}
                 onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
               />
