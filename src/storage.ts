@@ -140,14 +140,7 @@ export function deleteShow(id: number): boolean {
   return true;
 }
 
-// ── Persistent storage & backup ────────────────────────────
-
-export async function requestPersistentStorage(): Promise<boolean> {
-  if (navigator.storage && navigator.storage.persist) {
-    return navigator.storage.persist();
-  }
-  return false;
-}
+// ── Backup & Restore ────────────────────────────
 
 const BACKUP_KEYS = [
   "comedians",
