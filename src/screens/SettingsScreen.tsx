@@ -225,7 +225,7 @@ function SettingsScreen({ onSettingsChange }: SettingsScreenProps) {
 
         <div className="settings-section">
           <h2>Download Desktop App</h2>
-          <p className="setting-help backup-help">Install the full desktop version for Windows. Click a link below to download.</p>
+          <p className="setting-help backup-help">Install the full desktop version for Mac or Windows. Click a link below to download.</p>
           <div className="download-options">
             <a
               href="https://github.com/taylordrew4u2/CONTROLLEREVENT/releases/latest/download/Pins.Needles.Controller.Setup.exe"
@@ -236,7 +236,19 @@ function SettingsScreen({ onSettingsChange }: SettingsScreenProps) {
               <span className="download-icon">⬇</span>
               <span>
                 <strong>Windows Installer (.exe)</strong>
-                <small>Recommended — installs with shortcuts</small>
+                <small>Recommended for Windows — installs with shortcuts</small>
+              </span>
+            </a>
+            <a
+              href="https://github.com/taylordrew4u2/CONTROLLEREVENT/releases/latest/download/Pins.Needles.Controller.dmg"
+              className="btn-download"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <span className="download-icon">🍎</span>
+              <span>
+                <strong>Mac Installer (.dmg)</strong>
+                <small>Recommended for Mac — drag to Applications</small>
               </span>
             </a>
             <a
