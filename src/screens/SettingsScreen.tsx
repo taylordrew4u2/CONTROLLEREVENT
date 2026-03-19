@@ -252,12 +252,12 @@ function SettingsScreen({ onSettingsChange }: SettingsScreenProps) {
               </span>
             </a>
             <a
-              href="https://github.com/taylordrew4u2/CONTROLLEREVENT/releases/latest/download/Pins.Needles.Controller.dmg"
-              className="btn-download"
+              href="https://github.com/taylordrew4u2/CONTROLLEREVENT/releases/latest"
+              className="btn-download btn-download-alt"
               target="_blank"
               rel="noopener noreferrer"
             >
-              <span className="download-icon">🍎</span>
+              <span className="download-icon">📦</span>
               <span>
                 <strong>All Downloads</strong>
                 <small>View all versions, portable &amp; zip builds</small>
@@ -270,7 +270,7 @@ function SettingsScreen({ onSettingsChange }: SettingsScreenProps) {
           <h2>Application Info</h2>
           <div className="info-item">
             <p><strong>Version:</strong> 2.0.0</p>
-            <p><strong>Works Offline:</strong> Yes (native app)</p>
+            <p><strong>Works Offline:</strong> Yes (PWA)</p>
             <p><strong>Storage:</strong> Local (persistent)</p>
             <p><strong>Data Protection:</strong> Persistent storage requested — browser won't auto-delete your data</p>
           </div>
