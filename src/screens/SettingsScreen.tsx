@@ -225,44 +225,69 @@ function SettingsScreen({ onSettingsChange }: SettingsScreenProps) {
 
         <div className="settings-section">
           <h2>Download Desktop App</h2>
-          <p className="setting-help backup-help">Install the full desktop version for Windows or macOS. Click a link below to download.</p>
+          <p className="setting-help backup-help">
+            Get the desktop version for your computer. Not sure which one? 
+            {navigator.userAgent.includes('Mac') ? ' You\'re on a Mac — grab the macOS download.' : navigator.userAgent.includes('Win') ? ' You\'re on Windows — grab the Windows download.' : ' Pick the one that matches your computer.'}
+          </p>
+
           <div className="download-options">
-            <a
-              href="https://github.com/taylordrew4u2/CONTROLLEREVENT/releases/latest/download/Pins-Needles-Controller-Setup.exe"
-              className="btn-download"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <span className="download-icon">⬇</span>
-              <span>
-                <strong>Windows Installer (.exe)</strong>
-                <small>Recommended for Windows — installs with shortcuts</small>
-              </span>
-            </a>
-            <a
-              href="https://github.com/taylordrew4u2/CONTROLLEREVENT/releases/latest/download/Pins-Needles-Controller.dmg"
-              className="btn-download"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <span className="download-icon">🍎</span>
-              <span>
-                <strong>macOS Installer (.dmg)</strong>
-                <small>Recommended for Mac — drag to Applications</small>
-              </span>
-            </a>
-            <a
-              href="https://github.com/taylordrew4u2/CONTROLLEREVENT/releases/latest"
-              className="btn-download btn-download-alt"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <span className="download-icon">📦</span>
-              <span>
-                <strong>All Downloads</strong>
-                <small>View all versions, portable &amp; zip builds</small>
-              </span>
-            </a>
+            <div className={`download-card${navigator.userAgent.includes('Win') ? ' download-recommended' : ''}`}>
+              {navigator.userAgent.includes('Win') && <span className="download-badge">Recommended for you</span>}
+              <a
+                href="https://github.com/taylordrew4u2/CONTROLLEREVENT/releases/latest/download/Pins-Needles-Controller-Setup.exe"
+                className="btn-download"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <span className="download-icon">🪟</span>
+                <span>
+                  <strong>Download for Windows</strong>
+                  <small>.exe installer — works on Windows 10 &amp; 11</small>
+                </span>
+              </a>
+              <ol className="install-steps">
+                <li>Click the button above to download the <code>.exe</code> file</li>
+                <li>Open the downloaded file and click <strong>"Install"</strong></li>
+                <li>The app will open automatically — a desktop shortcut is created too</li>
+              </ol>
+            </div>
+
+            <div className={`download-card${navigator.userAgent.includes('Mac') ? ' download-recommended' : ''}`}>
+              {navigator.userAgent.includes('Mac') && <span className="download-badge">Recommended for you</span>}
+              <a
+                href="https://github.com/taylordrew4u2/CONTROLLEREVENT/releases/latest/download/Pins-Needles-Controller.dmg"
+                className="btn-download"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <span className="download-icon">🍎</span>
+                <span>
+                  <strong>Download for Mac</strong>
+                  <small>.dmg installer — works on macOS 11+</small>
+                </span>
+              </a>
+              <ol className="install-steps">
+                <li>Click the button above to download the <code>.dmg</code> file</li>
+                <li>Open it and drag the app icon into your <strong>Applications</strong> folder</li>
+                <li>First launch: right-click the app → <strong>"Open"</strong> → click <strong>"Open"</strong> again</li>
+              </ol>
+            </div>
+
+            <details className="download-more">
+              <summary>Other download options</summary>
+              <a
+                href="https://github.com/taylordrew4u2/CONTROLLEREVENT/releases/latest"
+                className="btn-download btn-download-alt"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <span className="download-icon">📦</span>
+                <span>
+                  <strong>All Downloads &amp; Older Versions</strong>
+                  <small>Portable builds, zip files, and past releases</small>
+                </span>
+              </a>
+            </details>
           </div>
         </div>
 
