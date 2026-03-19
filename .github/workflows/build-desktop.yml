@@ -18,9 +18,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
 
-      - run: npm ci
+      - run: npm install
 
       - run: npm run build
 
@@ -43,16 +42,17 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
 
-      - run: npm ci
+      - run: npm install
 
       - run: npm run build
 
-      - name: Build Mac installer
+      - name: Build macOS installer
         run: npx electron-builder --mac --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
 
-      - name: Upload Mac artifacts
+      - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
         with:
           name: mac-installer
@@ -71,7 +71,7 @@ jobs:
           name: windows-installer
           path: release
 
-      - name: Download Mac artifacts
+      - name: Download macOS artifacts
         uses: actions/download-artifact@v4
         with:
           name: mac-installer

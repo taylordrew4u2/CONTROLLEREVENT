@@ -225,18 +225,30 @@ function SettingsScreen({ onSettingsChange }: SettingsScreenProps) {
 
         <div className="settings-section">
           <h2>Download Desktop App</h2>
-          <p className="setting-help backup-help">Choose your platform to download the desktop app.</p>
+          <p className="setting-help backup-help">Install the full desktop version for Windows or macOS. Click a link below to download.</p>
           <div className="download-options">
             <a
-              href="https://github.com/taylordrew4u2/CONTROLLEREVENT/releases/latest/download/Pins.Needles.Controller.Setup.exe"
+              href="https://github.com/taylordrew4u2/CONTROLLEREVENT/releases/latest/download/Pins-Needles-Controller-Setup.exe"
               className="btn-download"
               target="_blank"
               rel="noopener noreferrer"
             >
               <span className="download-icon">⬇</span>
               <span>
-                <strong>Download for Windows</strong>
-                <small>Installer (.exe) — installs with shortcuts</small>
+                <strong>Windows Installer (.exe)</strong>
+                <small>Recommended for Windows — installs with shortcuts</small>
+              </span>
+            </a>
+            <a
+              href="https://github.com/taylordrew4u2/CONTROLLEREVENT/releases/latest/download/Pins-Needles-Controller.dmg"
+              className="btn-download"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <span className="download-icon">🍎</span>
+              <span>
+                <strong>macOS Installer (.dmg)</strong>
+                <small>Recommended for Mac — drag to Applications</small>
               </span>
             </a>
             <a
@@ -247,8 +259,8 @@ function SettingsScreen({ onSettingsChange }: SettingsScreenProps) {
             >
               <span className="download-icon">🍎</span>
               <span>
-                <strong>Download for Mac</strong>
-                <small>Installer (.dmg) — drag to Applications</small>
+                <strong>All Downloads</strong>
+                <small>View all versions, portable &amp; zip builds</small>
               </span>
             </a>
           </div>
@@ -258,7 +270,7 @@ function SettingsScreen({ onSettingsChange }: SettingsScreenProps) {
           <h2>Application Info</h2>
           <div className="info-item">
             <p><strong>Version:</strong> 2.0.0</p>
-            <p><strong>Works Offline:</strong> Yes (PWA)</p>
+            <p><strong>Works Offline:</strong> Yes (native app)</p>
             <p><strong>Storage:</strong> Local (persistent)</p>
             <p><strong>Data Protection:</strong> Persistent storage requested — browser won't auto-delete your data</p>
           </div>

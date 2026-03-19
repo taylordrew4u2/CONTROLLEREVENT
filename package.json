@@ -64,19 +64,24 @@
         "zip"
       ],
       "icon": "assets/icon.png",
-      "category": "public.app-category.entertainment"
+      "category": "public.app-category.entertainment",
+      "artifactName": "Pins-Needles-Controller.${ext}"
     },
     "win": {
       "target": [
         "nsis",
         "portable"
       ],
-      "icon": "assets/icon.png"
+      "icon": "assets/icon.png",
+      "artifactName": "Pins-Needles-Controller-Setup.${ext}"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true
+    },
+    "portable": {
+      "artifactName": "Pins-Needles-Controller-Portable.${ext}"
     }
   }
 }
