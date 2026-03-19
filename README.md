@@ -2,7 +2,7 @@
 
 This app runs your live comedy show for you. You put in your lineup, hit Start, and it counts down each comedian's time. It tells you who's up, who's next, and if you're running late.
 
-You download it and install it on your computer or Android phone — just like any other app.
+This is a native app — it runs on Mac, Windows, and Android. It is not a website and cannot be used in a web browser.
 
 ---
 
@@ -236,14 +236,13 @@ npm run cap:android   # build + sync + open Android Studio
 ```bash
 npm run dev           # local dev server with hot reload
 npm run build         # production build → dist/
-npm run preview       # preview production build locally
 npm run electron:dev  # build + launch in Electron
 npm run cap:sync      # rebuild + sync to native projects
 ```
 
 ### Tech Stack
 
-React 18, TypeScript, Vite 5, Electron 33, Capacitor 8, SQLite (desktop), localStorage (mobile), GitHub Actions CI/CD.
+React 18, TypeScript, Vite 8, Electron 41, Capacitor 8, SQLite (desktop), localStorage (mobile), GitHub Actions CI/CD.
 
 ### Troubleshooting Builds
 
