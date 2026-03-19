@@ -225,7 +225,7 @@ function SettingsScreen({ onSettingsChange }: SettingsScreenProps) {
 
         <div className="settings-section">
           <h2>Download Desktop App</h2>
-          <p className="setting-help backup-help">Install the full desktop version for Mac or Windows. Click a link below to download.</p>
+          <p className="setting-help backup-help">Choose your platform to download the desktop app.</p>
           <div className="download-options">
             <a
               href="https://github.com/taylordrew4u2/CONTROLLEREVENT/releases/latest/download/Pins.Needles.Controller.Setup.exe"
@@ -235,8 +235,8 @@ function SettingsScreen({ onSettingsChange }: SettingsScreenProps) {
             >
               <span className="download-icon">⬇</span>
               <span>
-                <strong>Windows Installer (.exe)</strong>
-                <small>Recommended for Windows — installs with shortcuts</small>
+                <strong>Download for Windows</strong>
+                <small>Installer (.exe) — installs with shortcuts</small>
               </span>
             </a>
             <a
@@ -247,20 +247,8 @@ function SettingsScreen({ onSettingsChange }: SettingsScreenProps) {
             >
               <span className="download-icon">🍎</span>
               <span>
-                <strong>Mac Installer (.dmg)</strong>
-                <small>Recommended for Mac — drag to Applications</small>
-              </span>
-            </a>
-            <a
-              href="https://github.com/taylordrew4u2/CONTROLLEREVENT/releases/latest"
-              className="btn-download btn-download-alt"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <span className="download-icon">📦</span>
-              <span>
-                <strong>All Downloads</strong>
-                <small>View all versions &amp; portable builds</small>
+                <strong>Download for Mac</strong>
+                <small>Installer (.dmg) — drag to Applications</small>
               </span>
             </a>
           </div>
