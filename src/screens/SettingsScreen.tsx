@@ -294,7 +294,7 @@ function SettingsScreen({ onSettingsChange }: SettingsScreenProps) {
         <div className="settings-section">
           <h2>Application Info</h2>
           <div className="info-item">
-            <p><strong>Version:</strong> 2.0.0</p>
+            <p><strong>Version:</strong> 2.1.0</p>
             <p><strong>Works Offline:</strong> Yes (PWA)</p>
             <p><strong>Storage:</strong> Local (persistent)</p>
             <p><strong>Data Protection:</strong> Persistent storage requested — browser won't auto-delete your data</p>
