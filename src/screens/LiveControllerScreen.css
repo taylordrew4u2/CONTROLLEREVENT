@@ -136,6 +136,7 @@
 
 .progress-bar {
     height: 100%;
+    width: var(--progress-width, 0%);
     background: var(--accent);
     transition: width 0.5s linear;
     border-radius: var(--radius-full);

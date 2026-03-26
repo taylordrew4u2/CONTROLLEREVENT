@@ -501,8 +501,8 @@ function LiveControllerScreen() {
               <div
                 className="progress-bar"
                 style={{
-                  width: `${(elapsedSeconds / (currentShow.totalDuration * 60)) * 100}%`
-                }}
+                  '--progress-width': `${(elapsedSeconds / (currentShow.totalDuration * 60)) * 100}%`
+                } as React.CSSProperties}
               />
             </div>
           </div>
