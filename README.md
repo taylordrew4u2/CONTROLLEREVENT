@@ -254,7 +254,7 @@ npm run cap:sync      # rebuild + sync to native projects
 
 ### Tech Stack
 
-React 18, TypeScript, Vite 8, Electron 41, Capacitor 8, SQLite (desktop), localStorage (mobile), GitHub Actions CI/CD.
+React 18, TypeScript, Vite 8, Electron 41, Capacitor 8, localStorage (data), IndexedDB (audio), GitHub Actions CI/CD.
 
 ### Troubleshooting Builds
 
