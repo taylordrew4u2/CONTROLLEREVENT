@@ -71,10 +71,14 @@ When you open the app, you'll see **four tabs at the bottom**: Library, Builder,
 2. Tap the **Add Comedian** button
 3. Type the comedian's **name**
 4. Type how many **minutes** their set is (for example: `8` for an 8-minute set)
-5. Tap **Save**
-6. Do this for every comedian who might be in your shows
+5. (Optional) Add **walk-on music** — this plays automatically when the comedian takes the stage
+6. (Optional) Add **walk-off music** — this plays when their set ends
+7. Tap **Save**
+8. Do this for every comedian who might be in your shows
 
 **Want to change someone later?** Just tap their name in the list to edit them. Want to remove someone? Tap the delete button next to their name.
+
+> Audio files are automatically processed with fade-in and fade-out effects so transitions sound smooth.
 
 ---
 
@@ -85,14 +89,18 @@ When you open the app, you'll see **four tabs at the bottom**: Library, Builder,
 1. Tap **Builder** (bottom of the screen)
 2. The app already has a **default 60-minute show template** loaded — you don't have to start from scratch
 3. You'll see a list of segments like "Opening Act 1", "Host transition", "Headliner set", etc.
-4. **To assign a comedian to a segment:** Tap the segment name → pick a comedian from the dropdown
+4. **To assign a comedian to a segment:** Use the **Assign** dropdown on any segment → pick a comedian or template
 5. **To change how long a segment is:** Tap the number next to it and type a new number
 6. **To rearrange the order:** Use the **up/down arrow buttons** on each segment
 7. **To add a new segment:** Tap the **Add Segment** button at the bottom
-8. **To remove a segment:** Tap the **delete button** (trash icon) on that segment
-9. When the lineup looks right, tap **Save Show** and give it a name (like "Friday Night Show" or "March 17th")
+8. **To remove a segment:** Tap the **delete button** (✕) on that segment
+9. **To add notes to a segment:** Tap the **N** button — use this for credits, talking points, or reminders
+10. **To attach audio to a segment:** Tap the **A** button — pick an audio file to play during that segment
+11. When the lineup looks right, tap **Save Show** and give it a name (like "Friday Night Show" or "March 17th")
 
 > You can save as many different shows as you want. They'll all be there when you come back.
+>
+> **Save Template** saves your current segment layout as the new default template so future shows start with the same structure.
 
 ---
 
@@ -131,7 +139,11 @@ When you open the app, you'll see **four tabs at the bottom**: Library, Builder,
 Tap **Settings** (bottom of the screen) to change:
 
 - **Auto-advance** — whether the timer automatically moves to the next segment when time's up (on by default — leave it on)
+- **Show warnings** — whether the app shows visual warnings when a segment is running low on time
 - **Volume** — how loud the audio cues are
+- **Audio output** — pick which speaker or audio device to use (with a test button)
+- **Fade out duration** — how many seconds to fade out music at the end of a segment (default: 2 seconds)
+- **Audio fade-in / fade-out** — how many seconds of fade to apply when processing walk-on and walk-off music files (defaults: 2s in, 3s out)
 - **Backup** — **THIS IS IMPORTANT.** Tap Backup to save a copy of all your comedians and shows. If something ever goes wrong, you can restore from this backup.
 
 ---
