@@ -150,3 +150,20 @@
         min-width: 56px;
     }
 }
+
+/* ─── Audio picker ─── */
+.audio-picker {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    flex-wrap: wrap;
+}
+
+.audio-file-name {
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 220px;
+}

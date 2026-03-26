@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Comedian, Template } from '../types';
 import * as storage from '../storage';
+import { saveAudioFile } from '../audioStorage';
 import Modal from '../components/Modal';
 import EmptyState from '../components/EmptyState';
 import ConfirmDialog from '../components/ConfirmDialog';
@@ -142,7 +143,8 @@ function LibraryScreen() {
                   <div className="item-name">{comedian.name}</div>
                   <div className="item-details">
                     {comedian.defaultDuration} min set
-                    {comedian.audioFilePath && ' · Audio attached'}
+                    {comedian.walkOnAudioName && ` · Walk-on: ${comedian.walkOnAudioName}`}
+                    {comedian.walkOffAudioName && ` · Walk-off: ${comedian.walkOffAudioName}`}
                   </div>
                 </div>
                 <div className="item-actions">
@@ -234,6 +236,9 @@ interface ComedianModalProps {
 function ComedianModal({ comedian, onSave, onClose }: ComedianModalProps) {
   const [formData, setFormData] = useState(comedian);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
+  const walkOnRef = useRef<HTMLInputElement>(null);
+  const walkOffRef = useRef<HTMLInputElement>(null);
 
   const validate = () => {
     const e: Record<string, string> = {};
@@ -243,10 +248,28 @@ function ComedianModal({ comedian, onSave, onClose }: ComedianModalProps) {
     return Object.keys(e).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleAudioFile = async (file: File, type: 'walkOn' | 'walkOff') => {
+    try {
+      const { id, name } = await saveAudioFile(file);
+      if (type === 'walkOn') {
+        setFormData(prev => ({ ...prev, walkOnAudioId: id, walkOnAudioName: name }));
+      } else {
+        setFormData(prev => ({ ...prev, walkOffAudioId: id, walkOffAudioName: name }));
+      }
+      showToast(`${type === 'walkOn' ? 'Walk-on' : 'Walk-off'} audio saved`, 'success');
+    } catch {
+      showToast('Failed to save audio file', 'error');
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validate()) {
+    if (!validate()) return;
+    setSaving(true);
+    try {
       onSave(formData);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -279,9 +302,55 @@ function ComedianModal({ comedian, onSave, onClose }: ComedianModalProps) {
           <span className="field-hint">How many minutes this comedian typically performs</span>
         </div>
 
+        <div className="form-group">
+          <label>Walk-On Music</label>
+          <div className="audio-picker">
+            <input
+              ref={walkOnRef}
+              type="file"
+              accept="audio/*"
+              style={{ display: 'none' }}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleAudioFile(file, 'walkOn');
+              }}
+            />
+            <button type="button" className="btn-secondary" onClick={() => walkOnRef.current?.click()}>
+              {formData.walkOnAudioName ? 'Change File' : 'Choose File'}
+            </button>
+            {formData.walkOnAudioName && (
+              <span className="audio-file-name">{formData.walkOnAudioName}</span>
+            )}
+          </div>
+          <span className="field-hint">Plays automatically when this comedian takes the stage</span>
+        </div>
+
+        <div className="form-group">
+          <label>Walk-Off Music</label>
+          <div className="audio-picker">
+            <input
+              ref={walkOffRef}
+              type="file"
+              accept="audio/*"
+              style={{ display: 'none' }}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleAudioFile(file, 'walkOff');
+              }}
+            />
+            <button type="button" className="btn-secondary" onClick={() => walkOffRef.current?.click()}>
+              {formData.walkOffAudioName ? 'Change File' : 'Choose File'}
+            </button>
+            {formData.walkOffAudioName && (
+              <span className="audio-file-name">{formData.walkOffAudioName}</span>
+            )}
+          </div>
+          <span className="field-hint">Plays automatically when this comedian leaves the stage</span>
+        </div>
+
         <div className="form-actions">
           <button type="button" className="btn-secondary" onClick={onClose}>Cancel</button>
-          <button type="submit" className="btn-primary">Save</button>
+          <button type="submit" className="btn-primary" disabled={saving}>{saving ? 'Saving...' : 'Save'}</button>
         </div>
       </form>
     </Modal>

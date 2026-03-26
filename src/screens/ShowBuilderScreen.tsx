@@ -120,6 +120,10 @@ function ShowBuilderScreen() {
       handleUpdateSegment(segmentIndex, {
         name: comedian.name,
         audioFilePath: comedian.audioFilePath,
+        walkOnAudioId: comedian.walkOnAudioId,
+        walkOnAudioName: comedian.walkOnAudioName,
+        walkOffAudioId: comedian.walkOffAudioId,
+        walkOffAudioName: comedian.walkOffAudioName,
         duration: comedian.defaultDuration,
         comedianId: comedian.id
       });
@@ -265,7 +269,9 @@ function ShowBuilderScreen() {
                   ) : (
                     <div>
                       <span onClick={() => setEditingSegment(index)}>{segment.name}</span>
-                      {segment.audioFilePath && <span className="audio-indicator"> (audio)</span>}
+                      {segment.walkOnAudioName && <span className="audio-indicator"> (walk-on)</span>}
+                      {segment.walkOffAudioName && <span className="audio-indicator"> (walk-off)</span>}
+                      {segment.audioFilePath && !segment.walkOnAudioName && <span className="audio-indicator"> (audio)</span>}
                     </div>
                   )}
                 </div>

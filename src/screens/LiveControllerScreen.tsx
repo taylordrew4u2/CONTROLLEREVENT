@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Show } from '../types';
 import * as storage from '../storage';
+import { getAudioBlobURL } from '../audioStorage';
 import Modal from '../components/Modal';
 import ConfirmDialog from '../components/ConfirmDialog';
 import './LiveControllerScreen.css';
@@ -19,8 +20,10 @@ function LiveControllerScreen() {
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const nextAudioRef = useRef<HTMLAudioElement | null>(null);
+  const walkOffAudioRef = useRef<HTMLAudioElement | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const fadeOutRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const blobURLsRef = useRef<string[]>([]);
 
   // Load settings
   useEffect(() => {
@@ -36,6 +39,37 @@ function LiveControllerScreen() {
   const getAudioURL = (filePath: string): string => {
     if (!filePath) return '';
     return filePath;
+  };
+
+  // Play audio from IndexedDB by ID, returning the Audio element
+  const playAudioFromDB = async (audioId: string, vol: number): Promise<HTMLAudioElement | null> => {
+    try {
+      const url = await getAudioBlobURL(audioId);
+      if (!url) return null;
+      blobURLsRef.current.push(url);
+      const audio = new Audio(url);
+      audio.volume = vol;
+      await audio.play();
+      return audio;
+    } catch (err) {
+      console.error('Failed to play audio from DB:', err);
+      return null;
+    }
+  };
+
+  // Preload audio from IndexedDB by ID
+  const preloadAudioFromDB = async (audioId: string, vol: number): Promise<HTMLAudioElement | null> => {
+    try {
+      const url = await getAudioBlobURL(audioId);
+      if (!url) return null;
+      blobURLsRef.current.push(url);
+      const audio = new Audio(url);
+      audio.volume = vol;
+      audio.load();
+      return audio;
+    } catch {
+      return null;
+    }
   };
 
   // Fade out audio over specified duration (in seconds)
@@ -64,26 +98,50 @@ function LiveControllerScreen() {
   const handleNextSegment = useCallback(() => {
     if (!currentShow || currentSegmentIndex >= currentShow.segments.length - 1) return;
     
-    // Fade out current audio
+    const currentSeg = currentShow.segments[currentSegmentIndex];
+    const nextIndex = currentSegmentIndex + 1;
+    const nextSeg = currentShow.segments[nextIndex];
+
+    // Fade out current audio (walk-on or legacy audio)
     if (audioRef.current) {
       fadeOutAudio(audioRef.current, fadeOutDuration);
     }
     
-    // Move to next segment
-    const nextIndex = currentSegmentIndex + 1;
-    setCurrentSegmentIndex(nextIndex);
-    setElapsedSeconds(currentShow.segments[nextIndex].calculatedStartTime * 60);
+    // Play walk-off audio for the current comedian
+    if (currentSeg.walkOffAudioId) {
+      playAudioFromDB(currentSeg.walkOffAudioId, volume).then(audio => {
+        if (audio) {
+          walkOffAudioRef.current = audio;
+          // Auto fade-out walk-off after 15 seconds
+          setTimeout(() => {
+            if (walkOffAudioRef.current) {
+              fadeOutAudio(walkOffAudioRef.current, fadeOutDuration);
+            }
+          }, 15000);
+        }
+      });
+    }
     
-    // Use preloaded audio
-    if (nextAudioRef.current) {
+    // Move to next segment
+    setCurrentSegmentIndex(nextIndex);
+    setElapsedSeconds(nextSeg.calculatedStartTime * 60);
+    
+    // Play walk-on audio for the next comedian (if they have it)
+    if (nextSeg.walkOnAudioId && isRunning) {
+      playAudioFromDB(nextSeg.walkOnAudioId, volume).then(audio => {
+        if (audio) {
+          audioRef.current = audio;
+        }
+      });
+    } else if (nextAudioRef.current) {
+      // Fall back to preloaded legacy audio
       audioRef.current = nextAudioRef.current;
       nextAudioRef.current = null;
-      
       if (isRunning) {
         audioRef.current.play();
       }
     }
-  }, [currentShow, currentSegmentIndex, isRunning, fadeOutDuration]);
+  }, [currentShow, currentSegmentIndex, isRunning, fadeOutDuration, volume]);
 
   useEffect(() => {
     loadShows();
@@ -95,6 +153,10 @@ function LiveControllerScreen() {
       if (audioRef.current) {
         fadeOutAudio(audioRef.current, 0.5);
       }
+      if (walkOffAudioRef.current) {
+        walkOffAudioRef.current.pause();
+        walkOffAudioRef.current = null;
+      }
       if (nextAudioRef.current) {
         nextAudioRef.current.pause();
         nextAudioRef.current = null;
@@ -102,6 +164,9 @@ function LiveControllerScreen() {
       if (fadeOutRef.current) {
         clearInterval(fadeOutRef.current);
       }
+      // Revoke blob URLs
+      blobURLsRef.current.forEach(url => URL.revokeObjectURL(url));
+      blobURLsRef.current = [];
     };
   }, []);
 
@@ -144,10 +209,16 @@ function LiveControllerScreen() {
   }, [isRunning, currentSegmentIndex, currentShow, handleNextSegment]);
 
   useEffect(() => {
-    // Preload next audio
+    // Preload next segment audio
     if (currentShow && currentSegmentIndex < currentShow.segments.length - 1) {
       const nextSegment = currentShow.segments[currentSegmentIndex + 1];
-      if (nextSegment.audioFilePath) {
+      // Preload walk-on audio from IndexedDB
+      if (nextSegment.walkOnAudioId) {
+        preloadAudioFromDB(nextSegment.walkOnAudioId, volume).then(audio => {
+          if (audio) nextAudioRef.current = audio;
+        });
+      } else if (nextSegment.audioFilePath) {
+        // Legacy audio path fallback
         nextAudioRef.current = new Audio(getAudioURL(nextSegment.audioFilePath));
         nextAudioRef.current.volume = volume;
         nextAudioRef.current.load();
@@ -169,9 +240,14 @@ function LiveControllerScreen() {
       setShowLoadModal(false);
       
       // Initialize first segment audio
-      if (show.segments[0]?.audioFilePath) {
+      const firstSeg = show.segments[0];
+      if (firstSeg?.walkOnAudioId) {
+        preloadAudioFromDB(firstSeg.walkOnAudioId, volume).then(audio => {
+          if (audio) audioRef.current = audio;
+        });
+      } else if (firstSeg?.audioFilePath) {
         audioRef.current = new Audio();
-        audioRef.current.src = getAudioURL(show.segments[0].audioFilePath);
+        audioRef.current.src = getAudioURL(firstSeg.audioFilePath);
         audioRef.current.volume = volume;
         audioRef.current.load();
       }
@@ -180,11 +256,24 @@ function LiveControllerScreen() {
 
   const handleStart = () => {
     setIsRunning(true);
-    if (audioRef.current && currentShow?.segments[currentSegmentIndex]?.audioFilePath) {
+    const currentSeg = currentShow?.segments[currentSegmentIndex];
+    
+    // If walk-on audio is from IndexedDB and already preloaded
+    if (currentSeg?.walkOnAudioId && audioRef.current) {
+      audioRef.current.volume = volume;
+      audioRef.current.play()
+        .then(() => console.log('Walk-on audio started'))
+        .catch(err => console.error('Walk-on play error:', err));
+    } else if (currentSeg?.walkOnAudioId && !audioRef.current) {
+      // Not preloaded yet — load and play now
+      playAudioFromDB(currentSeg.walkOnAudioId, volume).then(audio => {
+        if (audio) audioRef.current = audio;
+      });
+    } else if (audioRef.current && currentSeg?.audioFilePath) {
       // Ensure audio source is set
-      const audioPath = getAudioURL(currentShow.segments[currentSegmentIndex].audioFilePath);
+      const audioPath = getAudioURL(currentSeg.audioFilePath!);
       console.log('Starting audio playback:', {
-        originalPath: currentShow.segments[currentSegmentIndex].audioFilePath,
+        originalPath: currentSeg.audioFilePath,
         convertedURL: audioPath,
         currentSrc: audioRef.current.src
       });
@@ -254,15 +343,26 @@ function LiveControllerScreen() {
     if (audioRef.current) {
       fadeOutAudio(audioRef.current, fadeOutDuration);
     }
+    if (walkOffAudioRef.current) {
+      fadeOutAudio(walkOffAudioRef.current, fadeOutDuration);
+    }
     
     setCurrentSegmentIndex(index);
     setElapsedSeconds(currentShow.segments[index].calculatedStartTime * 60);
     
-    // Load new audio
-    if (currentShow.segments[index].audioFilePath) {
-      audioRef.current = new Audio(getAudioURL(currentShow.segments[index].audioFilePath));
+    const seg = currentShow.segments[index];
+    
+    // Load walk-on audio from IndexedDB if available
+    if (seg.walkOnAudioId) {
+      preloadAudioFromDB(seg.walkOnAudioId, volume).then(audio => {
+        if (audio) {
+          audioRef.current = audio;
+          if (isRunning) audio.play();
+        }
+      });
+    } else if (seg.audioFilePath) {
+      audioRef.current = new Audio(getAudioURL(seg.audioFilePath));
       audioRef.current.volume = volume;
-      
       if (isRunning) {
         audioRef.current.play();
       }
@@ -299,6 +399,9 @@ function LiveControllerScreen() {
     setIsRunning(false);
     if (audioRef.current) {
       fadeOutAudio(audioRef.current, 0.5);
+    }
+    if (walkOffAudioRef.current) {
+      fadeOutAudio(walkOffAudioRef.current, 0.5);
     }
     setShowEmergencyConfirm(false);
   };
@@ -438,7 +541,19 @@ function LiveControllerScreen() {
                 </div>
               </div>
             )}
-            {currentSegment.audioFilePath && (
+            {currentSegment.walkOnAudioName && (
+              <div className="status-item full-width">
+                <div className="status-label">Walk-On Music</div>
+                <div className="status-value audio-path">{currentSegment.walkOnAudioName}</div>
+              </div>
+            )}
+            {currentSegment.walkOffAudioName && (
+              <div className="status-item full-width">
+                <div className="status-label">Walk-Off Music</div>
+                <div className="status-value audio-path">{currentSegment.walkOffAudioName}</div>
+              </div>
+            )}
+            {currentSegment.audioFilePath && !currentSegment.walkOnAudioName && (
               <div className="status-item full-width">
                 <div className="status-label">Audio File</div>
                 <div className="status-value audio-path">{currentSegment.audioFilePath}</div>

@@ -1,0 +1,90 @@
+/**
+ * IndexedDB-based audio file storage.
+ * Audio files are stored as blobs and persist permanently across sessions.
+ * Files cannot be deleted through the UI — they are permanent local assets.
+ */
+
+const DB_NAME = "pn-controller-audio";
+const DB_VERSION = 1;
+const STORE_NAME = "audioFiles";
+
+interface AudioRecord {
+  id: string;
+  name: string;
+  mimeType: string;
+  blob: Blob;
+  createdAt: string;
+}
+
+function openDB(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME, { keyPath: "id" });
+      }
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+/** Save an audio file to IndexedDB. Returns the generated ID. */
+export async function saveAudioFile(
+  file: File,
+): Promise<{ id: string; name: string }> {
+  const db = await openDB();
+  const id = `audio_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  const record: AudioRecord = {
+    id,
+    name: file.name,
+    mimeType: file.type,
+    blob: file,
+    createdAt: new Date().toISOString(),
+  };
+
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, "readwrite");
+    const store = tx.objectStore(STORE_NAME);
+    const request = store.put(record);
+    request.onsuccess = () => resolve({ id, name: file.name });
+    request.onerror = () => reject(request.error);
+    tx.oncomplete = () => db.close();
+  });
+}
+
+/** Get a blob URL for playback. Caller must revoke when done. */
+export async function getAudioBlobURL(id: string): Promise<string | null> {
+  if (!id) return null;
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, "readonly");
+    const store = tx.objectStore(STORE_NAME);
+    const request = store.get(id);
+    request.onsuccess = () => {
+      const record = request.result as AudioRecord | undefined;
+      if (record) {
+        resolve(URL.createObjectURL(record.blob));
+      } else {
+        resolve(null);
+      }
+    };
+    request.onerror = () => reject(request.error);
+    tx.oncomplete = () => db.close();
+  });
+}
+
+/** Check if an audio file exists in the store. */
+export async function hasAudioFile(id: string): Promise<boolean> {
+  if (!id) return false;
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, "readonly");
+    const store = tx.objectStore(STORE_NAME);
+    const request = store.get(id);
+    request.onsuccess = () => resolve(!!request.result);
+    request.onerror = () => reject(request.error);
+    tx.oncomplete = () => db.close();
+  });
+}

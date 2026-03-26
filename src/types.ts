@@ -2,6 +2,10 @@ export interface Comedian {
   id?: number;
   name: string;
   audioFilePath?: string;
+  walkOnAudioId?: string;
+  walkOnAudioName?: string;
+  walkOffAudioId?: string;
+  walkOffAudioName?: string;
   defaultDuration: number;
 }
 
@@ -36,6 +40,10 @@ export interface Segment {
   name: string;
   duration: number;
   audioFilePath?: string;
+  walkOnAudioId?: string;
+  walkOnAudioName?: string;
+  walkOffAudioId?: string;
+  walkOffAudioName?: string;
   orderIndex: number;
   calculatedStartTime: number;
   comedianId?: number;
