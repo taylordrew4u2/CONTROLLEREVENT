@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Segment, Comedian, Template, Show } from '../types';
 import * as storage from '../storage';
+import { saveAudioFile } from '../audioStorage';
 import Modal from '../components/Modal';
 import EmptyState from '../components/EmptyState';
 import ConfirmDialog from '../components/ConfirmDialog';
@@ -22,6 +23,9 @@ function ShowBuilderScreen() {
   const [showDeleteSegmentConfirm, setShowDeleteSegmentConfirm] = useState<number | null>(null);
   const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
   const [templateName, setTemplateName] = useState('');
+  const [audioPickerSegmentIndex, setAudioPickerSegmentIndex] = useState<number | null>(null);
+  const [audioProcessing, setAudioProcessing] = useState(false);
+  const segmentAudioRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadDefaultTemplate();
@@ -142,8 +146,30 @@ function ShowBuilderScreen() {
     }
   };
 
-  const handleAddAudioToSegment = (_segmentIndex: number) => {
-    showToast('Audio file picking is not available in this version', 'warning');
+  const handleAddAudioToSegment = (segmentIndex: number) => {
+    setAudioPickerSegmentIndex(segmentIndex);
+    segmentAudioRef.current?.click();
+  };
+
+  const handleSegmentAudioSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || audioPickerSegmentIndex === null) return;
+    setAudioProcessing(true);
+    try {
+      const { id, name } = await saveAudioFile(file);
+      handleUpdateSegment(audioPickerSegmentIndex, {
+        walkOnAudioId: id,
+        walkOnAudioName: name,
+      });
+      showToast('Audio attached with fades applied', 'success');
+    } catch (err) {
+      console.error('Audio processing error:', err);
+      showToast('Failed to process audio file', 'error');
+    } finally {
+      setAudioProcessing(false);
+      setAudioPickerSegmentIndex(null);
+      if (segmentAudioRef.current) segmentAudioRef.current.value = '';
+    }
   };
 
   const handleSaveShow = async () => {
@@ -366,6 +392,17 @@ function ShowBuilderScreen() {
           <button className="btn-primary" onClick={handleAddSegment}>Add Segment</button>
           <p className="builder-tip">Tap a segment name to rename it. Use "Assign" to fill from your library.</p>
         </div>
+
+        <input
+          ref={segmentAudioRef}
+          type="file"
+          accept="audio/*"
+          style={{ display: 'none' }}
+          onChange={handleSegmentAudioSelected}
+        />
+        {audioProcessing && (
+          <div className="audio-processing-banner">Processing audio with fades...</div>
+        )}
       </div>
 
       {showSaveModal && (
