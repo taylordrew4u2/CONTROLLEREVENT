@@ -9,6 +9,8 @@ interface Settings {
   autoAdvanceSegments: boolean;
   showWarnings: boolean;
   fadeOutDuration: number;
+  audioFadeInDuration: number;
+  audioFadeOutDuration: number;
 }
 
 interface AudioDevice {
@@ -29,7 +31,9 @@ function SettingsScreen({ onSettingsChange }: SettingsScreenProps) {
       audioOutput: 'default',
       autoAdvanceSegments: true,
       showWarnings: true,
-      fadeOutDuration: 2
+      fadeOutDuration: 2,
+      audioFadeInDuration: 2,
+      audioFadeOutDuration: 3
     };
   });
 
@@ -155,6 +159,40 @@ function SettingsScreen({ onSettingsChange }: SettingsScreenProps) {
               value={settings.fadeOutDuration}
               onChange={(e) => handleSettingChange('fadeOutDuration', parseFloat(e.target.value))}
             />
+          </div>
+
+          <div className="setting-item">
+            <label>Audio File Fade-In (seconds)</label>
+            <div className="volume-control">
+              <input
+                type="range"
+                min="0.5"
+                max="10"
+                step="0.5"
+                title="Fade-in duration baked into uploaded audio files"
+                value={settings.audioFadeInDuration}
+                onChange={(e) => handleSettingChange('audioFadeInDuration', parseFloat(e.target.value))}
+              />
+              <span className="volume-value">{settings.audioFadeInDuration}s</span>
+            </div>
+            <p className="setting-help">Smooth fade-in baked into every uploaded audio file. Adjust before uploading new files.</p>
+          </div>
+
+          <div className="setting-item">
+            <label>Audio File Fade-Out (seconds)</label>
+            <div className="volume-control">
+              <input
+                type="range"
+                min="0.5"
+                max="10"
+                step="0.5"
+                title="Fade-out duration baked into uploaded audio files"
+                value={settings.audioFadeOutDuration}
+                onChange={(e) => handleSettingChange('audioFadeOutDuration', parseFloat(e.target.value))}
+              />
+              <span className="volume-value">{settings.audioFadeOutDuration}s</span>
+            </div>
+            <p className="setting-help">Smooth fade-out baked into every uploaded audio file. Adjust before uploading new files.</p>
           </div>
 
           <div className="setting-item">

@@ -237,6 +237,7 @@ function ComedianModal({ comedian, onSave, onClose }: ComedianModalProps) {
   const [formData, setFormData] = useState(comedian);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+  const [processing, setProcessing] = useState<string | null>(null);
   const walkOnRef = useRef<HTMLInputElement>(null);
   const walkOffRef = useRef<HTMLInputElement>(null);
 
@@ -249,6 +250,8 @@ function ComedianModal({ comedian, onSave, onClose }: ComedianModalProps) {
   };
 
   const handleAudioFile = async (file: File, type: 'walkOn' | 'walkOff') => {
+    const label = type === 'walkOn' ? 'Walk-on' : 'Walk-off';
+    setProcessing(`Processing ${label} audio with fades...`);
     try {
       const { id, name } = await saveAudioFile(file);
       if (type === 'walkOn') {
@@ -256,9 +259,12 @@ function ComedianModal({ comedian, onSave, onClose }: ComedianModalProps) {
       } else {
         setFormData(prev => ({ ...prev, walkOffAudioId: id, walkOffAudioName: name }));
       }
-      showToast(`${type === 'walkOn' ? 'Walk-on' : 'Walk-off'} audio saved`, 'success');
-    } catch {
-      showToast('Failed to save audio file', 'error');
+      showToast(`${label} audio saved with fades applied`, 'success');
+    } catch (err) {
+      console.error('Audio processing error:', err);
+      showToast('Failed to process audio file', 'error');
+    } finally {
+      setProcessing(null);
     }
   };
 
@@ -348,9 +354,13 @@ function ComedianModal({ comedian, onSave, onClose }: ComedianModalProps) {
           <span className="field-hint">Plays automatically when this comedian leaves the stage</span>
         </div>
 
+        {processing && (
+          <div className="audio-processing-banner">{processing}</div>
+        )}
+
         <div className="form-actions">
-          <button type="button" className="btn-secondary" onClick={onClose}>Cancel</button>
-          <button type="submit" className="btn-primary" disabled={saving}>{saving ? 'Saving...' : 'Save'}</button>
+          <button type="button" className="btn-secondary" onClick={onClose} disabled={!!processing}>Cancel</button>
+          <button type="submit" className="btn-primary" disabled={saving || !!processing}>{saving ? 'Saving...' : 'Save'}</button>
         </div>
       </form>
     </Modal>

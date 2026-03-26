@@ -2,7 +2,10 @@
  * IndexedDB-based audio file storage.
  * Audio files are stored as blobs and persist permanently across sessions.
  * Files cannot be deleted through the UI — they are permanent local assets.
+ * All files are automatically processed with fade-in/fade-out on upload.
  */
+
+import { processAudioWithFades } from "./audioProcessor";
 
 const DB_NAME = "pn-controller-audio";
 const DB_VERSION = 1;
@@ -30,17 +33,20 @@ function openDB(): Promise<IDBDatabase> {
   });
 }
 
-/** Save an audio file to IndexedDB. Returns the generated ID. */
+/** Save an audio file to IndexedDB. Processes with fade-in/out first. Returns the generated ID. */
 export async function saveAudioFile(
   file: File,
 ): Promise<{ id: string; name: string }> {
+  // Process the audio to bake in fade-in and fade-out
+  const processedBlob = await processAudioWithFades(file);
+
   const db = await openDB();
   const id = `audio_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   const record: AudioRecord = {
     id,
     name: file.name,
-    mimeType: file.type,
-    blob: file,
+    mimeType: "audio/wav",
+    blob: processedBlob,
     createdAt: new Date().toISOString(),
   };
 
