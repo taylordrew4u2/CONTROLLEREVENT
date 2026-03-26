@@ -5,6 +5,10 @@
     background-color: var(--bg-base);
 }
 
+.show-builder-screen .hidden-input {
+    display: none;
+}
+
 /* ─── Header bar ─── */
 
 .builder-header {

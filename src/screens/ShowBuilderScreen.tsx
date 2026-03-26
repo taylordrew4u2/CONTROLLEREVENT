@@ -397,7 +397,8 @@ function ShowBuilderScreen() {
           ref={segmentAudioRef}
           type="file"
           accept="audio/*"
-          style={{ display: 'none' }}
+          title="Choose segment audio file"
+          className="hidden-input"
           onChange={handleSegmentAudioSelected}
         />
         {audioProcessing && (

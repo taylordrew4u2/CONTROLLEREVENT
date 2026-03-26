@@ -300,6 +300,7 @@ function ComedianModal({ comedian, onSave, onClose }: ComedianModalProps) {
           <input
             type="number"
             min="1"
+            title="Default set duration in minutes"
             value={formData.defaultDuration}
             onChange={(e) => { setFormData({ ...formData, defaultDuration: parseInt(e.target.value) || 0 }); setErrors(prev => ({ ...prev, duration: '' })); }}
             className={errors.duration ? 'input-error' : ''}
@@ -315,7 +316,8 @@ function ComedianModal({ comedian, onSave, onClose }: ComedianModalProps) {
               ref={walkOnRef}
               type="file"
               accept="audio/*"
-              style={{ display: 'none' }}
+              title="Choose walk-on music file"
+              className="hidden-input"
               onChange={(e) => {
                 const file = e.target.files?.[0];
                 if (file) handleAudioFile(file, 'walkOn');
@@ -338,7 +340,8 @@ function ComedianModal({ comedian, onSave, onClose }: ComedianModalProps) {
               ref={walkOffRef}
               type="file"
               accept="audio/*"
-              style={{ display: 'none' }}
+              title="Choose walk-off music file"
+              className="hidden-input"
               onChange={(e) => {
                 const file = e.target.files?.[0];
                 if (file) handleAudioFile(file, 'walkOff');
@@ -411,6 +414,7 @@ function TemplateModal({ template, onSave, onClose }: TemplateModalProps) {
         <div className="form-group">
           <label>Type</label>
           <select
+            title="Segment type"
             value={formData.type}
             onChange={(e) => setFormData({ ...formData, type: e.target.value })}
           >
@@ -426,6 +430,7 @@ function TemplateModal({ template, onSave, onClose }: TemplateModalProps) {
           <input
             type="number"
             min="1"
+            title="Default duration in minutes"
             value={formData.defaultDuration}
             onChange={(e) => { setFormData({ ...formData, defaultDuration: parseInt(e.target.value) || 0 }); setErrors(prev => ({ ...prev, duration: '' })); }}
             className={errors.duration ? 'input-error' : ''}
