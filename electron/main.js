@@ -16,11 +16,14 @@ function createWindow() {
     },
   });
 
-  if (process.env.NODE_ENV === "development" || !app.isPackaged) {
+  if (process.env.VITE_DEV_SERVER === "true") {
     mainWindow.loadURL("http://localhost:5173");
     mainWindow.webContents.openDevTools();
   } else {
     mainWindow.loadFile(path.join(__dirname, "../dist/index.html"));
+    if (!app.isPackaged) {
+      mainWindow.webContents.openDevTools();
+    }
   }
 }
 

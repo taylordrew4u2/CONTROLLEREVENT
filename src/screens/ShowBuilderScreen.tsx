@@ -408,20 +408,23 @@ function ShowBuilderScreen() {
 
       {showSaveModal && (
         <Modal title="Save Show" onClose={() => setShowSaveModal(false)}>
-          <div className="form-group">
-            <label>Show Name</label>
-            <input
-              type="text"
-              value={showName}
-              onChange={(e) => setShowName(e.target.value)}
-              autoFocus
-              placeholder="Enter show name..."
-            />
-          </div>
-          <div className="form-actions">
-            <button className="btn-secondary" onClick={() => setShowSaveModal(false)}>Cancel</button>
-            <button className="btn-primary" onClick={handleSaveShow}>Save</button>
-          </div>
+          <form onSubmit={(e) => { e.preventDefault(); handleSaveShow(); }}>
+            <div className="form-group">
+              <label>Show Name</label>
+              <input
+                type="text"
+                value={showName}
+                onChange={(e) => setShowName(e.target.value)}
+                autoFocus
+                placeholder="Enter show name..."
+                required
+              />
+            </div>
+            <div className="form-actions">
+              <button type="button" className="btn-secondary" onClick={() => setShowSaveModal(false)}>Cancel</button>
+              <button type="submit" className="btn-primary">Save</button>
+            </div>
+          </form>
         </Modal>
       )}
 
@@ -489,21 +492,24 @@ function ShowBuilderScreen() {
 
       {showSaveTemplateModal && (
         <Modal title="Save as Template" onClose={() => setShowSaveTemplateModal(false)}>
-          <p className="confirm-message">This will save the current segment layout as the new default template.</p>
-          <div className="form-group">
-            <label>Template Name</label>
-            <input
-              type="text"
-              value={templateName}
-              onChange={(e) => setTemplateName(e.target.value)}
-              placeholder="e.g. Friday Night 60-Min"
-              autoFocus
-            />
-          </div>
-          <div className="form-actions">
-            <button className="btn-secondary" onClick={() => setShowSaveTemplateModal(false)}>Cancel</button>
-            <button className="btn-primary" onClick={confirmSaveTemplate}>Save Template</button>
-          </div>
+          <form onSubmit={(e) => { e.preventDefault(); confirmSaveTemplate(); }}>
+            <p className="confirm-message">This will save the current segment layout as the new default template.</p>
+            <div className="form-group">
+              <label>Template Name</label>
+              <input
+                type="text"
+                value={templateName}
+                onChange={(e) => setTemplateName(e.target.value)}
+                placeholder="e.g. Friday Night 60-Min"
+                autoFocus
+                required
+              />
+            </div>
+            <div className="form-actions">
+              <button type="button" className="btn-secondary" onClick={() => setShowSaveTemplateModal(false)}>Cancel</button>
+              <button type="submit" className="btn-primary">Save Template</button>
+            </div>
+          </form>
         </Modal>
       )}
     </div>
