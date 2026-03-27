@@ -104,24 +104,15 @@ function SettingsScreen({ onSettingsChange }: SettingsScreenProps) {
   };
 
   const testAudio = () => {
-    console.log('Testing audio with volume:', settings.audioVolume);
-    
-    // Create a simple beep sound using Web Audio API
     const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
-    
     oscillator.connect(gainNode);
     gainNode.connect(audioContext.destination);
-    
-    oscillator.frequency.value = 440; // A4 note
+    oscillator.frequency.value = 440;
     gainNode.gain.value = settings.audioVolume;
-    
     oscillator.start();
-    setTimeout(() => {
-      oscillator.stop();
-      console.log('Test audio played');
-    }, 500);
+    setTimeout(() => oscillator.stop(), 500);
   };
 
   return (
@@ -228,8 +219,8 @@ function SettingsScreen({ onSettingsChange }: SettingsScreenProps) {
               checked={settings.autoAdvanceSegments}
               onChange={(e) => handleSettingChange('autoAdvanceSegments', e.target.checked)}
             />
-            <label htmlFor="auto-advance">Auto-advance to next segment</label>
-            <p className="setting-help">Automatically move to the next segment when time expires</p>
+            <label htmlFor="auto-advance">Auto-advance to next performer</label>
+            <p className="setting-help">Automatically move to the next performer when time expires</p>
           </div>
 
           <div className="setting-item checkbox">
@@ -240,7 +231,7 @@ function SettingsScreen({ onSettingsChange }: SettingsScreenProps) {
               onChange={(e) => handleSettingChange('showWarnings', e.target.checked)}
             />
             <label htmlFor="show-warnings">Show 30-second warnings</label>
-            <p className="setting-help">Vibrate when 30 seconds remain in current segment</p>
+            <p className="setting-help">Vibrate when 30 seconds remain for current performer</p>
           </div>
         </div>
 
@@ -262,80 +253,11 @@ function SettingsScreen({ onSettingsChange }: SettingsScreenProps) {
         </div>
 
         <div className="settings-section">
-          <h2>Download Desktop App</h2>
-          <p className="setting-help backup-help">
-            Get the desktop version for your computer. Not sure which one? 
-            {navigator.userAgent.includes('Mac') ? ' You\'re on a Mac — grab the macOS download.' : navigator.userAgent.includes('Win') ? ' You\'re on Windows — grab the Windows download.' : ' Pick the one that matches your computer.'}
-          </p>
-
-          <div className="download-options">
-            <div className={`download-card${navigator.userAgent.includes('Win') ? ' download-recommended' : ''}`}>
-              {navigator.userAgent.includes('Win') && <span className="download-badge">Recommended for you</span>}
-              <a
-                href="https://github.com/taylordrew4u2/CONTROLLEREVENT/releases/latest/download/Pins-Needles-Controller-Setup.exe"
-                className="btn-download"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <span className="download-icon">🪟</span>
-                <span>
-                  <strong>Download for Windows</strong>
-                  <small>.exe installer — works on Windows 10 &amp; 11</small>
-                </span>
-              </a>
-              <ol className="install-steps">
-                <li>Click the button above to download the <code>.exe</code> file</li>
-                <li>Open the downloaded file and click <strong>"Install"</strong></li>
-                <li>The app will open automatically — a desktop shortcut is created too</li>
-              </ol>
-            </div>
-
-            <div className={`download-card${navigator.userAgent.includes('Mac') ? ' download-recommended' : ''}`}>
-              {navigator.userAgent.includes('Mac') && <span className="download-badge">Recommended for you</span>}
-              <a
-                href="https://github.com/taylordrew4u2/CONTROLLEREVENT/releases/latest/download/Pins-Needles-Controller.dmg"
-                className="btn-download"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <span className="download-icon">🍎</span>
-                <span>
-                  <strong>Download for Mac</strong>
-                  <small>.dmg installer — works on macOS 11+</small>
-                </span>
-              </a>
-              <ol className="install-steps">
-                <li>Click the button above to download the <code>.dmg</code> file</li>
-                <li>Open it and drag the app icon into your <strong>Applications</strong> folder</li>
-                <li>First launch: right-click the app → <strong>"Open"</strong> → click <strong>"Open"</strong> again</li>
-              </ol>
-            </div>
-
-            <details className="download-more">
-              <summary>Other download options</summary>
-              <a
-                href="https://github.com/taylordrew4u2/CONTROLLEREVENT/releases/latest"
-                className="btn-download btn-download-alt"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <span className="download-icon">📦</span>
-                <span>
-                  <strong>All Downloads &amp; Older Versions</strong>
-                  <small>Portable builds, zip files, and past releases</small>
-                </span>
-              </a>
-            </details>
-          </div>
-        </div>
-
-        <div className="settings-section">
           <h2>Application Info</h2>
           <div className="info-item">
             <p><strong>Version:</strong> 2.1.0</p>
-            <p><strong>Works Offline:</strong> Yes (PWA)</p>
             <p><strong>Storage:</strong> Local (persistent)</p>
-            <p><strong>Data Protection:</strong> Persistent storage requested — browser won't auto-delete your data</p>
+            <p><strong>Data Protection:</strong> Persistent storage requested — your data won't be auto-deleted</p>
           </div>
         </div>
       </div>

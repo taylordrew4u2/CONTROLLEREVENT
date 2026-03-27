@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Segment, Comedian, Template, Show } from '../types';
+import { LineupEntry, Performer, Show } from '../types';
 import * as storage from '../storage';
 import { saveAudioFile } from '../audioStorage';
 import Modal from '../components/Modal';
@@ -9,60 +9,30 @@ import { showToast } from '../components/Toast';
 import './ShowBuilderScreen.css';
 
 function ShowBuilderScreen() {
-  const [segments, setSegments] = useState<Segment[]>([]);
-  const [comedians, setComedians] = useState<Comedian[]>([]);
-  const [templates, setTemplates] = useState<Template[]>([]);
+  const [lineup, setLineup] = useState<LineupEntry[]>([]);
+  const [performers, setPerformers] = useState<Performer[]>([]);
   const [shows, setShows] = useState<Show[]>([]);
   const [showName, setShowName] = useState('');
   const [currentShowId, setCurrentShowId] = useState<number | null>(null);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [showLoadModal, setShowLoadModal] = useState(false);
-  const [editingSegment, setEditingSegment] = useState<number | null>(null);
+  const [showAddPerformerModal, setShowAddPerformerModal] = useState(false);
   const [editingNotesIndex, setEditingNotesIndex] = useState<number | null>(null);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
-  const [showDeleteSegmentConfirm, setShowDeleteSegmentConfirm] = useState<number | null>(null);
-  const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
-  const [templateName, setTemplateName] = useState('');
-  const [audioPickerSegmentIndex, setAudioPickerSegmentIndex] = useState<number | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
+  const [audioPickerIndex, setAudioPickerIndex] = useState<{ index: number; type: 'walkOn' | 'walkOff' } | null>(null);
   const [audioProcessing, setAudioProcessing] = useState(false);
-  const segmentAudioRef = useRef<HTMLInputElement>(null);
+  const audioRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    loadDefaultTemplate();
-    loadComedians();
-    loadTemplates();
+    loadPerformers();
     loadShows();
   }, []);
 
-  const loadDefaultTemplate = () => {
-    const template = storage.getDefaultShowTemplate();
-    if (template && template.segments) {
-      const newSegments = template.segments.map((seg, index) => ({
-        name: seg.name,
-        duration: seg.duration,
-        orderIndex: index,
-        calculatedStartTime: 0,
-        segmentType: seg.segmentType
-      }));
-      recalculateTimestamps(newSegments);
-      setSegments(newSegments);
-    }
-  };
-
-  const loadComedians = () => setComedians(storage.getComedians());
-  const loadTemplates = () => setTemplates(storage.getTemplates());
+  const loadPerformers = () => setPerformers(storage.getPerformers());
   const loadShows = () => setShows(storage.getShows());
 
-  const recalculateTimestamps = (segs: Segment[]) => {
-    let currentTime = 0;
-    segs.forEach(seg => {
-      seg.calculatedStartTime = currentTime;
-      currentTime += seg.duration;
-    });
-    return segs;
-  };
-
-  const getTotalDuration = () => segments.reduce((sum, seg) => sum + seg.duration, 0);
+  const getTotalDuration = () => lineup.reduce((sum, e) => sum + e.duration, 0);
 
   const formatTime = (minutes: number) => {
     const hours = Math.floor(minutes / 60);
@@ -70,180 +40,141 @@ function ShowBuilderScreen() {
     return `${hours}:${mins.toString().padStart(2, '0')}`;
   };
 
-  const formatTimeRange = (start: number, duration: number) => {
-    return `${formatTime(start)}\u2013${formatTime(start + duration)}`;
+  const getStartTime = (index: number) => {
+    let t = 0;
+    for (let i = 0; i < index; i++) t += lineup[i].duration;
+    return t;
   };
 
-  const handleAddSegment = () => {
-    const newSegment: Segment = {
-      name: 'New Segment',
-      duration: 5,
-      orderIndex: segments.length,
-      calculatedStartTime: 0
+  const handleAddFromLibrary = (performer: Performer) => {
+    const entry: LineupEntry = {
+      performerId: performer.id,
+      name: performer.name,
+      duration: performer.defaultDuration,
+      walkOnAudioId: performer.walkOnAudioId,
+      walkOnAudioName: performer.walkOnAudioName,
+      walkOffAudioId: performer.walkOffAudioId,
+      walkOffAudioName: performer.walkOffAudioName,
+      orderIndex: lineup.length,
     };
-    const newSegments = [...segments, newSegment];
-    recalculateTimestamps(newSegments);
-    setSegments(newSegments);
+    setLineup([...lineup, entry]);
+    setShowAddPerformerModal(false);
+    showToast(`${performer.name} added to lineup`, 'success');
   };
 
-  const handleUpdateSegment = (index: number, updates: Partial<Segment>) => {
-    const newSegments = segments.map((seg, i) =>
-      i === index ? { ...seg, ...updates } : seg
+  const handleAddCustomEntry = () => {
+    const entry: LineupEntry = {
+      name: 'New Performer',
+      duration: 5,
+      orderIndex: lineup.length,
+    };
+    setLineup([...lineup, entry]);
+  };
+
+  const handleUpdateEntry = (index: number, updates: Partial<LineupEntry>) => {
+    const newLineup = lineup.map((e, i) =>
+      i === index ? { ...e, ...updates } : e
     );
-    recalculateTimestamps(newSegments);
-    setSegments(newSegments);
+    setLineup(newLineup);
   };
 
-  const handleDeleteSegment = (index: number) => {
-    setShowDeleteSegmentConfirm(index);
+  const handleDeleteEntry = (index: number) => {
+    setShowDeleteConfirm(index);
   };
 
-  const confirmDeleteSegment = () => {
-    if (showDeleteSegmentConfirm === null) return;
-    const newSegments = segments.filter((_, i) => i !== showDeleteSegmentConfirm)
-      .map((seg, i) => ({ ...seg, orderIndex: i }));
-    recalculateTimestamps(newSegments);
-    setSegments(newSegments);
-    showToast('Segment removed', 'success');
-    setShowDeleteSegmentConfirm(null);
+  const confirmDeleteEntry = () => {
+    if (showDeleteConfirm === null) return;
+    const newLineup = lineup.filter((_, i) => i !== showDeleteConfirm)
+      .map((e, i) => ({ ...e, orderIndex: i }));
+    setLineup(newLineup);
+    showToast('Removed from lineup', 'success');
+    setShowDeleteConfirm(null);
   };
 
-  const handleMoveSegment = (fromIndex: number, toIndex: number) => {
-    if (toIndex < 0 || toIndex >= segments.length) return;
-    const newSegments = [...segments];
-    const [moved] = newSegments.splice(fromIndex, 1);
-    newSegments.splice(toIndex, 0, moved);
-    newSegments.forEach((seg, i) => seg.orderIndex = i);
-    recalculateTimestamps(newSegments);
-    setSegments(newSegments);
+  const handleMoveEntry = (fromIndex: number, toIndex: number) => {
+    if (toIndex < 0 || toIndex >= lineup.length) return;
+    const newLineup = [...lineup];
+    const [moved] = newLineup.splice(fromIndex, 1);
+    newLineup.splice(toIndex, 0, moved);
+    newLineup.forEach((e, i) => e.orderIndex = i);
+    setLineup(newLineup);
   };
 
-  const handleAssignComedian = (segmentIndex: number, comedianId: number) => {
-    const comedian = comedians.find(c => c.id === comedianId);
-    if (comedian) {
-      handleUpdateSegment(segmentIndex, {
-        name: comedian.name,
-        audioFilePath: comedian.audioFilePath,
-        walkOnAudioId: comedian.walkOnAudioId,
-        walkOnAudioName: comedian.walkOnAudioName,
-        walkOffAudioId: comedian.walkOffAudioId,
-        walkOffAudioName: comedian.walkOffAudioName,
-        duration: comedian.defaultDuration,
-        comedianId: comedian.id
-      });
-    }
+  const handleAudioPick = (index: number, type: 'walkOn' | 'walkOff') => {
+    setAudioPickerIndex({ index, type });
+    audioRef.current?.click();
   };
 
-  const handleAssignTemplate = (segmentIndex: number, templateId: number) => {
-    const template = templates.find(t => t.id === templateId);
-    if (template) {
-      handleUpdateSegment(segmentIndex, {
-        name: template.name,
-        audioFilePath: template.audioFilePath,
-        duration: template.defaultDuration,
-        templateId: template.id
-      });
-    }
-  };
-
-  const handleAddAudioToSegment = (segmentIndex: number) => {
-    setAudioPickerSegmentIndex(segmentIndex);
-    segmentAudioRef.current?.click();
-  };
-
-  const handleSegmentAudioSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAudioSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || audioPickerSegmentIndex === null) return;
+    if (!file || !audioPickerIndex) return;
     setAudioProcessing(true);
     try {
       const { id, name } = await saveAudioFile(file);
-      handleUpdateSegment(audioPickerSegmentIndex, {
-        walkOnAudioId: id,
-        walkOnAudioName: name,
-      });
+      const { index, type } = audioPickerIndex;
+      if (type === 'walkOn') {
+        handleUpdateEntry(index, { walkOnAudioId: id, walkOnAudioName: name });
+      } else {
+        handleUpdateEntry(index, { walkOffAudioId: id, walkOffAudioName: name });
+      }
       showToast('Audio attached with fades applied', 'success');
-    } catch (err) {
-      console.error('Audio processing error:', err);
+    } catch {
       showToast('Failed to process audio file', 'error');
     } finally {
       setAudioProcessing(false);
-      setAudioPickerSegmentIndex(null);
-      if (segmentAudioRef.current) segmentAudioRef.current.value = '';
+      setAudioPickerIndex(null);
+      if (audioRef.current) audioRef.current.value = '';
     }
   };
 
-  const handleSaveShow = async () => {
+  const handleSaveShow = () => {
     if (!showName.trim()) {
       showToast('Please enter a show name', 'warning');
       return;
     }
-    if (segments.length === 0) {
-      showToast('Add at least one segment before saving', 'warning');
+    if (lineup.length === 0) {
+      showToast('Add at least one performer before saving', 'warning');
       return;
     }
-    try {
-      const totalDuration = getTotalDuration();
-      const show: Show = {
-        name: showName,
-        createdDate: new Date().toISOString(),
-        totalDuration: totalDuration || 0,
-        segments: segments
-      };
-      if (currentShowId) {
-        storage.updateShow(currentShowId, show);
-      } else {
-        const id = storage.saveShow(show);
-        setCurrentShowId(id);
-      }
-      setShowSaveModal(false);
-      loadShows();
-      showToast('Show saved!', 'success');
-    } catch (err) {
-      console.error('Error saving show:', err);
-      showToast('Error saving show: ' + (err instanceof Error ? err.message : String(err)), 'error');
+    const show: Show = {
+      name: showName,
+      createdDate: new Date().toISOString(),
+      lineup: lineup,
+    };
+    if (currentShowId) {
+      storage.updateShow(currentShowId, show);
+    } else {
+      const id = storage.saveShow(show);
+      setCurrentShowId(id);
     }
+    setShowSaveModal(false);
+    loadShows();
+    showToast('Show saved!', 'success');
   };
 
   const handleLoadShow = (showId: number) => {
     const show = storage.getShow(showId);
     if (show) {
-      setSegments(show.segments);
+      setLineup(show.lineup);
       setShowName(show.name);
       setCurrentShowId(show.id!);
       setShowLoadModal(false);
     }
   };
 
-  const handleUseTemplate = () => {
+  const handleReset = () => {
     setShowResetConfirm(true);
   };
 
   const confirmReset = () => {
-    loadDefaultTemplate();
+    setLineup([]);
     setShowName('');
     setCurrentShowId(null);
     setShowResetConfirm(false);
-    showToast('Reset to default template', 'info');
+    showToast('Lineup cleared', 'info');
   };
 
-  const handleSaveAsTemplate = () => {
-    setTemplateName('');
-    setShowSaveTemplateModal(true);
-  };
-
-  const confirmSaveTemplate = () => {
-    if (!templateName.trim()) {
-      showToast('Please enter a template name', 'warning');
-      return;
-    }
-    storage.saveShowTemplate(templateName, segments.map(seg => ({
-      name: seg.name,
-      duration: seg.duration,
-      orderIndex: seg.orderIndex
-    })));
-    setShowSaveTemplateModal(false);
-    showToast('Template saved as default!', 'success');
-  };
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
   return (
     <div className="show-builder-screen">
@@ -251,155 +182,123 @@ function ShowBuilderScreen() {
         <div className="header-info">
           <h2>{showName || 'Untitled Show'}</h2>
           <div className="total-runtime">
-            Total: {formatTime(getTotalDuration())} ({getTotalDuration()} min)
+            {lineup.length} performer{lineup.length !== 1 ? 's' : ''} · {formatTime(getTotalDuration())} total
           </div>
         </div>
         <div className="header-actions">
-          <button className="btn-secondary" onClick={handleUseTemplate}>Reset</button>
-          <button className="btn-secondary" onClick={handleSaveAsTemplate}>Save Template</button>
+          <button className="btn-secondary" onClick={handleReset}>Clear</button>
           <button className="btn-secondary" onClick={() => setShowLoadModal(true)}>Load</button>
           <button className="btn-primary" onClick={() => setShowSaveModal(true)}>Save Show</button>
         </div>
       </div>
 
       <div className="builder-content">
-        <div className="segments-list">
-          <div className="list-header">
-            <span className="col-time">Time</span>
-            <span className="col-segment">Segment</span>
-            <span className="col-duration">Duration</span>
-            <span className="col-actions">Actions</span>
-          </div>
-
-          {segments.length === 0 ? (
+        <div className="lineup-list">
+          {lineup.length === 0 ? (
             <EmptyState
-              message="No segments yet"
-              hint='Tap "Add Segment" below or "Reset" to load the default show template.'
+              message="No performers in lineup"
+              hint='Tap "Add from Library" or "Add Custom" to build your lineup.'
             />
           ) : (
-            segments.map((segment, index) => (
-              <div key={index} className="segment-row">
-                <div className="col-time">
-                  {formatTimeRange(segment.calculatedStartTime, segment.duration)}
-                </div>
-                <div className="col-segment">
-                  {editingSegment === index ? (
+            lineup.map((entry, index) => {
+              const startTime = getStartTime(index);
+              return (
+                <div key={index} className="lineup-row">
+                  <div className="col-time">
+                    {formatTime(startTime)}–{formatTime(startTime + entry.duration)}
+                  </div>
+                  <div className="col-performer">
+                    {editingIndex === index ? (
+                      <input
+                        type="text"
+                        title="Performer name"
+                        value={entry.name}
+                        onChange={(e) => handleUpdateEntry(index, { name: e.target.value })}
+                        onBlur={() => setEditingIndex(null)}
+                        autoFocus
+                      />
+                    ) : (
+                      <div>
+                        <span onClick={() => setEditingIndex(index)}>{entry.name}</span>
+                        {entry.walkOnAudioName && <span className="audio-indicator"> ♪ on</span>}
+                        {entry.walkOffAudioName && <span className="audio-indicator"> ♪ off</span>}
+                      </div>
+                    )}
+                  </div>
+                  <div className="col-duration">
                     <input
-                      type="text"
-                      title="Segment name"
-                      value={segment.name}
-                      onChange={(e) => handleUpdateSegment(index, { name: e.target.value })}
-                      onBlur={() => setEditingSegment(null)}
-                      autoFocus
+                      type="number"
+                      min="1"
+                      title="Set duration in minutes"
+                      value={entry.duration}
+                      onChange={(e) => handleUpdateEntry(index, { duration: parseInt(e.target.value) || 1 })}
+                      className="duration-input"
                     />
-                  ) : (
-                    <div>
-                      <span onClick={() => setEditingSegment(index)}>{segment.name}</span>
-                      {segment.walkOnAudioName && <span className="audio-indicator"> (walk-on)</span>}
-                      {segment.walkOffAudioName && <span className="audio-indicator"> (walk-off)</span>}
-                      {segment.audioFilePath && !segment.walkOnAudioName && <span className="audio-indicator"> (audio)</span>}
-                    </div>
-                  )}
+                    <span>min</span>
+                  </div>
+                  <div className="col-actions">
+                    <button
+                      className="btn-icon"
+                      onClick={() => setEditingNotesIndex(index)}
+                      title="Add notes for this performer"
+                      aria-label="Notes"
+                    >
+                      N
+                    </button>
+                    <button
+                      className="btn-icon"
+                      onClick={() => handleAudioPick(index, 'walkOn')}
+                      title="Set walk-on audio for this slot"
+                      aria-label="Walk-on audio"
+                    >
+                      ♪
+                    </button>
+                    <button
+                      className="btn-icon"
+                      onClick={() => handleMoveEntry(index, index - 1)}
+                      disabled={index === 0}
+                      title="Move earlier in lineup"
+                      aria-label="Move up"
+                    >
+                      &#8593;
+                    </button>
+                    <button
+                      className="btn-icon"
+                      onClick={() => handleMoveEntry(index, index + 1)}
+                      disabled={index === lineup.length - 1}
+                      title="Move later in lineup"
+                      aria-label="Move down"
+                    >
+                      &#8595;
+                    </button>
+                    <button
+                      className="btn-danger btn-icon"
+                      onClick={() => handleDeleteEntry(index)}
+                      title="Remove from lineup"
+                      aria-label="Delete"
+                    >
+                      &#10005;
+                    </button>
+                  </div>
                 </div>
-                <div className="col-duration">
-                  <input
-                    type="number"
-                    min="1"
-                    title="Segment duration in minutes"
-                    value={segment.duration}
-                    onChange={(e) => handleUpdateSegment(index, { duration: parseInt(e.target.value) || 1 })}
-                    className="duration-input"
-                  />
-                  <span>min</span>
-                </div>
-                <div className="col-actions">
-                  <button
-                    className="btn-icon"
-                    onClick={() => setEditingNotesIndex(index)}
-                    title="Add notes or talking points for this segment"
-                    aria-label="Notes"
-                  >
-                    N
-                  </button>
-                  <button
-                    className="btn-icon"
-                    onClick={() => handleAddAudioToSegment(index)}
-                    title="Attach an audio file to play during this segment"
-                    aria-label="Audio"
-                  >
-                    A
-                  </button>
-
-                  <select
-                    title="Assign comedian or template"
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      if (value.startsWith('c-')) {
-                        handleAssignComedian(index, parseInt(value.substring(2)));
-                      } else if (value.startsWith('t-')) {
-                        handleAssignTemplate(index, parseInt(value.substring(2)));
-                      }
-                      e.target.value = '';
-                    }}
-                    defaultValue=""
-                  >
-                    <option value="">Assign...</option>
-                    <optgroup label="Comedians">
-                      {comedians.map(c => (
-                        <option key={`c-${c.id}`} value={`c-${c.id}`}>{c.name}</option>
-                      ))}
-                    </optgroup>
-                    <optgroup label="Templates">
-                      {templates.map(t => (
-                        <option key={`t-${t.id}`} value={`t-${t.id}`}>{t.name}</option>
-                      ))}
-                    </optgroup>
-                  </select>
-
-                  <button
-                    className="btn-icon"
-                    onClick={() => handleMoveSegment(index, index - 1)}
-                    disabled={index === 0}
-                    title="Move this segment earlier in the show"
-                    aria-label="Move up"
-                  >
-                    &#8593;
-                  </button>
-                  <button
-                    className="btn-icon"
-                    onClick={() => handleMoveSegment(index, index + 1)}
-                    disabled={index === segments.length - 1}
-                    title="Move this segment later in the show"
-                    aria-label="Move down"
-                  >
-                    &#8595;
-                  </button>
-                  <button
-                    className="btn-danger btn-icon"
-                    onClick={() => handleDeleteSegment(index)}
-                    title="Remove this segment from the show"
-                    aria-label="Delete segment"
-                  >
-                    &#10005;
-                  </button>
-                </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
 
-        <div className="add-segment-area">
-          <button className="btn-primary" onClick={handleAddSegment}>Add Segment</button>
-          <p className="builder-tip">Tap a segment name to rename it. Use "Assign" to fill from your library.</p>
+        <div className="add-performer-area">
+          <button className="btn-primary" onClick={() => setShowAddPerformerModal(true)}>Add from Library</button>
+          <button className="btn-secondary" style={{ marginLeft: 8 }} onClick={handleAddCustomEntry}>Add Custom</button>
+          <p className="builder-tip">Tap a name to rename. Audio assignments travel with each performer when reordered.</p>
         </div>
 
         <input
-          ref={segmentAudioRef}
+          ref={audioRef}
           type="file"
           accept="audio/*"
-          title="Choose segment audio file"
+          title="Choose audio file"
           className="hidden-input"
-          onChange={handleSegmentAudioSelected}
+          onChange={handleAudioSelected}
         />
         {audioProcessing && (
           <div className="audio-processing-banner">Processing audio with fades...</div>
@@ -431,14 +330,14 @@ function ShowBuilderScreen() {
       {showLoadModal && (
         <Modal title="Load Show" onClose={() => setShowLoadModal(false)}>
           {shows.length === 0 ? (
-            <EmptyState message="No saved shows yet" hint="Build a show and save it first." />
+            <EmptyState message="No saved shows yet" hint="Build a lineup and save it first." />
           ) : (
             <div className="shows-list">
               {shows.map(show => (
                 <div key={show.id} className="show-item" onClick={() => handleLoadShow(show.id!)}>
                   <div className="show-name">{show.name}</div>
                   <div className="show-info">
-                    {formatTime(show.totalDuration)} · {new Date(show.createdDate).toLocaleDateString()}
+                    {show.lineup.length} performers · {new Date(show.createdDate).toLocaleDateString()}
                   </div>
                 </div>
               ))}
@@ -450,15 +349,39 @@ function ShowBuilderScreen() {
         </Modal>
       )}
 
+      {showAddPerformerModal && (
+        <Modal title="Add Performer to Lineup" onClose={() => setShowAddPerformerModal(false)}>
+          {performers.length === 0 ? (
+            <EmptyState message="No performers in library" hint="Go to Library to add performers first." />
+          ) : (
+            <div className="shows-list">
+              {performers.map(p => (
+                <div key={p.id} className="show-item" onClick={() => handleAddFromLibrary(p)}>
+                  <div className="show-name">{p.name}</div>
+                  <div className="show-info">
+                    {p.defaultDuration} min
+                    {p.walkOnAudioName && ` · Walk-on: ${p.walkOnAudioName}`}
+                    {p.walkOffAudioName && ` · Walk-off: ${p.walkOffAudioName}`}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="form-actions">
+            <button className="btn-secondary" onClick={() => setShowAddPerformerModal(false)}>Cancel</button>
+          </div>
+        </Modal>
+      )}
+
       {editingNotesIndex !== null && (
-        <Modal title="Segment Notes" onClose={() => setEditingNotesIndex(null)}>
-          <h3 className="notes-segment-name">{segments[editingNotesIndex]?.name}</h3>
-          <p className="notes-help">Use this space for credits, talking points, or reminders for this segment.</p>
+        <Modal title="Performer Notes" onClose={() => setEditingNotesIndex(null)}>
+          <h3 className="notes-performer-name">{lineup[editingNotesIndex]?.name}</h3>
+          <p className="notes-help">Credits, talking points, or reminders for this performer's slot.</p>
           <textarea
             className="notes-textarea"
-            value={segments[editingNotesIndex]?.notes || ''}
-            onChange={(e) => handleUpdateSegment(editingNotesIndex, { notes: e.target.value })}
-            placeholder={"e.g., Credits: John Smith from Boston\nMention: New show dates next weekend\nSetup: Introduce headliner's special achievement"}
+            value={lineup[editingNotesIndex]?.notes || ''}
+            onChange={(e) => handleUpdateEntry(editingNotesIndex, { notes: e.target.value })}
+            placeholder={"e.g., Credits: From Boston\nMention: New album out\nSetup: Long intro needed"}
             rows={10}
             autoFocus
           />
@@ -470,47 +393,24 @@ function ShowBuilderScreen() {
 
       {showResetConfirm && (
         <ConfirmDialog
-          title="Reset to Default Template?"
-          message="This will clear your entire current lineup and replace it with the default show template. Any unsaved changes will be lost."
-          confirmLabel="Reset"
+          title="Clear Lineup?"
+          message="This will remove all performers from the current lineup. Any unsaved changes will be lost."
+          confirmLabel="Clear"
           danger
           onConfirm={confirmReset}
           onCancel={() => setShowResetConfirm(false)}
         />
       )}
 
-      {showDeleteSegmentConfirm !== null && (
+      {showDeleteConfirm !== null && (
         <ConfirmDialog
-          title="Delete Segment?"
-          message={`Are you sure you want to remove "${segments[showDeleteSegmentConfirm]?.name}" from the show?`}
-          confirmLabel="Delete"
+          title="Remove Performer?"
+          message={`Remove "${lineup[showDeleteConfirm]?.name}" from the lineup?`}
+          confirmLabel="Remove"
           danger
-          onConfirm={confirmDeleteSegment}
-          onCancel={() => setShowDeleteSegmentConfirm(null)}
+          onConfirm={confirmDeleteEntry}
+          onCancel={() => setShowDeleteConfirm(null)}
         />
-      )}
-
-      {showSaveTemplateModal && (
-        <Modal title="Save as Template" onClose={() => setShowSaveTemplateModal(false)}>
-          <form onSubmit={(e) => { e.preventDefault(); confirmSaveTemplate(); }}>
-            <p className="confirm-message">This will save the current segment layout as the new default template.</p>
-            <div className="form-group">
-              <label>Template Name</label>
-              <input
-                type="text"
-                value={templateName}
-                onChange={(e) => setTemplateName(e.target.value)}
-                placeholder="e.g. Friday Night 60-Min"
-                autoFocus
-                required
-              />
-            </div>
-            <div className="form-actions">
-              <button type="button" className="btn-secondary" onClick={() => setShowSaveTemplateModal(false)}>Cancel</button>
-              <button type="submit" className="btn-primary">Save Template</button>
-            </div>
-          </form>
-        </Modal>
       )}
     </div>
   );

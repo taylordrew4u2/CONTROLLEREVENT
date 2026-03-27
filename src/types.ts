@@ -1,60 +1,31 @@
-export interface Comedian {
+/** A performer in the library — persists across shows. */
+export interface Performer {
   id?: number;
   name: string;
-  audioFilePath?: string;
   walkOnAudioId?: string;
   walkOnAudioName?: string;
   walkOffAudioId?: string;
   walkOffAudioName?: string;
-  defaultDuration: number;
+  defaultDuration: number; // minutes
 }
 
-export interface Template {
-  id?: number;
+/** A performer's slot in a show lineup. Audio assignments travel with the entry. */
+export interface LineupEntry {
+  performerId?: number;
   name: string;
-  audioFilePath?: string;
-  defaultDuration: number;
-  type: string;
-}
-
-export interface ShowTemplateSegment {
-  id?: number;
-  showTemplateId?: number;
-  name: string;
-  duration: number;
-  orderIndex: number;
-  segmentType?: string;
-}
-
-export interface ShowTemplate {
-  id?: number;
-  name: string;
-  isDefault: number;
-  createdDate: string;
-  segments: ShowTemplateSegment[];
-}
-
-export interface Segment {
-  id?: number;
-  showId?: number;
-  name: string;
-  duration: number;
-  audioFilePath?: string;
+  duration: number; // minutes
   walkOnAudioId?: string;
   walkOnAudioName?: string;
   walkOffAudioId?: string;
   walkOffAudioName?: string;
   orderIndex: number;
-  calculatedStartTime: number;
-  comedianId?: number;
-  templateId?: number;
   notes?: string;
 }
 
+/** A saved show with an ordered performer lineup. */
 export interface Show {
   id?: number;
   name: string;
   createdDate: string;
-  totalDuration: number;
-  segments: Segment[];
+  lineup: LineupEntry[];
 }

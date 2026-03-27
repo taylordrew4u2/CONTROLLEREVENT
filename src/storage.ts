@@ -1,15 +1,9 @@
 /**
- * Local-only storage layer replacing Electron/SQLite.
+ * Local-only storage layer.
  * All data persists in localStorage. IDs are auto-incremented integers.
  */
 
-import {
-  Comedian,
-  Template,
-  ShowTemplate,
-  ShowTemplateSegment,
-  Show,
-} from "./types";
+import { Performer, Show } from "./types";
 
 function getStore<T>(key: string): T[] {
   const raw = localStorage.getItem(key);
@@ -28,86 +22,32 @@ function nextId(key: string): number {
   return next;
 }
 
-// ── Comedians ──────────────────────────────────────────────
+// ── Performers ─────────────────────────────────────────────
 
-export function getComedians(): Comedian[] {
-  return getStore<Comedian>("comedians");
+export function getPerformers(): Performer[] {
+  return getStore<Performer>("performers");
 }
 
-export function addComedian(comedian: Comedian): Comedian {
-  const list = getComedians();
-  const saved = { ...comedian, id: nextId("comedians") };
+export function addPerformer(performer: Performer): Performer {
+  const list = getPerformers();
+  const saved = { ...performer, id: nextId("performers") };
   list.push(saved);
-  setStore("comedians", list);
+  setStore("performers", list);
   return saved;
 }
 
-export function updateComedian(id: number, comedian: Comedian): Comedian {
-  const list = getComedians().map((c) =>
-    c.id === id ? { ...comedian, id } : c,
+export function updatePerformer(id: number, performer: Performer): Performer {
+  const list = getPerformers().map((p) =>
+    p.id === id ? { ...performer, id } : p,
   );
-  setStore("comedians", list);
-  return { ...comedian, id };
+  setStore("performers", list);
+  return { ...performer, id };
 }
 
-export function deleteComedian(id: number): boolean {
-  const list = getComedians().filter((c) => c.id !== id);
-  setStore("comedians", list);
+export function deletePerformer(id: number): boolean {
+  const list = getPerformers().filter((p) => p.id !== id);
+  setStore("performers", list);
   return true;
-}
-
-// ── Templates ──────────────────────────────────────────────
-
-export function getTemplates(): Template[] {
-  return getStore<Template>("templates");
-}
-
-export function addTemplate(template: Template): Template {
-  const list = getTemplates();
-  const saved = { ...template, id: nextId("templates") };
-  list.push(saved);
-  setStore("templates", list);
-  return saved;
-}
-
-export function updateTemplate(id: number, template: Template): Template {
-  const list = getTemplates().map((t) =>
-    t.id === id ? { ...template, id } : t,
-  );
-  setStore("templates", list);
-  return { ...template, id };
-}
-
-export function deleteTemplate(id: number): boolean {
-  const list = getTemplates().filter((t) => t.id !== id);
-  setStore("templates", list);
-  return true;
-}
-
-// ── Show Templates ─────────────────────────────────────────
-
-export function getDefaultShowTemplate(): ShowTemplate | null {
-  const list = getStore<ShowTemplate>("showTemplates");
-  return list.find((t) => t.isDefault === 1) || null;
-}
-
-export function saveShowTemplate(
-  name: string,
-  segments: ShowTemplateSegment[],
-): number {
-  const list = getStore<ShowTemplate>("showTemplates");
-  // clear existing defaults
-  list.forEach((t) => (t.isDefault = 0));
-  const id = nextId("showTemplates");
-  list.push({
-    id,
-    name,
-    isDefault: 1,
-    createdDate: new Date().toISOString(),
-    segments,
-  });
-  setStore("showTemplates", list);
-  return id;
 }
 
 // ── Shows ──────────────────────────────────────────────────
@@ -143,12 +83,8 @@ export function deleteShow(id: number): boolean {
 // ── Backup & Restore ────────────────────────────
 
 const BACKUP_KEYS = [
-  "comedians",
-  "comedians_id",
-  "templates",
-  "templates_id",
-  "showTemplates",
-  "showTemplates_id",
+  "performers",
+  "performers_id",
   "shows",
   "shows_id",
   "appSettings",
@@ -177,53 +113,17 @@ export function importAllData(json: string): void {
 export function seedIfEmpty(): void {
   if (localStorage.getItem("seeded")) return;
 
-  // Seed segment templates
-  if (getTemplates().length === 0) {
-    const defaultTemplates: Omit<Template, "id">[] = [
-      { name: "Host Intro", type: "Host Intro", defaultDuration: 5 },
-      { name: "Opening Act", type: "Opening Act", defaultDuration: 8 },
-      { name: "Host Transition", type: "Host Transition", defaultDuration: 1 },
-      {
-        name: "Extended Host Bit",
-        type: "Extended Host Bit",
-        defaultDuration: 11,
-      },
-      { name: "Headliner Intro", type: "Headliner Intro", defaultDuration: 1 },
-      { name: "Headliner Set", type: "Headliner Set", defaultDuration: 15 },
-      { name: "Show Close", type: "Show Close", defaultDuration: 2 },
-    ];
-    for (const t of defaultTemplates) {
-      addTemplate(t as Template);
-    }
-  }
-
-  // Seed example comedians
-  if (getComedians().length === 0) {
-    const exampleComedians: Omit<Comedian, "id">[] = [
+  // Seed example performers
+  if (getPerformers().length === 0) {
+    const examples: Omit<Performer, "id">[] = [
       { name: "Example - Opener 1", defaultDuration: 8 },
       { name: "Example - Opener 2", defaultDuration: 8 },
       { name: "Example - Opener 3", defaultDuration: 8 },
       { name: "Example - Headliner", defaultDuration: 15 },
     ];
-    for (const c of exampleComedians) {
-      addComedian(c as Comedian);
+    for (const p of examples) {
+      addPerformer(p as Performer);
     }
-  }
-
-  // Seed 60-min default show template
-  if (!getDefaultShowTemplate()) {
-    saveShowTemplate("Standard 60-Min Show", [
-      { name: "Show Open + Host Intro", duration: 5, orderIndex: 0 },
-      { name: "Opening Act 1", duration: 8, orderIndex: 1 },
-      { name: "Host Transition", duration: 1, orderIndex: 2 },
-      { name: "Opening Act 2", duration: 8, orderIndex: 3 },
-      { name: "Host Transition", duration: 1, orderIndex: 4 },
-      { name: "Opening Act 3", duration: 8, orderIndex: 5 },
-      { name: "Extended Host Bit", duration: 11, orderIndex: 6 },
-      { name: "Headliner Intro", duration: 1, orderIndex: 7 },
-      { name: "Headliner Set", duration: 15, orderIndex: 8 },
-      { name: "Show Close", duration: 2, orderIndex: 9 },
-    ]);
   }
 
   localStorage.setItem("seeded", "1");

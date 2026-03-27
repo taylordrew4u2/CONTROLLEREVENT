@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Show } from '../types';
+import { Show, LineupEntry } from '../types';
 import * as storage from '../storage';
 import { getAudioBlobURL } from '../audioStorage';
 import Modal from '../components/Modal';
@@ -9,7 +9,7 @@ import './LiveControllerScreen.css';
 function LiveControllerScreen() {
   const [shows, setShows] = useState<Show[]>([]);
   const [currentShow, setCurrentShow] = useState<Show | null>(null);
-  const [currentSegmentIndex, setCurrentSegmentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
   const [volume, setVolume] = useState(0.8);
@@ -17,13 +17,18 @@ function LiveControllerScreen() {
   const [showScheduleOverlay, setShowScheduleOverlay] = useState(false);
   const [showLoadModal, setShowLoadModal] = useState(false);
   const [showEmergencyConfirm, setShowEmergencyConfirm] = useState(false);
-  
+  const [isMuted, setIsMuted] = useState(false);
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
+  const [audioLabel, setAudioLabel] = useState<string>('');
+  const [walkOffLabel, setWalkOffLabel] = useState<string>('');
+
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const nextAudioRef = useRef<HTMLAudioElement | null>(null);
   const walkOffAudioRef = useRef<HTMLAudioElement | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const fadeOutRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const blobURLsRef = useRef<string[]>([]);
+  const preMuteVolumeRef = useRef(0.8);
 
   // Load settings
   useEffect(() => {
@@ -35,24 +40,33 @@ function LiveControllerScreen() {
     }
   }, []);
 
-  // Convert file path to URL for playback
-  const getAudioURL = (filePath: string): string => {
-    if (!filePath) return '';
-    return filePath;
-  };
+  // Compute start time (in minutes) at a given lineup index
+  const getStartTime = useCallback((lineup: LineupEntry[], index: number) => {
+    let t = 0;
+    for (let i = 0; i < index; i++) t += lineup[i].duration;
+    return t;
+  }, []);
 
-  // Play audio from IndexedDB by ID, returning the Audio element
+  const getTotalDuration = useCallback((lineup: LineupEntry[]) => {
+    return lineup.reduce((sum, e) => sum + e.duration, 0);
+  }, []);
+
+  // Play audio from IndexedDB by ID
   const playAudioFromDB = async (audioId: string, vol: number): Promise<HTMLAudioElement | null> => {
     try {
       const url = await getAudioBlobURL(audioId);
       if (!url) return null;
       blobURLsRef.current.push(url);
       const audio = new Audio(url);
-      audio.volume = vol;
+      audio.volume = isMuted ? 0 : vol;
+      audio.addEventListener('play', () => setIsAudioPlaying(true));
+      audio.addEventListener('pause', () => {
+        if (audio.currentTime >= audio.duration) setIsAudioPlaying(false);
+      });
+      audio.addEventListener('ended', () => setIsAudioPlaying(false));
       await audio.play();
       return audio;
-    } catch (err) {
-      console.error('Failed to play audio from DB:', err);
+    } catch {
       return null;
     }
   };
@@ -64,7 +78,12 @@ function LiveControllerScreen() {
       if (!url) return null;
       blobURLsRef.current.push(url);
       const audio = new Audio(url);
-      audio.volume = vol;
+      audio.volume = isMuted ? 0 : vol;
+      audio.addEventListener('play', () => setIsAudioPlaying(true));
+      audio.addEventListener('pause', () => {
+        if (audio.currentTime >= audio.duration) setIsAudioPlaying(false);
+      });
+      audio.addEventListener('ended', () => setIsAudioPlaying(false));
       audio.load();
       return audio;
     } catch {
@@ -75,13 +94,10 @@ function LiveControllerScreen() {
   // Fade out audio over specified duration (in seconds)
   const fadeOutAudio = (audio: HTMLAudioElement, duration: number = 2) => {
     if (!audio) return;
-    
     const startVolume = audio.volume;
     const startTime = Date.now();
     const endTime = startTime + (duration * 1000);
-    
     if (fadeOutRef.current) clearInterval(fadeOutRef.current);
-    
     fadeOutRef.current = setInterval(() => {
       const now = Date.now();
       if (now >= endTime) {
@@ -95,279 +111,167 @@ function LiveControllerScreen() {
     }, 50);
   };
 
-  const handleNextSegment = useCallback(() => {
-    if (!currentShow || currentSegmentIndex >= currentShow.segments.length - 1) return;
-    
-    const currentSeg = currentShow.segments[currentSegmentIndex];
-    const nextIndex = currentSegmentIndex + 1;
-    const nextSeg = currentShow.segments[nextIndex];
+  const handleNextPerformer = useCallback(() => {
+    if (!currentShow || currentIndex >= currentShow.lineup.length - 1) return;
 
-    // Fade out current audio (walk-on or legacy audio)
+    const currentEntry = currentShow.lineup[currentIndex];
+    const nextIdx = currentIndex + 1;
+    const nextEntry = currentShow.lineup[nextIdx];
+
+    // Fade out current walk-on audio
     if (audioRef.current) {
       fadeOutAudio(audioRef.current, fadeOutDuration);
     }
-    
-    // Play walk-off audio for the current comedian
-    if (currentSeg.walkOffAudioId) {
-      playAudioFromDB(currentSeg.walkOffAudioId, volume).then(audio => {
+
+    // Play walk-off audio for the departing performer
+    if (currentEntry.walkOffAudioId) {
+      setWalkOffLabel(currentEntry.walkOffAudioName || 'Walk-Off');
+      playAudioFromDB(currentEntry.walkOffAudioId, volume).then(audio => {
         if (audio) {
           walkOffAudioRef.current = audio;
-          // Auto fade-out walk-off after 15 seconds
+          audio.addEventListener('ended', () => setWalkOffLabel(''));
           setTimeout(() => {
             if (walkOffAudioRef.current) {
               fadeOutAudio(walkOffAudioRef.current, fadeOutDuration);
+              setWalkOffLabel('');
             }
           }, 15000);
         }
       });
+    } else {
+      setWalkOffLabel('');
     }
-    
-    // Move to next segment
-    setCurrentSegmentIndex(nextIndex);
-    setElapsedSeconds(nextSeg.calculatedStartTime * 60);
-    
-    // Play walk-on audio for the next comedian (if they have it)
-    if (nextSeg.walkOnAudioId && isRunning) {
-      playAudioFromDB(nextSeg.walkOnAudioId, volume).then(audio => {
-        if (audio) {
-          audioRef.current = audio;
-        }
+
+    // Move to next performer
+    setCurrentIndex(nextIdx);
+    const nextStart = getStartTime(currentShow.lineup, nextIdx);
+    setElapsedSeconds(nextStart * 60);
+
+    // Play walk-on audio for the incoming performer
+    if (nextEntry.walkOnAudioId && isRunning) {
+      setAudioLabel(nextEntry.walkOnAudioName || 'Walk-On');
+      playAudioFromDB(nextEntry.walkOnAudioId, volume).then(audio => {
+        if (audio) audioRef.current = audio;
       });
     } else if (nextAudioRef.current) {
-      // Fall back to preloaded legacy audio
       audioRef.current = nextAudioRef.current;
       nextAudioRef.current = null;
-      if (isRunning) {
-        audioRef.current.play();
-      }
+      if (isRunning) audioRef.current.play();
     }
-  }, [currentShow, currentSegmentIndex, isRunning, fadeOutDuration, volume]);
+  }, [currentShow, currentIndex, isRunning, fadeOutDuration, volume, getStartTime]);
 
   useEffect(() => {
     loadShows();
   }, []);
 
-  // Cleanup audio on unmount
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (audioRef.current) {
-        fadeOutAudio(audioRef.current, 0.5);
-      }
-      if (walkOffAudioRef.current) {
-        walkOffAudioRef.current.pause();
-        walkOffAudioRef.current = null;
-      }
-      if (nextAudioRef.current) {
-        nextAudioRef.current.pause();
-        nextAudioRef.current = null;
-      }
-      if (fadeOutRef.current) {
-        clearInterval(fadeOutRef.current);
-      }
-      // Revoke blob URLs
+      if (audioRef.current) fadeOutAudio(audioRef.current, 0.5);
+      if (walkOffAudioRef.current) { walkOffAudioRef.current.pause(); walkOffAudioRef.current = null; }
+      if (nextAudioRef.current) { nextAudioRef.current.pause(); nextAudioRef.current = null; }
+      if (fadeOutRef.current) clearInterval(fadeOutRef.current);
       blobURLsRef.current.forEach(url => URL.revokeObjectURL(url));
       blobURLsRef.current = [];
     };
   }, []);
 
+  // Timer tick
   useEffect(() => {
     if (isRunning) {
       timerRef.current = setInterval(() => {
         setElapsedSeconds(prev => {
           const newValue = prev + 1;
-          
-          // Check if segment is complete
-          if (currentShow && currentSegmentIndex < currentShow.segments.length) {
-            const currentSegment = currentShow.segments[currentSegmentIndex];
-            const segmentElapsed = newValue - (currentSegment.calculatedStartTime * 60);
-            
-            // 30-second warning
-            if (segmentElapsed === (currentSegment.duration * 60) - 30) {
+          if (currentShow && currentIndex < currentShow.lineup.length) {
+            const entry = currentShow.lineup[currentIndex];
+            const entryStart = getStartTime(currentShow.lineup, currentIndex) * 60;
+            const entryElapsed = newValue - entryStart;
+
+            // 30-second warning vibration
+            if (entryElapsed === (entry.duration * 60) - 30) {
               navigator.vibrate?.(200);
             }
-            
-            // Auto-advance to next segment
-            if (segmentElapsed >= currentSegment.duration * 60) {
-              handleNextSegment();
+            // Auto-advance
+            if (entryElapsed >= entry.duration * 60) {
+              handleNextPerformer();
             }
           }
-          
           return newValue;
         });
       }, 1000);
     } else {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
+      if (timerRef.current) clearInterval(timerRef.current);
     }
-    
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-    };
-  }, [isRunning, currentSegmentIndex, currentShow, handleNextSegment]);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [isRunning, currentIndex, currentShow, handleNextPerformer, getStartTime]);
 
+  // Preload next performer's walk-on audio
   useEffect(() => {
-    // Preload next segment audio
-    if (currentShow && currentSegmentIndex < currentShow.segments.length - 1) {
-      const nextSegment = currentShow.segments[currentSegmentIndex + 1];
-      // Preload walk-on audio from IndexedDB
-      if (nextSegment.walkOnAudioId) {
-        preloadAudioFromDB(nextSegment.walkOnAudioId, volume).then(audio => {
+    if (currentShow && currentIndex < currentShow.lineup.length - 1) {
+      const nextEntry = currentShow.lineup[currentIndex + 1];
+      if (nextEntry.walkOnAudioId) {
+        preloadAudioFromDB(nextEntry.walkOnAudioId, volume).then(audio => {
           if (audio) nextAudioRef.current = audio;
         });
-      } else if (nextSegment.audioFilePath) {
-        // Legacy audio path fallback
-        nextAudioRef.current = new Audio(getAudioURL(nextSegment.audioFilePath));
-        nextAudioRef.current.volume = volume;
-        nextAudioRef.current.load();
       }
     }
-  }, [currentSegmentIndex, currentShow, volume]);
+  }, [currentIndex, currentShow, volume]);
 
-  const loadShows = () => {
-    setShows(storage.getShows());
-  };
+  const loadShows = () => setShows(storage.getShows());
 
   const handleLoadShow = (showId: number) => {
     const show = storage.getShow(showId);
     if (show) {
       setCurrentShow(show);
-      setCurrentSegmentIndex(0);
+      setCurrentIndex(0);
       setElapsedSeconds(0);
       setIsRunning(false);
       setShowLoadModal(false);
-      
-      // Initialize first segment audio
-      const firstSeg = show.segments[0];
-      if (firstSeg?.walkOnAudioId) {
-        preloadAudioFromDB(firstSeg.walkOnAudioId, volume).then(audio => {
+      // Preload first performer's walk-on audio
+      const first = show.lineup[0];
+      if (first?.walkOnAudioId) {
+        preloadAudioFromDB(first.walkOnAudioId, volume).then(audio => {
           if (audio) audioRef.current = audio;
         });
-      } else if (firstSeg?.audioFilePath) {
-        audioRef.current = new Audio();
-        audioRef.current.src = getAudioURL(firstSeg.audioFilePath);
-        audioRef.current.volume = volume;
-        audioRef.current.load();
       }
     }
   };
 
   const handleStart = () => {
     setIsRunning(true);
-    const currentSeg = currentShow?.segments[currentSegmentIndex];
-    
-    // If walk-on audio is from IndexedDB and already preloaded
-    if (currentSeg?.walkOnAudioId && audioRef.current) {
+    const entry = currentShow?.lineup[currentIndex];
+    if (entry?.walkOnAudioId && audioRef.current) {
       audioRef.current.volume = volume;
-      audioRef.current.play()
-        .then(() => console.log('Walk-on audio started'))
-        .catch(err => console.error('Walk-on play error:', err));
-    } else if (currentSeg?.walkOnAudioId && !audioRef.current) {
-      // Not preloaded yet — load and play now
-      playAudioFromDB(currentSeg.walkOnAudioId, volume).then(audio => {
+      audioRef.current.play().catch(() => {});
+    } else if (entry?.walkOnAudioId && !audioRef.current) {
+      playAudioFromDB(entry.walkOnAudioId, volume).then(audio => {
         if (audio) audioRef.current = audio;
       });
-    } else if (audioRef.current && currentSeg?.audioFilePath) {
-      // Ensure audio source is set
-      const audioPath = getAudioURL(currentSeg.audioFilePath!);
-      console.log('Starting audio playback:', {
-        originalPath: currentSeg.audioFilePath,
-        convertedURL: audioPath,
-        currentSrc: audioRef.current.src
-      });
-      
-      if (audioRef.current.src !== audioPath) {
-        // Fade out old audio if playing
-        if (!audioRef.current.paused) {
-          fadeOutAudio(audioRef.current, 0.5);
-          // Wait for fade to complete before loading new audio
-          setTimeout(() => {
-            if (audioRef.current) {
-              audioRef.current.src = audioPath;
-              audioRef.current.load();
-              startAudioPlayback();
-            }
-          }, 500);
-        } else {
-          audioRef.current.src = audioPath;
-          audioRef.current.load();
-          startAudioPlayback();
-        }
-      } else {
-        startAudioPlayback();
-      }
-    } else {
-      console.warn('No audio to play:', {
-        hasAudioRef: !!audioRef.current,
-        hasShow: !!currentShow,
-        segmentIndex: currentSegmentIndex,
-        audioPath: currentShow?.segments[currentSegmentIndex]?.audioFilePath
-      });
     }
-  };
-
-  const startAudioPlayback = () => {
-    if (!audioRef.current) return;
-    
-    // Set volume
-    audioRef.current.volume = volume;
-    
-    // Add event listeners for debugging
-    audioRef.current.onloadstart = () => console.log('Audio: loadstart');
-    audioRef.current.onloadeddata = () => console.log('Audio: loadeddata');
-    audioRef.current.oncanplay = () => console.log('Audio: canplay');
-    audioRef.current.onplay = () => console.log('Audio: playing');
-    audioRef.current.onerror = (e) => console.error('Audio error:', e, audioRef.current?.error);
-    
-    // Add small delay to ensure audio is ready
-    setTimeout(() => {
-      console.log('Attempting to play audio...');
-      audioRef.current?.play()
-        .then(() => console.log('Audio playback started successfully'))
-        .catch(err => console.error('Audio play error:', err));
-    }, 100);
   };
 
   const handlePause = () => {
     setIsRunning(false);
-    if (audioRef.current) {
-      fadeOutAudio(audioRef.current, fadeOutDuration);
-    }
+    if (audioRef.current) fadeOutAudio(audioRef.current, fadeOutDuration);
   };
 
-  const handleJumpToSegment = (index: number) => {
+  const handleJumpToPerformer = (index: number) => {
     if (!currentShow) return;
-    
-    if (audioRef.current) {
-      fadeOutAudio(audioRef.current, fadeOutDuration);
-    }
-    if (walkOffAudioRef.current) {
-      fadeOutAudio(walkOffAudioRef.current, fadeOutDuration);
-    }
-    
-    setCurrentSegmentIndex(index);
-    setElapsedSeconds(currentShow.segments[index].calculatedStartTime * 60);
-    
-    const seg = currentShow.segments[index];
-    
-    // Load walk-on audio from IndexedDB if available
-    if (seg.walkOnAudioId) {
-      preloadAudioFromDB(seg.walkOnAudioId, volume).then(audio => {
+    if (audioRef.current) fadeOutAudio(audioRef.current, fadeOutDuration);
+    if (walkOffAudioRef.current) fadeOutAudio(walkOffAudioRef.current, fadeOutDuration);
+
+    setCurrentIndex(index);
+    setElapsedSeconds(getStartTime(currentShow.lineup, index) * 60);
+
+    const entry = currentShow.lineup[index];
+    if (entry.walkOnAudioId) {
+      preloadAudioFromDB(entry.walkOnAudioId, volume).then(audio => {
         if (audio) {
           audioRef.current = audio;
           if (isRunning) audio.play();
         }
       });
-    } else if (seg.audioFilePath) {
-      audioRef.current = new Audio(getAudioURL(seg.audioFilePath));
-      audioRef.current.volume = volume;
-      if (isRunning) {
-        audioRef.current.play();
-      }
     }
-    
     setShowScheduleOverlay(false);
   };
 
@@ -377,32 +281,83 @@ function LiveControllerScreen() {
 
   const handleVolumeChange = (newVolume: number) => {
     setVolume(newVolume);
-    if (audioRef.current) {
-      audioRef.current.volume = newVolume;
-    }
+    if (isMuted) setIsMuted(false);
+    if (audioRef.current) audioRef.current.volume = newVolume;
+    if (walkOffAudioRef.current) walkOffAudioRef.current.volume = newVolume;
   };
 
   const handleRestartTrack = () => {
     if (audioRef.current) {
       audioRef.current.currentTime = 0;
-      if (isRunning) {
-        audioRef.current.play();
-      }
+      if (isRunning) audioRef.current.play();
     }
   };
 
-  const handleEmergencyStop = () => {
-    setShowEmergencyConfirm(true);
+  const handleToggleMute = () => {
+    if (isMuted) {
+      const restored = preMuteVolumeRef.current;
+      setIsMuted(false);
+      setVolume(restored);
+      if (audioRef.current) audioRef.current.volume = restored;
+      if (walkOffAudioRef.current) walkOffAudioRef.current.volume = restored;
+    } else {
+      preMuteVolumeRef.current = volume;
+      setIsMuted(true);
+      if (audioRef.current) audioRef.current.volume = 0;
+      if (walkOffAudioRef.current) walkOffAudioRef.current.volume = 0;
+    }
   };
+
+  const handlePlayPauseAudio = () => {
+    if (!audioRef.current) return;
+    if (audioRef.current.paused) {
+      audioRef.current.volume = isMuted ? 0 : volume;
+      audioRef.current.play();
+      setIsAudioPlaying(true);
+    } else {
+      audioRef.current.pause();
+      setIsAudioPlaying(false);
+    }
+  };
+
+  const handleStopAllAudio = () => {
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current.currentTime = 0; }
+    if (walkOffAudioRef.current) { walkOffAudioRef.current.pause(); walkOffAudioRef.current.currentTime = 0; walkOffAudioRef.current = null; }
+    if (fadeOutRef.current) clearInterval(fadeOutRef.current);
+    setIsAudioPlaying(false);
+    setAudioLabel('');
+    setWalkOffLabel('');
+  };
+
+  const handlePlayWalkOn = () => {
+    const entry = getCurrentEntry();
+    if (!entry?.walkOnAudioId) return;
+    if (audioRef.current && !audioRef.current.paused) fadeOutAudio(audioRef.current, 0.5);
+    setAudioLabel(entry.walkOnAudioName || 'Walk-On');
+    playAudioFromDB(entry.walkOnAudioId, volume).then(audio => {
+      if (audio) audioRef.current = audio;
+    });
+  };
+
+  const handlePlayWalkOff = () => {
+    const entry = getCurrentEntry();
+    if (!entry?.walkOffAudioId) return;
+    if (walkOffAudioRef.current && !walkOffAudioRef.current.paused) fadeOutAudio(walkOffAudioRef.current, 0.5);
+    setWalkOffLabel(entry.walkOffAudioName || 'Walk-Off');
+    playAudioFromDB(entry.walkOffAudioId, volume).then(audio => {
+      if (audio) {
+        walkOffAudioRef.current = audio;
+        audio.addEventListener('ended', () => setWalkOffLabel(''));
+      }
+    });
+  };
+
+  const handleEmergencyStop = () => setShowEmergencyConfirm(true);
 
   const confirmEmergencyStop = () => {
     setIsRunning(false);
-    if (audioRef.current) {
-      fadeOutAudio(audioRef.current, 0.5);
-    }
-    if (walkOffAudioRef.current) {
-      fadeOutAudio(walkOffAudioRef.current, 0.5);
-    }
+    if (audioRef.current) fadeOutAudio(audioRef.current, 0.5);
+    if (walkOffAudioRef.current) fadeOutAudio(walkOffAudioRef.current, 0.5);
     setShowEmergencyConfirm(false);
   };
 
@@ -419,35 +374,29 @@ function LiveControllerScreen() {
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  const getCurrentSegment = () => {
-    if (!currentShow || currentSegmentIndex >= currentShow.segments.length) return null;
-    return currentShow.segments[currentSegmentIndex];
+  const getCurrentEntry = (): LineupEntry | null => {
+    if (!currentShow || currentIndex >= currentShow.lineup.length) return null;
+    return currentShow.lineup[currentIndex];
   };
 
-  const getNextSegment = () => {
-    if (!currentShow || currentSegmentIndex >= currentShow.segments.length - 1) return null;
-    return currentShow.segments[currentSegmentIndex + 1];
+  const getNextEntry = (): LineupEntry | null => {
+    if (!currentShow || currentIndex >= currentShow.lineup.length - 1) return null;
+    return currentShow.lineup[currentIndex + 1];
   };
 
-  const getSegmentTimeRemaining = () => {
-    const segment = getCurrentSegment();
-    if (!segment) return 0;
-    
-    const segmentStart = segment.calculatedStartTime * 60;
-    const segmentDuration = segment.duration * 60;
-    const segmentElapsed = elapsedSeconds - segmentStart;
-    
-    return Math.max(0, segmentDuration - segmentElapsed);
+  const getTimeRemaining = () => {
+    const entry = getCurrentEntry();
+    if (!entry || !currentShow) return 0;
+    const entryStart = getStartTime(currentShow.lineup, currentIndex) * 60;
+    const entryDuration = entry.duration * 60;
+    const entryElapsed = elapsedSeconds - entryStart;
+    return Math.max(0, entryDuration - entryElapsed);
   };
 
   const getScheduleDelta = () => {
-    const segment = getCurrentSegment();
-    if (!segment) return 0;
-    
-    const plannedTime = segment.calculatedStartTime * 60;
-    const actualTime = elapsedSeconds;
-    
-    return actualTime - plannedTime;
+    if (!currentShow) return 0;
+    const plannedTime = getStartTime(currentShow.lineup, currentIndex) * 60;
+    return elapsedSeconds - plannedTime;
   };
 
   if (!currentShow) {
@@ -461,12 +410,12 @@ function LiveControllerScreen() {
             Load Show
           </button>
           <div className="no-show-steps">
-            <p className="step"><strong>Step 1:</strong> Go to <strong>Library</strong> and add your comedians</p>
+            <p className="step"><strong>Step 1:</strong> Go to <strong>Library</strong> and add your performers</p>
             <p className="step"><strong>Step 2:</strong> Go to <strong>Builder</strong> to create &amp; save a show</p>
             <p className="step"><strong>Step 3:</strong> Come back here and tap <strong>Load Show</strong></p>
           </div>
         </div>
-        
+
         {showLoadModal && (
           <LoadShowModal
             shows={shows}
@@ -478,10 +427,12 @@ function LiveControllerScreen() {
     );
   }
 
-  const currentSegment = getCurrentSegment();
-  const nextSegment = getNextSegment();
-  const timeRemaining = getSegmentTimeRemaining();
+  const currentEntry = getCurrentEntry();
+  const nextEntry = getNextEntry();
+  const timeRemaining = getTimeRemaining();
   const delta = getScheduleDelta();
+  const totalDuration = getTotalDuration(currentShow.lineup);
+  const currentStart = getStartTime(currentShow.lineup, currentIndex);
 
   return (
     <div className="live-controller-screen">
@@ -490,18 +441,17 @@ function LiveControllerScreen() {
           <div className="countdown-timer">{formatMinutesSeconds(timeRemaining)}</div>
           <div className="elapsed-time">Show Time: {formatTime(elapsedSeconds)}</div>
         </div>
-        
-        {currentSegment && (
-          <div className="segment-info">
-            <div className="segment-name">
-              {formatMinutesSeconds(currentSegment.calculatedStartTime * 60)}-
-              {formatMinutesSeconds((currentSegment.calculatedStartTime + currentSegment.duration) * 60)} | {currentSegment.name}
+
+        {currentEntry && (
+          <div className="performer-info">
+            <div className="performer-name">
+              {formatMinutesSeconds(currentStart * 60)}–{formatMinutesSeconds((currentStart + currentEntry.duration) * 60)} | {currentEntry.name}
             </div>
             <div className="progress-bar-container">
               <div
                 className="progress-bar"
                 style={{
-                  '--progress-width': `${(elapsedSeconds / (currentShow.totalDuration * 60)) * 100}%`
+                  '--progress-width': `${totalDuration > 0 ? (elapsedSeconds / (totalDuration * 60)) * 100 : 0}%`
                 } as React.CSSProperties}
               />
             </div>
@@ -510,11 +460,11 @@ function LiveControllerScreen() {
       </div>
 
       <div className="controller-middle">
-        {currentSegment && (
+        {currentEntry && (
           <div className="status-grid">
             <div className="status-item">
               <div className="status-label">Allocated Time</div>
-              <div className="status-value">{currentSegment.duration} min</div>
+              <div className="status-value">{currentEntry.duration} min</div>
             </div>
             <div className="status-item">
               <div className="status-label">Time Remaining</div>
@@ -529,40 +479,31 @@ function LiveControllerScreen() {
             <div className="status-item">
               <div className="status-label">Position</div>
               <div className="status-value">
-                Segment {currentSegmentIndex + 1} of {currentShow.segments.length}
+                {currentIndex + 1} of {currentShow.lineup.length}
               </div>
             </div>
-            {nextSegment && (
+            {nextEntry && (
               <div className="status-item full-width">
                 <div className="status-label">Next Up</div>
-                <div className="status-value">
-                  {formatMinutesSeconds(nextSegment.calculatedStartTime * 60)}-
-                  {formatMinutesSeconds((nextSegment.calculatedStartTime + nextSegment.duration) * 60)} | {nextSegment.name}
-                </div>
+                <div className="status-value">{nextEntry.name} ({nextEntry.duration} min)</div>
               </div>
             )}
-            {currentSegment.walkOnAudioName && (
+            {currentEntry.walkOnAudioName && (
               <div className="status-item full-width">
                 <div className="status-label">Walk-On Music</div>
-                <div className="status-value audio-path">{currentSegment.walkOnAudioName}</div>
+                <div className="status-value audio-path">{currentEntry.walkOnAudioName}</div>
               </div>
             )}
-            {currentSegment.walkOffAudioName && (
+            {currentEntry.walkOffAudioName && (
               <div className="status-item full-width">
                 <div className="status-label">Walk-Off Music</div>
-                <div className="status-value audio-path">{currentSegment.walkOffAudioName}</div>
+                <div className="status-value audio-path">{currentEntry.walkOffAudioName}</div>
               </div>
             )}
-            {currentSegment.audioFilePath && !currentSegment.walkOnAudioName && (
-              <div className="status-item full-width">
-                <div className="status-label">Audio File</div>
-                <div className="status-value audio-path">{currentSegment.audioFilePath}</div>
-              </div>
-            )}
-            {currentSegment.notes && (
+            {currentEntry.notes && (
               <div className="status-item full-width notes-section">
                 <div className="status-label">Notes</div>
-                <div className="status-value notes-content">{currentSegment.notes}</div>
+                <div className="status-value notes-content">{currentEntry.notes}</div>
               </div>
             )}
           </div>
@@ -574,59 +515,54 @@ function LiveControllerScreen() {
           <h3>Timer Controls</h3>
           <div className="control-buttons">
             {!isRunning ? (
-              <button className="btn-success btn-large" onClick={handleStart}>
-                Start
-              </button>
+              <button className="btn-success btn-large" onClick={handleStart}>Start</button>
             ) : (
-              <button className="btn-secondary btn-large" onClick={handlePause}>
-                Pause
-              </button>
+              <button className="btn-secondary btn-large" onClick={handlePause}>Pause</button>
             )}
-            <button className="btn-secondary" onClick={() => handleAdjustTime(2)}>
-              +2 Min
-            </button>
-            <button className="btn-secondary" onClick={() => handleAdjustTime(-2)}>
-              −2 Min
-            </button>
-            <button className="btn-primary" onClick={handleNextSegment}>
-              Next
-            </button>
+            <button className="btn-secondary" onClick={() => handleAdjustTime(2)}>+2 Min</button>
+            <button className="btn-secondary" onClick={() => handleAdjustTime(-2)}>−2 Min</button>
+            <button className="btn-primary" onClick={handleNextPerformer}>Next</button>
           </div>
         </div>
 
         <div className="control-section">
           <h3>Audio Controls</h3>
+          {(audioLabel || walkOffLabel) && (
+            <div className="audio-now-playing">
+              {audioLabel && <span className="now-playing-label">&#9835; {audioLabel}</span>}
+              {walkOffLabel && <span className="now-playing-label walk-off-playing">&#9835; {walkOffLabel}</span>}
+            </div>
+          )}
           <div className="control-buttons">
-            <button className="btn-secondary" onClick={handleRestartTrack}>
-              Restart
+            <button
+              className={`btn-secondary${isAudioPlaying ? ' btn-active' : ''}`}
+              onClick={handlePlayPauseAudio}
+              disabled={!audioRef.current}
+            >
+              {isAudioPlaying ? 'Pause' : 'Play'}
             </button>
+            <button className="btn-secondary" onClick={handleStopAllAudio}>Stop Audio</button>
+            <button className="btn-secondary" onClick={handleRestartTrack}>Restart</button>
+            <button className={`btn-mute${isMuted ? ' muted' : ''}`} onClick={handleToggleMute}>
+              {isMuted ? 'Unmute' : 'Mute'}
+            </button>
+          </div>
+          <div className="control-buttons">
+            <button className="btn-secondary btn-walk-on" onClick={handlePlayWalkOn} disabled={!getCurrentEntry()?.walkOnAudioId}>Walk-On</button>
+            <button className="btn-secondary btn-walk-off" onClick={handlePlayWalkOff} disabled={!getCurrentEntry()?.walkOffAudioId}>Walk-Off</button>
             <div className="volume-control">
-              <label>Volume:</label>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.1"
-                title="Volume"
-                value={volume}
-                onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
-              />
-              <span>{Math.round(volume * 100)}%</span>
+              <label>Vol:</label>
+              <input type="range" min="0" max="1" step="0.05" title="Volume" value={isMuted ? 0 : volume} onChange={(e) => handleVolumeChange(parseFloat(e.target.value))} />
+              <span>{isMuted ? '0%' : Math.round(volume * 100) + '%'}</span>
             </div>
           </div>
         </div>
 
         <div className="control-section full-width">
           <div className="control-buttons">
-            <button className="btn-danger btn-large" onClick={handleEmergencyStop}>
-              Stop
-            </button>
-            <button className="btn-primary" onClick={() => setShowScheduleOverlay(true)}>
-              Schedule
-            </button>
-            <button className="btn-secondary" onClick={() => setShowLoadModal(true)}>
-              Switch Show
-            </button>
+            <button className="btn-danger btn-large" onClick={handleEmergencyStop}>Stop</button>
+            <button className="btn-primary" onClick={() => setShowScheduleOverlay(true)}>Lineup</button>
+            <button className="btn-secondary" onClick={() => setShowLoadModal(true)}>Switch Show</button>
           </div>
         </div>
       </div>
@@ -634,9 +570,8 @@ function LiveControllerScreen() {
       {showScheduleOverlay && (
         <ScheduleOverlay
           show={currentShow}
-          currentSegmentIndex={currentSegmentIndex}
-          elapsedSeconds={elapsedSeconds}
-          onJumpTo={handleJumpToSegment}
+          currentIndex={currentIndex}
+          onJumpTo={handleJumpToPerformer}
           onClose={() => setShowScheduleOverlay(false)}
         />
       )}
@@ -665,13 +600,17 @@ function LiveControllerScreen() {
 
 interface ScheduleOverlayProps {
   show: Show;
-  currentSegmentIndex: number;
-  elapsedSeconds: number;
+  currentIndex: number;
   onJumpTo: (index: number) => void;
   onClose: () => void;
 }
 
-function ScheduleOverlay({ show, currentSegmentIndex, onJumpTo, onClose }: ScheduleOverlayProps) {
+function ScheduleOverlay({ show, currentIndex, onJumpTo, onClose }: ScheduleOverlayProps) {
+  const getStartTime = (index: number) => {
+    let t = 0;
+    for (let i = 0; i < index; i++) t += show.lineup[i].duration;
+    return t;
+  };
   const formatTime = (minutes: number) => {
     const h = Math.floor(minutes / 60);
     const m = minutes % 60;
@@ -679,21 +618,22 @@ function ScheduleOverlay({ show, currentSegmentIndex, onJumpTo, onClose }: Sched
   };
 
   return (
-    <Modal title={`Schedule \u2014 ${show.name}`} onClose={onClose} wide>
+    <Modal title={`Lineup \u2014 ${show.name}`} onClose={onClose} wide>
       <div className="schedule-list">
-        {show.segments.map((segment, index) => (
-          <div
-            key={index}
-            className={`schedule-item ${index === currentSegmentIndex ? 'current' : ''}`}
-            onClick={() => onJumpTo(index)}
-          >
-            <div className="schedule-time">
-              {formatTime(segment.calculatedStartTime)}\u2013{formatTime(segment.calculatedStartTime + segment.duration)}
+        {show.lineup.map((entry, index) => {
+          const start = getStartTime(index);
+          return (
+            <div
+              key={index}
+              className={`schedule-item ${index === currentIndex ? 'current' : ''}`}
+              onClick={() => onJumpTo(index)}
+            >
+              <div className="schedule-time">{formatTime(start)}\u2013{formatTime(start + entry.duration)}</div>
+              <div className="schedule-name">{entry.name}</div>
+              <div className="schedule-duration">{entry.duration} min</div>
             </div>
-            <div className="schedule-name">{segment.name}</div>
-            <div className="schedule-duration">{segment.duration} min</div>
-          </div>
-        ))}
+          );
+        })}
       </div>
       <div className="form-actions">
         <button className="btn-secondary" onClick={onClose}>Close</button>
@@ -709,6 +649,8 @@ interface LoadShowModalProps {
 }
 
 function LoadShowModal({ shows, onLoad, onClose }: LoadShowModalProps) {
+  const getTotalDuration = (lineup: LineupEntry[]) => lineup.reduce((sum, e) => sum + e.duration, 0);
+
   return (
     <Modal title="Load Show" onClose={onClose}>
       {shows.length === 0 ? (
@@ -718,18 +660,17 @@ function LoadShowModal({ shows, onLoad, onClose }: LoadShowModalProps) {
         </div>
       ) : (
         <div className="shows-list">
-          {shows.map(show => (
-            <div
-              key={show.id}
-              className="show-item"
-              onClick={() => onLoad(show.id!)}
-            >
-              <div className="show-name">{show.name}</div>
-              <div className="show-info">
-                {Math.floor(show.totalDuration / 60)}:{(show.totalDuration % 60).toString().padStart(2, '0')} \u00b7 {new Date(show.createdDate).toLocaleDateString()}
+          {shows.map(show => {
+            const total = getTotalDuration(show.lineup);
+            return (
+              <div key={show.id} className="show-item" onClick={() => onLoad(show.id!)}>
+                <div className="show-name">{show.name}</div>
+                <div className="show-info">
+                  {show.lineup.length} performers \u00b7 {Math.floor(total / 60)}:{(total % 60).toString().padStart(2, '0')} \u00b7 {new Date(show.createdDate).toLocaleDateString()}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
       <div className="form-actions">

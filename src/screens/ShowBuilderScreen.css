@@ -60,9 +60,9 @@
     width: 100%;
 }
 
-/* ─── Segment list ─── */
+/* ─── Lineup list ─── */
 
-.segments-list {
+.lineup-list {
     background-color: var(--bg-surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
@@ -73,7 +73,7 @@
     display: none;
 }
 
-.segment-row {
+.lineup-row {
     display: flex;
     flex-wrap: wrap;
     gap: var(--sp-2);
@@ -83,11 +83,11 @@
     transition: background var(--transition-fast);
 }
 
-.segment-row:last-child {
+.lineup-row:last-child {
     border-bottom: none;
 }
 
-.segment-row:hover {
+.lineup-row:hover {
     background-color: var(--bg-card);
 }
 
@@ -100,20 +100,20 @@
     font-weight: 500;
 }
 
-.col-segment {
+.col-performer {
     font-size: var(--text-base);
     flex: 1;
     min-width: 100px;
 }
 
-.col-segment input {
+.col-performer input {
     width: 100%;
     padding: var(--sp-2);
     font-size: var(--text-base);
     border-radius: var(--radius-sm);
 }
 
-.col-segment span {
+.col-performer span {
     cursor: pointer;
     padding: var(--sp-1) var(--sp-2);
     border-radius: var(--radius-xs);
@@ -122,7 +122,7 @@
     font-weight: 500;
 }
 
-.col-segment span:hover {
+.col-performer span:hover {
     background: var(--bg-hover);
 }
 
@@ -195,9 +195,9 @@
     pointer-events: none;
 }
 
-/* ─── Add segment ─── */
+/* ─── Add performer ─── */
 
-.add-segment-area {
+.add-performer-area {
     margin-top: var(--sp-5);
     text-align: center;
 }
@@ -249,7 +249,7 @@
 
 /* ─── Notes modal ─── */
 
-.notes-segment-name {
+.notes-performer-name {
     margin: var(--sp-2) 0;
     color: var(--accent);
     font-size: var(--text-lg);
@@ -303,7 +303,7 @@
         border-bottom: 1px solid var(--border);
     }
 
-    .segment-row {
+    .lineup-row {
         display: grid;
         grid-template-columns: 120px 1fr 90px 1fr;
         gap: var(--sp-3);
@@ -329,7 +329,7 @@
         padding: var(--sp-4);
     }
 
-    .segment-row {
+    .lineup-row {
         padding: var(--sp-3);
     }
 }
