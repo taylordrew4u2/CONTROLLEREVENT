@@ -34,9 +34,13 @@ function LiveControllerScreen() {
   useEffect(() => {
     const savedSettings = localStorage.getItem('appSettings');
     if (savedSettings) {
-      const settings = JSON.parse(savedSettings);
-      setVolume(settings.audioVolume || 0.8);
-      setFadeOutDuration(settings.fadeOutDuration || 2);
+      try {
+        const settings = JSON.parse(savedSettings);
+        setVolume(settings.audioVolume || 0.8);
+        setFadeOutDuration(settings.fadeOutDuration || 2);
+      } catch {
+        /* corrupted settings — use defaults */
+      }
     }
   }, []);
 
@@ -210,6 +214,11 @@ function LiveControllerScreen() {
     if (currentShow && currentIndex < currentShow.lineup.length - 1) {
       const nextEntry = currentShow.lineup[currentIndex + 1];
       if (nextEntry.walkOnAudioId) {
+        // Clean up previous preloaded audio before loading new one
+        if (nextAudioRef.current) {
+          nextAudioRef.current.pause();
+          nextAudioRef.current = null;
+        }
         preloadAudioFromDB(nextEntry.walkOnAudioId, volume).then(audio => {
           if (audio) nextAudioRef.current = audio;
         });
@@ -257,8 +266,13 @@ function LiveControllerScreen() {
 
   const handleJumpToPerformer = (index: number) => {
     if (!currentShow) return;
-    if (audioRef.current) fadeOutAudio(audioRef.current, fadeOutDuration);
-    if (walkOffAudioRef.current) fadeOutAudio(walkOffAudioRef.current, fadeOutDuration);
+    // Stop and clean up all current audio
+    if (audioRef.current) { fadeOutAudio(audioRef.current, fadeOutDuration); audioRef.current = null; }
+    if (walkOffAudioRef.current) { fadeOutAudio(walkOffAudioRef.current, fadeOutDuration); walkOffAudioRef.current = null; }
+    if (nextAudioRef.current) { nextAudioRef.current.pause(); nextAudioRef.current = null; }
+    setIsAudioPlaying(false);
+    setAudioLabel('');
+    setWalkOffLabel('');
 
     setCurrentIndex(index);
     setElapsedSeconds(getStartTime(currentShow.lineup, index) * 60);

@@ -288,7 +288,7 @@ function ShowBuilderScreen() {
 
         <div className="add-performer-area">
           <button className="btn-primary" onClick={() => setShowAddPerformerModal(true)}>Add from Library</button>
-          <button className="btn-secondary" style={{ marginLeft: 8 }} onClick={handleAddCustomEntry}>Add Custom</button>
+          <button className="btn-secondary btn-add-custom" onClick={handleAddCustomEntry}>Add Custom</button>
           <p className="builder-tip">Tap a name to rename. Audio assignments travel with each performer when reordered.</p>
         </div>
 

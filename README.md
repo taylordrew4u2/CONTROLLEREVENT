@@ -1,214 +1,206 @@
 # Pins & Needles Show Controller
 
-This app runs your live comedy show for you. You put in your lineup, hit Start, and it counts down each comedian's time. It tells you who's up, who's next, and if you're running late.
+A live show audio controller and run-of-show manager. Built for comedy shows, variety shows, and any live event where a stage manager needs to play the right song for the right performer and keep the show on schedule.
 
-This is a native app — it runs on Mac, Windows, and Android. It is not a website and cannot be used in a web browser.
+**Runs on Mac, Windows, and Android.** This is a native app — not a website.
+
+---
+
+## What This App Does (Plain English)
+
+You tell the app who's performing tonight and in what order. You give each performer walk-on and walk-off music. Then you hit Start and the app:
+
+1. **Counts down each performer's time** so you always know how much time is left
+2. **Plays the right walk-on music** when each performer takes the stage
+3. **Plays walk-off music** when they leave
+4. **Shows you if you're ahead or behind schedule** so you can adjust on the fly
+5. **Auto-advances to the next performer** when time runs out (you can also skip manually)
+
+You don't have to remember anything. The app handles it.
 
 ---
 
 ## 📥 How to Get the App
 
-### If you have a Mac
+Go to [**github.com/taylordrew4u2/CONTROLLEREVENT/releases**](https://github.com/taylordrew4u2/CONTROLLEREVENT/releases) and download the file for your device.
 
-1. Click here → [**Download for Mac**](https://github.com/taylordrew4u2/CONTROLLEREVENT/releases)
-2. Find the file that ends in **`.dmg`** and click it to download
-3. When it's done downloading, find the file (probably in your **Downloads** folder) and **double-click** it
-4. A window pops up — drag the app icon into the **Applications** folder
-5. Open your **Applications** folder and double-click **Pins & Needles Controller** to launch it
+### Mac
 
-**First time opening it?** Mac might say "this app is from an unidentified developer." That's normal. Here's what to do:
+1. Download the file that ends in **`.dmg`**
+2. Open it → drag the app to **Applications**
+3. First time opening: **right-click the app → Open → Open** (Mac blocks unverified apps the first time — this is normal and only happens once)
 
-- **Right-click** the app (or hold Control and click it)
-- Click **Open**
-- Click **Open** again when the warning pops up
-- It will open normally every time after that
+### Windows
 
-### If you have a Windows PC
+1. Download the file that ends in **`.exe`**
+2. Run it → click **Next** through the installer
+3. If Windows shows a blue "protected your PC" popup → click **More info** → **Run anyway**
 
-1. Click here → [**Download for Windows**](https://github.com/taylordrew4u2/CONTROLLEREVENT/releases)
-2. Find the file that ends in **`.exe`** and click it to download
-3. When it's done downloading, find the file and **double-click** it
-4. Follow the installer steps — just keep clicking **Next** until it's done
-5. The app will be in your **Start Menu** and you might get a **Desktop shortcut** too
+### Android
 
-**Windows might show a blue popup** saying "Windows protected your PC." That's normal. Here's what to do:
+1. Download the file that ends in **`.apk`**
+2. Tap the downloaded file → tap **Install**
+3. If your phone says "Install unknown apps" is not allowed → it will show you the setting to turn it on → turn it on → go back and tap the file again
+4. Can't find the download? Pull down your notifications or open **Files → Downloads**
 
-- Click **More info**
-- Click **Run anyway**
+### iPhone / iPad
 
-### If you have an Android phone or tablet
-
-1. Click here → [**Download for Android**](https://github.com/taylordrew4u2/CONTROLLEREVENT/releases)
-2. Find the file that ends in **`.apk`** and tap it to download
-3. Your phone might say "This type of file can harm your device" — tap **Download anyway** (it's safe, it's just not from the Play Store)
-4. When it's done downloading, tap on the downloaded file (check your **notifications** or open your **Files** app → **Downloads**)
-5. If your phone says "Install unknown apps" is not allowed, it will take you to the setting — **turn it on**, then go back and tap the file again
-6. Tap **Install**
-7. When it's done, tap **Open** — you're all set!
-
-**Don't know how to find the downloaded file?**
-
-- Pull down from the top of your screen to see your **notifications** — the download should be there
-- Or open the **Files** app (or **My Files** on Samsung) and tap **Downloads**
-
-### If you have an iPhone or iPad
-
-The iPhone version is coming soon. For now, the app works on Mac, Windows, and Android.
+Coming soon.
 
 ---
 
-## 📖 How to Use the App (Step by Step)
+## 📖 How to Use the App
 
-When you open the app, you'll see **four tabs at the bottom**: Library, Builder, Live, and Settings. Here's what each one does:
+The app has **four tabs** along the bottom: **Library**, **Builder**, **Live**, and **Settings**.
+
+You only need to do Steps 1 and 2 once per show. Step 3 is what you use during the actual show.
 
 ---
 
-### Step 1: Add your comedians
+### Step 1: Add Your Performers (Library tab)
 
-> You only have to do this once. After you add someone, they're saved.
+> You only do this once per person. After you save a performer, they're in the app forever (until you delete them).
 
-1. Tap **Library** (bottom of the screen)
-2. Tap the **Add Comedian** button
-3. Type the comedian's **name**
-4. Type how many **minutes** their set is (for example: `8` for an 8-minute set)
-5. (Optional) Add **walk-on music** — this plays automatically when the comedian takes the stage
-6. (Optional) Add **walk-off music** — this plays when their set ends
+1. Tap **Library**
+2. Tap **Add Performer**
+3. Type their **name**
+4. Type their **default set length** in minutes (example: `8` for 8 minutes)
+5. **(Optional but recommended)** Tap **Choose File** under Walk-On Music → pick an audio file from your device
+6. **(Optional)** Tap **Choose File** under Walk-Off Music → pick an audio file
 7. Tap **Save**
-8. Do this for every comedian who might be in your shows
 
-**Want to change someone later?** Just tap their name in the list to edit them. Want to remove someone? Tap the delete button next to their name.
+Repeat for every performer who might appear in your shows.
 
-> Audio files are automatically processed with fade-in and fade-out effects so transitions sound smooth.
-
----
-
-### Step 2: Build your show lineup
-
-> This is where you set up the order and timing for tonight's show.
-
-1. Tap **Builder** (bottom of the screen)
-2. The app already has a **default 60-minute show template** loaded — you don't have to start from scratch
-3. You'll see a list of segments like "Opening Act 1", "Host transition", "Headliner set", etc.
-4. **To assign a comedian to a segment:** Use the **Assign** dropdown on any segment → pick a comedian or template
-5. **To change how long a segment is:** Tap the number next to it and type a new number
-6. **To rearrange the order:** Use the **up/down arrow buttons** on each segment
-7. **To add a new segment:** Tap the **Add Segment** button at the bottom
-8. **To remove a segment:** Tap the **delete button** (✕) on that segment
-9. **To add notes to a segment:** Tap the **N** button — use this for credits, talking points, or reminders
-10. **To attach audio to a segment:** Tap the **A** button — pick an audio file to play during that segment
-11. When the lineup looks right, tap **Save Show** and give it a name (like "Friday Night Show" or "March 17th")
-
-> You can save as many different shows as you want. They'll all be there when you come back.
->
-> **Save Template** saves your current segment layout as the new default template so future shows start with the same structure.
+**Good to know:**
+- Audio files are automatically processed with smooth **fade-in and fade-out** so transitions don't sound abrupt
+- You can edit or delete any performer later by tapping them in the list
+- The search bar at the top filters the list as you type
 
 ---
 
-### Step 3: Run the show live
+### Step 2: Build Your Show Lineup (Builder tab)
 
-> This is what you use during the actual show. It's basically a big countdown timer that knows your whole lineup.
+> This is where you set up tonight's show — who's performing, in what order, for how long.
 
-1. Tap **Live** (bottom of the screen)
-2. Tap **Load Show**
-3. Pick the show you saved in Step 2
-4. Tap **Start**
+1. Tap **Builder**
+2. Tap **Add from Library** to add performers from your library
+   - Each performer's name, set time, and audio files are copied into the lineup automatically
+3. Or tap **Add Custom** to add a non-library entry (like "Intermission" or "Host Intro")
 
-**Now the timer is running.** Here's what you'll see:
+**For each performer in the lineup, you can:**
 
-- **Big countdown timer** — shows how much time is left in the current segment
-- **Segment name** — shows who's on stage right now
-- **Ahead / Behind indicator** — green means you're ahead of schedule, red means you're behind
+| Action | How |
+| ------ | --- |
+| **Change their name** | Tap their name in the lineup to edit it |
+| **Change their time** | Change the number in the minutes field |
+| **Move them up/down** | Tap the **↑** or **↓** arrows |
+| **Add notes** | Tap the **N** button (for credits, reminders, etc.) |
+| **Set walk-on audio** | Tap the **♪** button to pick an audio file for this specific slot |
+| **Remove them** | Tap the **✕** button |
 
-**Buttons you can use during the show:**
+4. When the lineup looks right, tap **Save Show** → give it a name (like "Friday Night" or "March 22")
+5. To edit a previously saved show, tap **Load** → pick the show → make changes → **Save Show** again
+
+**Key concept:** Audio assignments travel with each performer. If you rearrange the lineup, the right walk-on and walk-off music stays attached to the right person. You never have to re-assign audio after reordering.
+
+---
+
+### Step 3: Run the Show Live (Live tab)
+
+> This is the main event. Open this tab when the show is about to start.
+
+1. Tap **Live**
+2. Tap **Load Show** → pick the show you saved in Step 2
+3. Tap **Start**
+
+**What you'll see:**
+
+- **Big countdown timer** — how much time the current performer has left
+- **Performer name and time slot** — who's on stage right now
+- **Schedule status** — "On Time", "+2:30" (behind), or "-1:00" (ahead)
+- **Next Up** — who's coming after the current performer
+- **Now Playing indicator** — shows when walk-on or walk-off music is playing
+
+**Buttons during the show:**
 
 | Button | What it does |
 | ------ | ------------ |
-| **+2** | Adds 2 minutes to the current segment (comedian is killing it, give them more time) |
-| **-2** | Takes away 2 minutes (running long, need to speed things up) |
-| **Skip** | Immediately jumps to the next segment |
-| **Pause** | Stops the timer (emergency, technical difficulty, etc.) |
+| **Start / Pause** | Start or pause the countdown timer |
+| **+2 Min** | Give the current performer 2 extra minutes |
+| **−2 Min** | Take away 2 minutes (running long, need to catch up) |
+| **Next** | Skip to the next performer immediately |
+| **Walk-On** | Play the current performer's walk-on music |
+| **Walk-Off** | Play the current performer's walk-off music |
+| **Play / Pause** | Pause or resume the current audio track |
+| **Stop Audio** | Stop all audio immediately |
+| **Restart** | Restart the current audio track from the beginning |
+| **Mute / Unmute** | Mute all audio without stopping it |
+| **Vol slider** | Adjust volume in 5% steps |
+| **Lineup** | See the full show schedule — tap any performer to jump to them |
+| **Stop** | Emergency stop — stops timer and fades out all audio |
+| **Switch Show** | Load a different show |
 
-**When a segment's time runs out,** the app automatically starts the next one. You don't have to touch anything — it just keeps going through your lineup.
-
-**Want to see the full schedule?** Tap the schedule button to see every segment, who's assigned, and what time each one starts.
-
----
-
-### Step 4 (Optional): Settings
-
-Tap **Settings** (bottom of the screen) to change:
-
-- **Auto-advance** — whether the timer automatically moves to the next segment when time's up (on by default — leave it on)
-- **Show warnings** — whether the app shows visual warnings when a segment is running low on time
-- **Volume** — how loud the audio cues are
-- **Audio output** — pick which speaker or audio device to use (with a test button)
-- **Fade out duration** — how many seconds to fade out music at the end of a segment (default: 2 seconds)
-- **Audio fade-in / fade-out** — how many seconds of fade to apply when processing walk-on and walk-off music files (defaults: 2s in, 3s out)
-- **Backup** — **THIS IS IMPORTANT.** Tap Backup to save a copy of all your comedians and shows. If something ever goes wrong, you can restore from this backup.
+**How auto-advance works:** When a performer's time runs out, the app automatically moves to the next performer and plays their walk-on music. Your phone will vibrate 30 seconds before time expires as a heads-up. You can turn auto-advance off in Settings.
 
 ---
 
-## ❓ Problems? Read This First
+### Step 4: Settings (optional)
 
-### "I can't find the app after I downloaded it"
+Tap **Settings** to configure:
 
-- Check your **Downloads** folder
-- On Mac: open **Finder** → click **Downloads** on the left
-- On Windows: open **File Explorer** → click **Downloads** on the left
+| Setting | What it does | Default |
+| ------- | ------------ | ------- |
+| **Master Volume** | Overall audio volume | 80% |
+| **Fade-Out Duration** | How long audio fades during transitions | 2 seconds |
+| **Audio Fade-In** | Fade-in baked into uploaded audio files | 2 seconds |
+| **Audio Fade-Out** | Fade-out baked into uploaded audio files | 3 seconds |
+| **Audio Output** | Which speaker/device to play audio through | System Default |
+| **Auto-advance** | Auto-move to next performer when time expires | On |
+| **30-second warnings** | Vibrate when 30 seconds remain | On |
 
-### "My comedians are gone" / "My saved shows disappeared"
-
-- Did you delete and reinstall the app? That erases your data.
-- **Prevent this from ever happening:** Go to **Settings → Backup** and save a backup. You can restore it later.
-
-### "The timer isn't making any sound"
-
-- Is your computer on **mute**? Check your volume.
-- Open the app's **Settings** and make sure the volume slider isn't set to zero.
-
-### "I messed up the show template and want to start over"
-
-- Just make a new show in **Builder** — the default template loads fresh every time
-- Your old saved shows are still there under **Load Show**
-
-### "I accidentally closed the app during a show"
-
-- Reopen the app, go to **Live**, and load your show again
-- You'll have to restart from the beginning (the timer doesn't save its place if you close the app)
+**IMPORTANT — Back up your data:**
+- Tap **Export Data** to save a backup file of all your performers and shows
+- Tap **Import Data** to restore from a backup
+- **Do this regularly.** If you delete the app or clear your data, everything is gone unless you have a backup.
 
 ---
 
-## 🎭 What the Default Show Looks Like
+## ❓ Common Problems
 
-The app comes with a pre-made 60-minute show template. You can change any of it:
+### "My performers / shows are gone"
+Did you reinstall the app or clear app data? That erases everything. Restore from a backup (Settings → Import Data). **If you don't have a backup, the data is gone.** Prevent this by exporting a backup regularly.
 
-| Time | What's happening | How long |
-| ---- | ---------------- | -------- |
-| 0:00 | Show open + host intro | 5 min |
-| 0:05 | Opening Act 1 | 8 min |
-| 0:13 | Host transition | 1 min |
-| 0:14 | Opening Act 2 | 8 min |
-| 0:22 | Host transition | 1 min |
-| 0:23 | Opening Act 3 | 8 min |
-| 0:31 | Extended host bit | 11 min |
-| 0:42 | Headliner intro | 1 min |
-| 0:43 | Headliner set | 15 min |
-| 0:58 | Show close | 2 min |
-| | **Total** | **60 min** |
+### "No sound is playing"
+1. Check that your device isn't muted
+2. Check the volume slider in the app (Settings → Master Volume)
+3. Check the volume slider on the Live screen
+4. Make sure you actually uploaded audio files for the performer (Library → Edit → Walk-On Music)
+
+### "I want to start over with a fresh lineup"
+Tap **Builder** → **Reset** → confirm. This clears the current lineup. Your saved shows and performers in the Library are not affected.
+
+### "I closed the app during a live show"
+Reopen the app → go to **Live** → **Load Show** → pick the show. You'll have to restart from the beginning — **the timer does not save its position if the app closes.**
+
+### "I want to change walk-on music for just one show"
+In the **Builder**, tap the **♪** button on that performer's row to set audio for that specific show slot. This overrides the default from the Library without changing the Library entry.
+
+### "The walk-on music doesn't have a smooth fade"
+Fade-in/out is baked into the audio when you upload it. If you changed the fade settings after uploading, you need to re-upload the audio file for the new settings to take effect.
 
 ---
 
-## 🔧 For Developers Only
+## 🔧 For Developers
 
 <details>
-<summary>Click here if you're a developer and want to build from source code</summary>
+<summary>Click to expand build instructions</summary>
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org) (LTS version)
+- [Node.js](https://nodejs.org) (LTS)
 - Git
 
-### Clone & Install
+### Setup
 
 ```bash
 git clone https://github.com/taylordrew4u2/CONTROLLEREVENT.git
@@ -216,53 +208,35 @@ cd CONTROLLEREVENT
 npm install
 ```
 
-### Build Desktop App
-
-```bash
-npm run build:mac   # macOS → release/*.dmg, *.zip
-npm run build:win   # Windows → release/*.exe
-npm run build:all   # both platforms at once
-```
-
-Output goes to the `release/` folder. See [BUILD_ON_MAC.md](BUILD_ON_MAC.md) for detailed instructions.
-
-### Build Android APK
-
-Requires **JDK 21** and **Android SDK**.
-
-```bash
-npm run build:android   # → android/app/build/outputs/apk/release/app-release-unsigned.apk
-```
-
-### Build Mobile (Open in IDE)
-
-Requires **Xcode** (Mac only, for iOS) or **Android Studio** (for Android).
-
-```bash
-npm run cap:ios       # build + sync + open Xcode
-npm run cap:android   # build + sync + open Android Studio
-```
-
-### Development Commands
+### Build Commands
 
 ```bash
 npm run dev           # local dev server with hot reload
 npm run build         # production build → dist/
 npm run electron:dev  # build + launch in Electron
-npm run cap:sync      # rebuild + sync to native projects
+npm run build:mac     # macOS → release/*.dmg, *.zip
+npm run build:win     # Windows → release/*.exe
+npm run build:all     # Mac + Windows
+npm run cap:sync      # rebuild + sync to mobile projects
+npm run cap:ios       # build + sync + open Xcode
+npm run cap:android   # build + sync + open Android Studio
+npm run build:android # build release APK
 ```
 
 ### Tech Stack
 
-React 18, TypeScript, Vite 8, Electron 41, Capacitor 8, localStorage (data), IndexedDB (audio), GitHub Actions CI/CD.
+React 18 · TypeScript 5 · Vite 8 · Electron 41 · Capacitor 8 · localStorage (data) · IndexedDB (audio blobs)
 
-### Troubleshooting Builds
+### Build Troubleshooting
 
-- `npm install` fails → make sure Node.js is installed
-- Mac build fails with Python error → `brew install python-setuptools`
-- iOS build fails → need Mac + Xcode + signing certificate
-- Android APK build fails → need JDK 21 (`brew install --cask temurin@21`) + Android SDK
-- Android build fails → need Android Studio + SDK
+| Problem | Fix |
+| ------- | --- |
+| `npm install` fails | Make sure Node.js is installed |
+| Mac build Python error | `brew install python-setuptools` |
+| iOS build fails | Need Mac + Xcode + signing certificate |
+| Android build fails | Need JDK 21 (`brew install --cask temurin@21`) + Android SDK |
+
+See [BUILD_ON_MAC.md](BUILD_ON_MAC.md) for detailed Mac build instructions.
 
 </details>
 

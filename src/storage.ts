@@ -7,7 +7,12 @@ import { Performer, Show } from "./types";
 
 function getStore<T>(key: string): T[] {
   const raw = localStorage.getItem(key);
-  return raw ? JSON.parse(raw) : [];
+  if (!raw) return [];
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return [];
+  }
 }
 
 function setStore<T>(key: string, data: T[]): void {
@@ -100,11 +105,28 @@ export function exportAllData(): string {
 }
 
 export function importAllData(json: string): void {
-  const data: Record<string, string | null> = JSON.parse(json);
+  let data: Record<string, string | null>;
+  try {
+    data = JSON.parse(json);
+  } catch {
+    throw new Error("Invalid backup file — could not parse JSON");
+  }
+  if (typeof data !== "object" || data === null) {
+    throw new Error("Invalid backup file — expected an object");
+  }
+  // Validate all values before writing anything (atomic-ish)
+  const entries: [string, string][] = [];
   for (const key of BACKUP_KEYS) {
     if (key in data && data[key] !== null) {
-      localStorage.setItem(key, data[key] as string);
+      if (typeof data[key] !== "string") {
+        throw new Error(`Invalid backup file — key "${key}" is not a string`);
+      }
+      entries.push([key, data[key] as string]);
     }
+  }
+  // All validation passed — write all at once
+  for (const [key, value] of entries) {
+    localStorage.setItem(key, value);
   }
 }
 

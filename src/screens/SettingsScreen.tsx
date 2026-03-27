@@ -26,7 +26,22 @@ interface SettingsScreenProps {
 function SettingsScreen({ onSettingsChange }: SettingsScreenProps) {
   const [settings, setSettings] = useState<Settings>(() => {
     const saved = localStorage.getItem('appSettings');
-    return saved ? JSON.parse(saved) : {
+    if (saved) {
+      try {
+        return { ...{
+          audioVolume: 0.8,
+          audioOutput: 'default',
+          autoAdvanceSegments: true,
+          showWarnings: true,
+          fadeOutDuration: 2,
+          audioFadeInDuration: 2,
+          audioFadeOutDuration: 3
+        }, ...JSON.parse(saved) };
+      } catch {
+        /* corrupted settings — use defaults */
+      }
+    }
+    return {
       audioVolume: 0.8,
       audioOutput: 'default',
       autoAdvanceSegments: true,
