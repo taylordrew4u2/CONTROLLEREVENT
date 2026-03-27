@@ -1,5 +1,5 @@
 42;
-const { app, BrowserWindow, ipcMain, dialog, protocol } = require("electron");
+const { app, BrowserWindow, protocol } = require("electron");
 const path = require("path");
 const fs = require("fs");
 
@@ -37,17 +37,4 @@ app.whenReady().then(() => {
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();
-});
-
-// File picker
-ipcMain.handle("pick-audio-file", async () => {
-  const result = await dialog.showOpenDialog(mainWindow, {
-    properties: ["openFile"],
-    filters: [
-      { name: "Audio Files", extensions: ["mp3", "wav", "ogg", "m4a", "aac"] },
-    ],
-  });
-
-  if (result.canceled) return null;
-  return result.filePaths[0];
 });
