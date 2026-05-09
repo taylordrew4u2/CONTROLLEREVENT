@@ -16,18 +16,23 @@ function TopBar() {
   );
 }
 
-export default function WebApp() {
+function ViewerLayout() {
   return (
-    <BrowserRouter>
-      <div className="web-shell">
-        <TopBar />
-        <Routes>
-          <Route path="/" element={<ViewerScreen />} />
-          <Route path="/admin" element={<AdminScreen />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </div>
-    </BrowserRouter>
+    <div className="web-shell">
+      <TopBar />
+      <ViewerScreen />
+    </div>
   );
 }
 
+export default function WebApp() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<ViewerLayout />} />
+        <Route path="/admin/*" element={<AdminScreen />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
