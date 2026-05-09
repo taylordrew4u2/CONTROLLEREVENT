@@ -319,3 +319,51 @@
         padding: var(--sp-3);
     }
 }
+/* ─── Bulk paste modal ─── */
+.bulk-options {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-3);
+    margin-top: var(--sp-3);
+}
+
+.bulk-ai-toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    font-size: var(--text-sm);
+    color: var(--text-secondary, rgba(255, 255, 255, 0.75));
+    cursor: pointer;
+}
+
+.bulk-ai-toggle.disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.bulk-preview {
+    margin-top: var(--sp-3);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: var(--sp-3);
+    max-height: 320px;
+    overflow-y: auto;
+}
+
+.bulk-preview-header {
+    font-size: var(--text-sm);
+    margin-bottom: var(--sp-2);
+    color: var(--text-secondary, rgba(255, 255, 255, 0.75));
+}
+
+.bulk-preview-row {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    margin-bottom: var(--sp-2);
+}
+
+.bulk-preview-name {
+    flex: 1;
+    min-width: 0;
+}

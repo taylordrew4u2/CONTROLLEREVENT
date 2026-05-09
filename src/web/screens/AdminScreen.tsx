@@ -8,6 +8,8 @@ import ToastContainer from '../../components/Toast';
 import { hydrateAdmin, installSyncWriter } from '../librarySync';
 import { setWebAudioSaver } from '../../audioStorage';
 import { makeWebAudioSaver } from '../webAudioSaver';
+import { setLineupAiParser } from '../../lineupAi';
+import { makeWebLineupAi } from '../webLineupAi';
 import { fetchEventState, updateEventState } from '../api';
 import '../../App.css';
 
@@ -114,6 +116,7 @@ function AdminShell({ password, onLock }: ShellProps) {
   useEffect(() => {
     let cancelled = false;
     setWebAudioSaver(makeWebAudioSaver(password));
+    setLineupAiParser(makeWebLineupAi(password));
     hydrateAdmin(password)
       .then(() => { if (!cancelled) setHydrated(true); })
       .catch((err) => {
@@ -141,6 +144,7 @@ function AdminShell({ password, onLock }: ShellProps) {
       cancelled = true;
       installer.uninstall();
       setWebAudioSaver(null);
+      setLineupAiParser(null);
     };
   }, [password, onLock]);
 

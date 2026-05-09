@@ -6,6 +6,8 @@ import Modal from '../components/Modal';
 import EmptyState from '../components/EmptyState';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { showToast } from '../components/Toast';
+import { parseLineupText, ParsedLineupItem } from '../lineupParser';
+import { getLineupAiParser } from '../lineupAi';
 import './ShowBuilderScreen.css';
 
 function ShowBuilderScreen() {
@@ -23,6 +25,13 @@ function ShowBuilderScreen() {
   const [audioPickerIndex, setAudioPickerIndex] = useState<{ index: number; type: 'walkOn' | 'walkOff' } | null>(null);
   const [audioProcessing, setAudioProcessing] = useState(false);
   const audioRef = useRef<HTMLInputElement>(null);
+  const [showBulkModal, setShowBulkModal] = useState(false);
+  const [bulkText, setBulkText] = useState('');
+  const [bulkPreview, setBulkPreview] = useState<ParsedLineupItem[]>([]);
+  const [bulkUseAi, setBulkUseAi] = useState(false);
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [bulkError, setBulkError] = useState<string | null>(null);
+  const aiAvailable = getLineupAiParser() !== null;
 
   useEffect(() => {
     loadPerformers();
@@ -35,10 +44,56 @@ function ShowBuilderScreen() {
   const getTotalDuration = () => lineup.reduce((sum, e) => sum + e.duration, 0);
 
   const formatTime = (minutes: number) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return `${hours}:${mins.toString().padStart(2, '0')}`;
+    const totalSec = Math.max(0, Math.round(minutes * 60));
+    const h = Math.floor(totalSec / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+    const mm = m.toString().padStart(2, '0');
+    const ss = s.toString().padStart(2, '0');
+    return h > 0 ? `${h}:${mm}:${ss}` : `${m}:${ss}`;
   };
+
+  const HOST_TRANSITION_NAME = 'Host Transition';
+  const HOST_TRANSITION_DURATION = 0.5;
+  const isHostTransition = (e: LineupEntry) =>
+    e.name.trim().toLowerCase() === HOST_TRANSITION_NAME.toLowerCase();
+
+  const handleAddHostTransitions = () => {
+    if (lineup.length < 2) {
+      showToast('Add at least two performers first', 'warning');
+      return;
+    }
+    const next: LineupEntry[] = [];
+    for (let i = 0; i < lineup.length; i++) {
+      next.push(lineup[i]);
+      const peek = lineup[i + 1];
+      if (peek && !isHostTransition(lineup[i]) && !isHostTransition(peek)) {
+        next.push({
+          name: HOST_TRANSITION_NAME,
+          duration: HOST_TRANSITION_DURATION,
+          orderIndex: 0,
+        });
+      }
+    }
+    next.forEach((e, idx) => (e.orderIndex = idx));
+    const added = next.length - lineup.length;
+    if (added === 0) {
+      showToast('Host transitions already in place', 'info');
+      return;
+    }
+    setLineup(next);
+    showToast(`Added ${added} host transition${added === 1 ? '' : 's'}`, 'success');
+  };
+
+  const handleRemoveHostTransitions = () => {
+    const filtered = lineup.filter((e) => !isHostTransition(e));
+    if (filtered.length === lineup.length) return;
+    filtered.forEach((e, idx) => (e.orderIndex = idx));
+    setLineup(filtered);
+    showToast('Host transitions removed', 'info');
+  };
+
+  const hasTransitions = lineup.some(isHostTransition);
 
   const getStartTime = (index: number) => {
     let t = 0;
@@ -176,6 +231,73 @@ function ShowBuilderScreen() {
 
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
+  const openBulkModal = () => {
+    setBulkText('');
+    setBulkPreview([]);
+    setBulkError(null);
+    setBulkUseAi(aiAvailable);
+    setShowBulkModal(true);
+  };
+
+  const handleBulkParse = async () => {
+    setBulkError(null);
+    if (!bulkText.trim()) {
+      setBulkPreview([]);
+      return;
+    }
+    if (bulkUseAi) {
+      const ai = getLineupAiParser();
+      if (!ai) {
+        setBulkError('AI parser not available; using fallback.');
+        setBulkPreview(parseLineupText(bulkText));
+        return;
+      }
+      setBulkBusy(true);
+      try {
+        const items = await ai(bulkText);
+        setBulkPreview(items);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'AI parse failed';
+        setBulkError(`${msg}. Using fallback.`);
+        setBulkPreview(parseLineupText(bulkText));
+      } finally {
+        setBulkBusy(false);
+      }
+    } else {
+      setBulkPreview(parseLineupText(bulkText));
+    }
+  };
+
+  const updateBulkPreview = (idx: number, updates: Partial<ParsedLineupItem>) => {
+    setBulkPreview(bulkPreview.map((item, i) => (i === idx ? { ...item, ...updates } : item)));
+  };
+
+  const removeBulkPreview = (idx: number) => {
+    setBulkPreview(bulkPreview.filter((_, i) => i !== idx));
+  };
+
+  const applyBulkPreview = () => {
+    if (bulkPreview.length === 0) return;
+    const byName = new Map(performers.map((p) => [p.name.trim().toLowerCase(), p]));
+    const additions: LineupEntry[] = bulkPreview.map((item, i) => {
+      const match = byName.get(item.name.trim().toLowerCase());
+      const entry: LineupEntry = {
+        performerId: match?.id,
+        name: match?.name || item.name,
+        duration: item.duration,
+        walkOnAudioId: match?.walkOnAudioId,
+        walkOnAudioName: match?.walkOnAudioName,
+        walkOffAudioId: match?.walkOffAudioId,
+        walkOffAudioName: match?.walkOffAudioName,
+        orderIndex: lineup.length + i,
+      };
+      return entry;
+    });
+    setLineup([...lineup, ...additions]);
+    setShowBulkModal(false);
+    showToast(`Added ${additions.length} performer${additions.length === 1 ? '' : 's'} to lineup`, 'success');
+  };
+
   return (
     <div className="show-builder-screen">
       <div className="builder-header">
@@ -228,10 +350,11 @@ function ShowBuilderScreen() {
                   <div className="col-duration">
                     <input
                       type="number"
-                      min="1"
-                      title="Set duration in minutes"
+                      min="0.5"
+                      step="0.5"
+                      title="Set duration in minutes (0.5 = 30 seconds)"
                       value={entry.duration}
-                      onChange={(e) => handleUpdateEntry(index, { duration: parseInt(e.target.value) || 1 })}
+                      onChange={(e) => handleUpdateEntry(index, { duration: parseFloat(e.target.value) || 0.5 })}
                       className="duration-input"
                     />
                     <span>min</span>
@@ -289,6 +412,15 @@ function ShowBuilderScreen() {
         <div className="add-performer-area">
           <button className="btn-primary" onClick={() => setShowAddPerformerModal(true)}>Add from Library</button>
           <button className="btn-secondary btn-add-custom" onClick={handleAddCustomEntry}>Add Custom</button>
+          <button className="btn-secondary btn-add-custom" onClick={openBulkModal}>Bulk Paste</button>
+          <button
+            className="btn-secondary btn-add-custom"
+            onClick={hasTransitions ? handleRemoveHostTransitions : handleAddHostTransitions}
+            title="Insert a 30-second host slot between every performer"
+            disabled={lineup.length < 2 && !hasTransitions}
+          >
+            {hasTransitions ? 'Remove Host Transitions' : 'Add Host Transitions (30s)'}
+          </button>
           <p className="builder-tip">Tap a name to rename. Audio assignments travel with each performer when reordered.</p>
         </div>
 
@@ -387,6 +519,88 @@ function ShowBuilderScreen() {
           />
           <div className="form-actions">
             <button className="btn-primary" onClick={() => setEditingNotesIndex(null)}>Done</button>
+          </div>
+        </Modal>
+      )}
+
+      {showBulkModal && (
+        <Modal title="Bulk Add Performers" onClose={() => setShowBulkModal(false)}>
+          <p className="notes-help">
+            Paste names with optional minutes — one per line. Examples: <code>Alex - 7</code>, <code>Sam, 5 min</code>, <code>Jordan</code> (defaults to 5).
+          </p>
+          <textarea
+            className="notes-textarea"
+            value={bulkText}
+            onChange={(e) => setBulkText(e.target.value)}
+            placeholder={"Alex - 7\nSam, 5 min\nJordan\nKim 8"}
+            rows={8}
+            autoFocus
+          />
+          <div className="bulk-options">
+            <label className={`bulk-ai-toggle${aiAvailable ? '' : ' disabled'}`}>
+              <input
+                type="checkbox"
+                checked={bulkUseAi && aiAvailable}
+                disabled={!aiAvailable || bulkBusy}
+                onChange={(e) => setBulkUseAi(e.target.checked)}
+              />
+              <span>Use AI parser (smart){aiAvailable ? '' : ' — not configured'}</span>
+            </label>
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={handleBulkParse}
+              disabled={bulkBusy || !bulkText.trim()}
+            >
+              {bulkBusy ? 'Parsing…' : 'Preview'}
+            </button>
+          </div>
+          {bulkError && <div className="web-message">{bulkError}</div>}
+          {bulkPreview.length > 0 && (
+            <div className="bulk-preview">
+              <div className="bulk-preview-header">
+                Preview ({bulkPreview.length}) — edit before adding:
+              </div>
+              {bulkPreview.map((item, i) => (
+                <div key={i} className="bulk-preview-row">
+                  <input
+                    type="text"
+                    className="bulk-preview-name"
+                    title="Performer name"
+                    value={item.name}
+                    onChange={(e) => updateBulkPreview(i, { name: e.target.value })}
+                  />
+                  <input
+                    type="number"
+                    min="0.5"
+                    step="0.5"
+                    className="duration-input"
+                    title="Duration in minutes (0.5 = 30 seconds)"
+                    value={item.duration}
+                    onChange={(e) => updateBulkPreview(i, { duration: parseFloat(e.target.value) || 0.5 })}
+                  />
+                  <span>min</span>
+                  <button
+                    type="button"
+                    className="btn-icon btn-danger"
+                    onClick={() => removeBulkPreview(i)}
+                    aria-label="Remove"
+                  >
+                    &#10005;
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="form-actions">
+            <button className="btn-secondary" onClick={() => setShowBulkModal(false)}>Cancel</button>
+            <button
+              className="btn-primary"
+              onClick={applyBulkPreview}
+              disabled={bulkPreview.length === 0}
+            >
+              Add {bulkPreview.length || ''} to Lineup
+            </button>
           </div>
         </Modal>
       )}
