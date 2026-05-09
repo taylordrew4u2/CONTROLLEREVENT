@@ -18,16 +18,20 @@ export default function AdminScreen() {
   const [durationMinutes, setDurationMinutes] = useState('8');
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [initialLoadSucceeded, setInitialLoadSucceeded] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const load = useCallback(async (syncInputs: boolean) => {
     const next = await fetchEventState();
     setState(next);
-    if (syncInputs) {
+    if (syncInputs || !initialLoadSucceeded) {
       setCurrent(next.current || '');
       setNextUpText((next.nextUp || []).join('\n'));
+      if (!initialLoadSucceeded) {
+        setInitialLoadSucceeded(true);
+      }
     }
-  }, []);
+  }, [initialLoadSucceeded]);
 
   useEffect(() => {
     load(true).catch(() => {});
