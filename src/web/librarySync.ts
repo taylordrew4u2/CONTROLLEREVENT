@@ -8,14 +8,26 @@ export interface RemoteLibrary {
 }
 
 const SYNC_KEYS = ['performers', 'shows', 'appSettings'] as const;
-type SyncKey = typeof SYNC_KEYS[number];
+
+async function readErrorMessage(res: Response, fallback: string): Promise<string> {
+  if (res.status === 401) return 'Unauthorized';
+  const ct = res.headers.get('content-type') || '';
+  if (ct.includes('application/json')) {
+    const data = await res.json().catch(() => null);
+    if (data && typeof data === 'object' && 'error' in data && typeof (data as { error?: unknown }).error === 'string') {
+      return (data as { error: string }).error;
+    }
+  }
+  const text = await res.text().catch(() => '');
+  return text || `${fallback} (${res.status})`;
+}
 
 export async function fetchRemoteLibrary(password: string): Promise<RemoteLibrary> {
   const res = await fetch('/api/library', {
     method: 'GET',
     headers: { 'x-admin-password': password },
   });
-  if (!res.ok) throw new Error(`Failed to load library (${res.status})`);
+  if (!res.ok) throw new Error(await readErrorMessage(res, 'Failed to load library'));
   return res.json();
 }
 
@@ -25,10 +37,7 @@ export async function pushRemoteLibrary(password: string, lib: RemoteLibrary): P
     headers: { 'content-type': 'application/json', 'x-admin-password': password },
     body: JSON.stringify(lib),
   });
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(text || `Failed to save library (${res.status})`);
-  }
+  if (!res.ok) throw new Error(await readErrorMessage(res, 'Failed to save library'));
   return res.json();
 }
 
@@ -77,11 +86,10 @@ export interface SyncCallbacks {
 export function installSyncWriter(password: string, cb: SyncCallbacks = {}): SyncInstaller {
   const original = Storage.prototype.setItem;
   let timer: ReturnType<typeof setTimeout> | null = null;
-  let pendingKeys = new Set<SyncKey>();
+  let inFlight: Promise<void> | null = null;
+  let rerun = false;
 
-  const flush = async () => {
-    timer = null;
-    pendingKeys = new Set();
+  const doFlush = async (): Promise<void> => {
     try {
       cb.onPushStart?.();
       await pushRemoteLibrary(password, readLocalLibrary());
@@ -91,11 +99,28 @@ export function installSyncWriter(password: string, cb: SyncCallbacks = {}): Syn
     }
   };
 
+  const flush = () => {
+    timer = null;
+    if (inFlight) {
+      rerun = true;
+      return;
+    }
+    inFlight = (async () => {
+      try {
+        do {
+          rerun = false;
+          await doFlush();
+        } while (rerun);
+      } finally {
+        inFlight = null;
+      }
+    })();
+  };
+
   function patched(this: Storage, key: string, value: string) {
     original.call(this, key, value);
     if (this !== window.localStorage) return;
     if ((SYNC_KEYS as readonly string[]).includes(key)) {
-      pendingKeys.add(key as SyncKey);
       if (timer) clearTimeout(timer);
       timer = setTimeout(flush, 500);
     }
