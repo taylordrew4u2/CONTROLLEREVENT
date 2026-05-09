@@ -38,10 +38,8 @@ export async function updateEventState(
         throw new Error(data.error);
       }
     }
-
     const text = await res.text().catch(() => '');
     throw new Error(text || `Failed to update state (${res.status})`);
   }
   return res.json();
 }
-
