@@ -1,4 +1,6 @@
-const KEY = 'controllerEvent:state';
+const { put, list } = require('@vercel/blob');
+
+const PATHNAME = 'controllerEvent/state.json';
 
 function json(res, status, payload) {
   res.statusCode = status;
@@ -18,30 +20,40 @@ async function readJsonBody(req) {
   try { return JSON.parse(raw); } catch { return null; }
 }
 
-async function upstash(command) {
-  const url = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
-  if (!url || !token) {
-    const err = new Error('Missing UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN env vars.');
+function requireToken() {
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  if (!token) {
+    const err = new Error('Missing BLOB_READ_WRITE_TOKEN env var.');
     err.code = 'missing_env';
     throw err;
   }
+  return token;
+}
 
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      authorization: `Bearer ${token}`,
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify(command),
-  });
-  const data = await res.json().catch(() => ({}));
+async function loadState() {
+  const token = requireToken();
+  const { blobs } = await list({ prefix: PATHNAME, limit: 1, token });
+  const blob = blobs.find((b) => b.pathname === PATHNAME);
+  if (!blob) return null;
+  const res = await fetch(blob.url, { cache: 'no-store' });
   if (!res.ok) {
-    const err = new Error(data?.error || `Upstash error (${res.status})`);
-    err.code = 'upstash_error';
+    const err = new Error(`Failed to fetch blob (${res.status})`);
+    err.code = 'blob_fetch_failed';
     throw err;
   }
-  return data?.result;
+  return res.json();
+}
+
+async function saveState(state) {
+  const token = requireToken();
+  await put(PATHNAME, JSON.stringify(state), {
+    access: 'public',
+    contentType: 'application/json; charset=utf-8',
+    addRandomSuffix: false,
+    allowOverwrite: true,
+    cacheControlMaxAge: 0,
+    token,
+  });
 }
 
 function sanitizeState(input, previous, { touchUpdatedAt = true } = {}) {
@@ -60,7 +72,6 @@ function sanitizeState(input, previous, { touchUpdatedAt = true } = {}) {
   if (input && Object.prototype.hasOwnProperty.call(input, 'timerEndsAt')) {
     if (input.timerEndsAt === null) next.timerEndsAt = null;
     if (typeof input.timerEndsAt === 'number' && Number.isFinite(input.timerEndsAt)) {
-      // Guard against obviously wrong values (e.g. seconds)
       next.timerEndsAt = input.timerEndsAt > 10_000_000_000 ? input.timerEndsAt : input.timerEndsAt * 1000;
     }
   }
@@ -87,10 +98,9 @@ module.exports = async (req, res) => {
 
   if (req.method === 'GET') {
     try {
-      const raw = await upstash(['GET', KEY]);
-      if (!raw) return json(res, 200, { current: '', nextUp: [], timerEndsAt: null, updatedAt: Date.now() });
-      const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
-      return json(res, 200, sanitizeState(parsed, null, { touchUpdatedAt: false }));
+      const stored = await loadState();
+      if (!stored) return json(res, 200, { current: '', nextUp: [], timerEndsAt: null, updatedAt: Date.now() });
+      return json(res, 200, sanitizeState(stored, null, { touchUpdatedAt: false }));
     } catch (e) {
       return json(res, 500, { error: e instanceof Error ? e.message : 'Failed to load state' });
     }
@@ -107,10 +117,9 @@ module.exports = async (req, res) => {
       const body = await readJsonBody(req);
       if (!body || typeof body !== 'object') return json(res, 400, { error: 'Invalid JSON body' });
 
-      const raw = await upstash(['GET', KEY]);
-      const previous = raw ? (typeof raw === 'string' ? JSON.parse(raw) : raw) : null;
+      const previous = await loadState();
       const next = sanitizeState(body, previous);
-      await upstash(['SET', KEY, JSON.stringify(next)]);
+      await saveState(next);
       return json(res, 200, next);
     } catch (e) {
       return json(res, 500, { error: e instanceof Error ? e.message : 'Failed to save state' });
