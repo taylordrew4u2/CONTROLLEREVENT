@@ -59,6 +59,18 @@ export default function ViewerScreen() {
     return (state.timerEndsAt - now) / 1000;
   }, [state?.timerEndsAt, now]);
 
+  if (state && !state.onAir) {
+    return (
+      <div className="web-page">
+        <div className="web-card">
+          <div className="web-label">Standby</div>
+          <div className="web-now">Show coming up shortly</div>
+          {error ? <div className="web-error">{error}</div> : null}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="web-page">
       <div className="web-card">
