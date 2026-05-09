@@ -19,9 +19,24 @@ function requireToken() {
 }
 
 function checkAuth(req) {
-  const expected = process.env.ADMIN_PASSWORD || 'weed69';
+  const expected = process.env.ADMIN_PASSWORD;
+  if (!expected) return null;
   const provided = req.headers['x-admin-password'];
-  return provided && provided === expected;
+  return Boolean(provided && provided === expected);
+}
+
+const AUDIO_PREFIX = 'controllerEvent/audio/';
+
+function isValidAudioBlobUrl(raw) {
+  let u;
+  try {
+    u = new URL(raw);
+  } catch {
+    return false;
+  }
+  if (!u.hostname.endsWith('.public.blob.vercel-storage.com')) return false;
+  const pathname = u.pathname.replace(/^\/+/, '');
+  return pathname.startsWith(AUDIO_PREFIX);
 }
 
 async function readRawBody(req, limit) {
@@ -65,9 +80,9 @@ module.exports = async (req, res) => {
     return;
   }
 
-  if (!checkAuth(req)) {
-    return json(res, 401, { error: 'Unauthorized' });
-  }
+  const auth = checkAuth(req);
+  if (auth === null) return json(res, 500, { error: 'Server misconfigured: ADMIN_PASSWORD not set' });
+  if (!auth) return json(res, 401, { error: 'Unauthorized' });
 
   if (req.method === 'POST') {
     try {
@@ -107,6 +122,9 @@ module.exports = async (req, res) => {
       const token = requireToken();
       const url = parseUrlParam(req);
       if (!url) return json(res, 400, { error: 'Missing url query param' });
+      if (!isValidAudioBlobUrl(url)) {
+        return json(res, 400, { error: 'URL is not a controllerEvent audio blob' });
+      }
       await del(url, { token });
       return json(res, 200, { ok: true });
     } catch (e) {

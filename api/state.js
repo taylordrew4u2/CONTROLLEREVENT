@@ -57,8 +57,9 @@ async function saveState(state) {
 }
 
 function sanitizeState(input, previous, { touchUpdatedAt = true } = {}) {
-  const base = previous || { current: '', nextUp: [], timerEndsAt: null, updatedAt: Date.now() };
+  const base = previous || { current: '', nextUp: [], timerEndsAt: null, onAir: false, updatedAt: Date.now() };
   const next = { ...base };
+  if (typeof next.onAir !== 'boolean') next.onAir = false;
 
   if (typeof input?.current === 'string') next.current = input.current.slice(0, 200);
   if (Array.isArray(input?.nextUp)) {
@@ -75,6 +76,7 @@ function sanitizeState(input, previous, { touchUpdatedAt = true } = {}) {
       next.timerEndsAt = input.timerEndsAt > 10_000_000_000 ? input.timerEndsAt : input.timerEndsAt * 1000;
     }
   }
+  if (typeof input?.onAir === 'boolean') next.onAir = input.onAir;
 
   if (touchUpdatedAt) {
     next.updatedAt = Date.now();
@@ -99,7 +101,7 @@ module.exports = async (req, res) => {
   if (req.method === 'GET') {
     try {
       const stored = await loadState();
-      if (!stored) return json(res, 200, { current: '', nextUp: [], timerEndsAt: null, updatedAt: Date.now() });
+      if (!stored) return json(res, 200, { current: '', nextUp: [], timerEndsAt: null, onAir: false, updatedAt: Date.now() });
       return json(res, 200, sanitizeState(stored, null, { touchUpdatedAt: false }));
     } catch (e) {
       return json(res, 500, { error: e instanceof Error ? e.message : 'Failed to load state' });
@@ -107,7 +109,8 @@ module.exports = async (req, res) => {
   }
 
   if (req.method === 'POST') {
-    const expectedPassword = process.env.ADMIN_PASSWORD || 'weed69';
+    const expectedPassword = process.env.ADMIN_PASSWORD;
+    if (!expectedPassword) return json(res, 500, { error: 'Server misconfigured: ADMIN_PASSWORD not set' });
     const provided = req.headers['x-admin-password'];
     if (!provided || provided !== expectedPassword) {
       return json(res, 401, { error: 'Unauthorized' });
@@ -118,11 +121,11 @@ module.exports = async (req, res) => {
       if (!body || typeof body !== 'object') return json(res, 400, { error: 'Invalid JSON body' });
 
       const previous = await loadState();
-      const hasChanges = ['current', 'nextUp', 'timerEndsAt'].some((k) =>
+      const hasChanges = ['current', 'nextUp', 'timerEndsAt', 'onAir'].some((k) =>
         Object.prototype.hasOwnProperty.call(body, k),
       );
       if (!hasChanges) {
-        return json(res, 200, previous || { current: '', nextUp: [], timerEndsAt: null, updatedAt: Date.now() });
+        return json(res, 200, previous || { current: '', nextUp: [], timerEndsAt: null, onAir: false, updatedAt: Date.now() });
       }
       const next = sanitizeState(body, previous);
       await saveState(next);

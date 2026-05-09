@@ -169,6 +169,11 @@ function LiveControllerScreen() {
   }, []);
 
   // Broadcast live state for the web admin shell to relay to the public viewer.
+  // Recompute only when the performer or run-state changes — using elapsedSeconds
+  // here would slide timerEndsAt every tick and defeat the admin-shell dedupe.
+  const elapsedRef = useRef(elapsedSeconds);
+  useEffect(() => { elapsedRef.current = elapsedSeconds; }, [elapsedSeconds]);
+
   useEffect(() => {
     const current = currentShow?.lineup[currentIndex]?.name || '';
     const nextUp: string[] = [];
@@ -182,13 +187,13 @@ function LiveControllerScreen() {
     if (entry && isRunning) {
       const entryStart = currentShow ? (() => { let t = 0; for (let i = 0; i < currentIndex; i++) t += currentShow.lineup[i].duration; return t; })() : 0;
       const entryDuration = entry.duration * 60;
-      const remaining = Math.max(0, (entryStart * 60 + entryDuration) - elapsedSeconds);
+      const remaining = Math.max(0, (entryStart * 60 + entryDuration) - elapsedRef.current);
       timerEndsAt = Date.now() + remaining * 1000;
     }
     window.dispatchEvent(new CustomEvent('pn:live-state', {
       detail: { current, nextUp, timerEndsAt },
     }));
-  }, [currentShow, currentIndex, isRunning, elapsedSeconds]);
+  }, [currentShow, currentIndex, isRunning]);
 
   // Cleanup on unmount
   useEffect(() => {
