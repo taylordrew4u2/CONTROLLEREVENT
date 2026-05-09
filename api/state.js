@@ -118,6 +118,12 @@ module.exports = async (req, res) => {
       if (!body || typeof body !== 'object') return json(res, 400, { error: 'Invalid JSON body' });
 
       const previous = await loadState();
+      const hasChanges = ['current', 'nextUp', 'timerEndsAt'].some((k) =>
+        Object.prototype.hasOwnProperty.call(body, k),
+      );
+      if (!hasChanges) {
+        return json(res, 200, previous || { current: '', nextUp: [], timerEndsAt: null, updatedAt: Date.now() });
+      }
       const next = sanitizeState(body, previous);
       await saveState(next);
       return json(res, 200, next);
