@@ -316,8 +316,8 @@ function LiveControllerScreen() {
     setShowScheduleOverlay(false);
   };
 
-  const handleAdjustTime = (minutes: number) => {
-    setElapsedSeconds(prev => Math.max(0, prev + (minutes * 60)));
+  const handleAdjustTime = (seconds: number) => {
+    setElapsedSeconds(prev => Math.max(0, prev + seconds));
   };
 
   const handleVolumeChange = (newVolume: number) => {
@@ -560,8 +560,8 @@ function LiveControllerScreen() {
             ) : (
               <button className="btn-secondary btn-large" onClick={handlePause}>Pause</button>
             )}
-            <button className="btn-secondary" onClick={() => handleAdjustTime(2)}>+2 Min</button>
-            <button className="btn-secondary" onClick={() => handleAdjustTime(-2)}>−2 Min</button>
+            <button className="btn-secondary" onClick={() => handleAdjustTime(10)}>+10 Sec</button>
+            <button className="btn-secondary" onClick={() => handleAdjustTime(-10)}>−10 Sec</button>
             <button className="btn-primary" onClick={handleNextPerformer}>Next</button>
           </div>
         </div>
