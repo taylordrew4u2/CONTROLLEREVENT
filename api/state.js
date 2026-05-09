@@ -44,7 +44,7 @@ async function upstash(command) {
   return data?.result;
 }
 
-function sanitizeState(input, previous) {
+function sanitizeState(input, previous, { touchUpdatedAt = true } = {}) {
   const base = previous || { current: '', nextUp: [], timerEndsAt: null, updatedAt: Date.now() };
   const next = { ...base };
 
@@ -65,7 +65,11 @@ function sanitizeState(input, previous) {
     }
   }
 
-  next.updatedAt = Date.now();
+  if (touchUpdatedAt) {
+    next.updatedAt = Date.now();
+  } else if (typeof next.updatedAt !== 'number' || !Number.isFinite(next.updatedAt)) {
+    next.updatedAt = Date.now();
+  }
   return next;
 }
 
@@ -86,7 +90,7 @@ module.exports = async (req, res) => {
       const raw = await upstash(['GET', KEY]);
       if (!raw) return json(res, 200, { current: '', nextUp: [], timerEndsAt: null, updatedAt: Date.now() });
       const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
-      return json(res, 200, sanitizeState(parsed, null));
+      return json(res, 200, sanitizeState(parsed, null, { touchUpdatedAt: false }));
     } catch (e) {
       return json(res, 500, { error: e instanceof Error ? e.message : 'Failed to load state' });
     }
@@ -115,4 +119,3 @@ module.exports = async (req, res) => {
 
   return json(res, 405, { error: 'Method Not Allowed' });
 };
-
