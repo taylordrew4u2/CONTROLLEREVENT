@@ -168,6 +168,28 @@ function LiveControllerScreen() {
     loadShows();
   }, []);
 
+  // Broadcast live state for the web admin shell to relay to the public viewer.
+  useEffect(() => {
+    const current = currentShow?.lineup[currentIndex]?.name || '';
+    const nextUp: string[] = [];
+    if (currentShow) {
+      for (let i = currentIndex + 1; i < currentShow.lineup.length; i++) {
+        nextUp.push(currentShow.lineup[i].name);
+      }
+    }
+    const entry = currentShow?.lineup[currentIndex];
+    let timerEndsAt: number | null = null;
+    if (entry && isRunning) {
+      const entryStart = currentShow ? (() => { let t = 0; for (let i = 0; i < currentIndex; i++) t += currentShow.lineup[i].duration; return t; })() : 0;
+      const entryDuration = entry.duration * 60;
+      const remaining = Math.max(0, (entryStart * 60 + entryDuration) - elapsedSeconds);
+      timerEndsAt = Date.now() + remaining * 1000;
+    }
+    window.dispatchEvent(new CustomEvent('pn:live-state', {
+      detail: { current, nextUp, timerEndsAt },
+    }));
+  }, [currentShow, currentIndex, isRunning, elapsedSeconds]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
