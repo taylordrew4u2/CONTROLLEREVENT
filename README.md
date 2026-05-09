@@ -7,46 +7,84 @@ A live show audio controller and run-of-show manager. Built for comedy shows, va
 
 ---
 
-## 🌐 Web Viewer (Vercel)
+## 🌐 Web Viewer + Admin (Vercel)
 
-If you want a public page where anyone can watch the event timer + “Next Up” list in real time:
+This repo can be deployed to **Vercel** as a public viewer page plus a password-protected `/admin` that runs the full Library / Show Builder / Live Controller / Settings app.
 
-- Viewer: `/` (public)
-- Admin: `/admin` (requires password; default is `weed69` unless you set `ADMIN_PASSWORD`)
+- **Viewer:** `/` — public; shows "Standby" until you go on-air, then shows Now / Timer / Next Up
+- **Admin:** `/admin` — password gate; the entire show-control backend lives here
 
-### What It Does
-
-- Admin types **Now** + **Next Up**, then starts/stops a countdown timer.
-- Everyone on the viewer page updates automatically (polls once per second).
-
-### Manual Vercel Setup (After Code Is Deployed)
+### What you need to do once
 
 1. **Create a Vercel project** from this repo.
    - Framework preset: **Vite**
    - Build command: `npm run build`
    - Output directory: `dist`
-2. **Provision storage (required):**
-   - Recommended: enable **Vercel KV** (it’s Upstash Redis under the hood).
-   - Vercel will add these env vars automatically:
-     - `UPSTASH_REDIS_REST_URL`
-     - `UPSTASH_REDIS_REST_TOKEN`
-3. **Set the admin password env var:**
-   - In Vercel → Project → Settings → Environment Variables
-   - Add `ADMIN_PASSWORD` = `weed69` (or change it to something stronger).
-4. **Deploy.**
-5. Share the viewer URL (`https://<your-app>.vercel.app/`) with your audience.
-6. As the admin, open `https://<your-app>.vercel.app/admin`, enter the password, then:
-   - Update **Now** / **Next Up**
-   - Click **Start / Restart Timer**
 
-### Notes / Security
+2. **Add a Vercel Blob store** (Project → Storage → Create → Blob).
+   - Vercel auto-injects `BLOB_READ_WRITE_TOKEN` into the project. **Required.**
+   - All persistence (event state, performers, shows, audio uploads) lives in Blob — no Redis / KV needed.
 
-- The `/admin` page is “password protected” by checking `ADMIN_PASSWORD` on the serverless API. Anyone with the password can control the show state.
-- The default password fallback is `weed69` if you forget to set `ADMIN_PASSWORD` on Vercel.
+3. **Set environment variables** (Project → Settings → Environment Variables):
+
+   | Variable | Required | What it does |
+   |---|---|---|
+   | `BLOB_READ_WRITE_TOKEN` | ✅ (auto) | Added by the Blob integration. Without it, every API call returns 500. |
+   | `ADMIN_PASSWORD` | ✅ | Gates `/admin` and all writes. **No fallback** — if unset, every write returns 500 with "Server misconfigured". |
+   | `OPENAI_API_KEY` | optional | Enables the "Use AI parser (smart)" toggle in Show Builder → Bulk Paste. Without it, the toggle is disabled and the local heuristic parser still works. |
+   | `OPENAI_MODEL` | optional | Defaults to `gpt-4o-mini`. |
+
+4. **Deploy.** Share the viewer URL with your audience; bookmark `/admin` for yourself.
+
+### Day-of-show flow
+
+1. Open `/admin`, enter the password.
+2. **Library** — add or edit performers (with optional walk-on/walk-off audio).
+3. **Builder** — drag the lineup together. Shortcuts:
+   - **Add from Library** / **Add Custom** / **Bulk Paste** (paste names + minutes; AI parser optional)
+   - **Add Host Transitions (30s)** — inserts a 30-second host slot between every performer
+4. **Live** — load the show, hit **Start**.
+5. Click **Off Air — Go Live** in the side nav (turns red **On Air — End Show**). The viewer flips out of Standby within ~3s.
+6. Click **End Show** when you're done — viewer returns to Standby.
+
+The viewer never sees what you're building. Only on-air state is published.
+
+### Bulk paste formats
+
+Paste any of these in the Show Builder → Bulk Paste modal (one per line):
+
+```
+Alex - 7
+Sam, 5 min
+Jordan
+Kim 8
+- Pat (6)
+1. Riley | 4
+```
+
+Names that match an existing Library performer (case-insensitive) inherit their walk-on/walk-off audio.
+
+### API endpoints (admin-gated except viewer GET)
+
+| Route | Method | Auth | Purpose |
+|---|---|---|---|
+| `/api/state` | GET | none | Viewer reads on-air state |
+| `/api/state` | POST | `x-admin-password` | Admin publishes on-air state |
+| `/api/library` | GET / POST | `x-admin-password` | Sync performers / shows / settings |
+| `/api/audio` | POST / DELETE | `x-admin-password` | Upload / delete walk-on/walk-off audio |
+| `/api/parse-lineup` | POST | `x-admin-password` | OpenAI lineup parsing (only if `OPENAI_API_KEY` is set) |
+
+### Troubleshooting
+
+- **Viewer stays on "Standby" after I go on-air** → look for "Sync failed: …" in the top-right of `/admin`. Common causes: `ADMIN_PASSWORD` not set, `BLOB_READ_WRITE_TOKEN` missing, blob save error.
+- **Admin says "Wrong password"** → check `ADMIN_PASSWORD` env var was set on the **Production** environment (not just Preview) and that you redeployed after adding it.
+- **AI bulk-paste toggle is disabled** → set `OPENAI_API_KEY` and redeploy.
+- **Audio upload fails** → max size is 25 MB; check `BLOB_READ_WRITE_TOKEN`.
+- **Reload re-prompts for password** → expected. The password is held in React state only (never persisted to localStorage / sessionStorage) per the CodeQL "clear-text storage" guidance.
 
 ### Local Testing (Optional)
 
-The web UI calls `/api/state`, which is a Vercel Serverless Function. For local testing of the web viewer/admin with the API:
+The web UI calls `/api/*`, which are Vercel Serverless Functions. For local testing of the web viewer/admin with the API:
 
 - Install the Vercel CLI and run `vercel dev`
 - Or deploy to Vercel first and test against the deployed URL
