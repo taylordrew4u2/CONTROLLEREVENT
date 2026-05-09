@@ -2,7 +2,54 @@
 
 A live show audio controller and run-of-show manager. Built for comedy shows, variety shows, and any live event where a stage manager needs to play the right song for the right performer and keep the show on schedule.
 
-**Runs on Mac, Windows, and Android.** This is a native app — not a website.
+**Runs on Mac, Windows, and Android.** The core controller is a native app.  
+**Optional:** This repo can also be deployed to **Vercel** as a lightweight **web viewer** (audience-facing) plus a password-protected **/admin** page to control “Now / Next Up” and the countdown timer in near real time.
+
+---
+
+## 🌐 Web Viewer (Vercel)
+
+If you want a public page where anyone can watch the event timer + “Next Up” list in real time:
+
+- Viewer: `/` (public)
+- Admin: `/admin` (requires password; default is `weed69` unless you set `ADMIN_PASSWORD`)
+
+### What It Does
+
+- Admin types **Now** + **Next Up**, then starts/stops a countdown timer.
+- Everyone on the viewer page updates automatically (polls once per second).
+
+### Manual Vercel Setup (After Code Is Deployed)
+
+1. **Create a Vercel project** from this repo.
+   - Framework preset: **Vite**
+   - Build command: `npm run build`
+   - Output directory: `dist`
+2. **Provision storage (required):**
+   - Recommended: enable **Vercel KV** (it’s Upstash Redis under the hood).
+   - Vercel will add these env vars automatically:
+     - `UPSTASH_REDIS_REST_URL`
+     - `UPSTASH_REDIS_REST_TOKEN`
+3. **Set the admin password env var:**
+   - In Vercel → Project → Settings → Environment Variables
+   - Add `ADMIN_PASSWORD` = `weed69` (or change it to something stronger).
+4. **Deploy.**
+5. Share the viewer URL (`https://<your-app>.vercel.app/`) with your audience.
+6. As the admin, open `https://<your-app>.vercel.app/admin`, enter the password, then:
+   - Update **Now** / **Next Up**
+   - Click **Start / Restart Timer**
+
+### Notes / Security
+
+- The `/admin` page is “password protected” by checking `ADMIN_PASSWORD` on the serverless API. Anyone with the password can control the show state.
+- The default password fallback is `weed69` if you forget to set `ADMIN_PASSWORD` on Vercel.
+
+### Local Testing (Optional)
+
+The web UI calls `/api/state`, which is a Vercel Serverless Function. For local testing of the web viewer/admin with the API:
+
+- Install the Vercel CLI and run `vercel dev`
+- Or deploy to Vercel first and test against the deployed URL
 
 ---
 
