@@ -24,6 +24,21 @@ export async function updateEventState(
     body: JSON.stringify(next),
   });
   if (!res.ok) {
+    const contentType = res.headers.get('content-type') || '';
+
+    if (contentType.includes('application/json')) {
+      const data = await res.json().catch(() => null);
+      if (
+        data &&
+        typeof data === 'object' &&
+        'error' in data &&
+        typeof data.error === 'string' &&
+        data.error
+      ) {
+        throw new Error(data.error);
+      }
+    }
+
     const text = await res.text().catch(() => '');
     throw new Error(text || `Failed to update state (${res.status})`);
   }
