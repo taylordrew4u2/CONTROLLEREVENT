@@ -2,6 +2,7 @@ export type EventState = {
   current: string;
   nextUp: string[];
   timerEndsAt: number | null;
+  onAir: boolean;
   updatedAt: number;
 };
 
@@ -13,7 +14,7 @@ export async function fetchEventState(): Promise<EventState> {
 
 export async function updateEventState(
   password: string,
-  next: Partial<Pick<EventState, 'current' | 'nextUp' | 'timerEndsAt'>>
+  next: Partial<Pick<EventState, 'current' | 'nextUp' | 'timerEndsAt' | 'onAir'>>
 ): Promise<EventState> {
   const res = await fetch('/api/state', {
     method: 'POST',

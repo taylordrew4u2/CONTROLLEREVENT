@@ -8,7 +8,7 @@ import ToastContainer from '../../components/Toast';
 import { hydrateAdmin, installSyncWriter } from '../librarySync';
 import { setWebAudioSaver } from '../../audioStorage';
 import { makeWebAudioSaver } from '../webAudioSaver';
-import { updateEventState } from '../api';
+import { fetchEventState, updateEventState } from '../api';
 import '../../App.css';
 
 const SESSION_KEY = 'pn_admin_password';
@@ -101,14 +101,21 @@ interface ShellProps {
   onLock: () => void;
 }
 
+type LiveDetail = { current: string; nextUp: string[]; timerEndsAt: number | null };
+
 function AdminShell({ password, onLock }: ShellProps) {
   const [hydrated, setHydrated] = useState(false);
   const [hydrateError, setHydrateError] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
+  const [onAir, setOnAir] = useState(false);
+  const [airBusy, setAirBusy] = useState(false);
+  const onAirRef = useRef(false);
+  const lastDetailRef = useRef<LiveDetail>({ current: '', nextUp: [], timerEndsAt: null });
   const lastPublishRef = useRef<string>('');
 
-  // Hydrate library from server, install sync writer + audio uploader.
+  useEffect(() => { onAirRef.current = onAir; }, [onAir]);
+
   useEffect(() => {
     let cancelled = false;
     setWebAudioSaver(makeWebAudioSaver(password));
@@ -120,6 +127,10 @@ function AdminShell({ password, onLock }: ShellProps) {
           if (/unauthorized/i.test(String(err))) onLock();
         }
       });
+
+    fetchEventState()
+      .then((s) => { if (!cancelled) setOnAir(Boolean(s.onAir)); })
+      .catch(() => {});
 
     const installer = installSyncWriter(password, {
       onPushStart: () => { setSyncing(true); setSyncError(null); },
@@ -138,13 +149,12 @@ function AdminShell({ password, onLock }: ShellProps) {
     };
   }, [password, onLock]);
 
-  // Relay LiveController state to the public /api/state blob.
-  const publish = useCallback(async (detail: { current: string; nextUp: string[]; timerEndsAt: number | null }) => {
-    const key = JSON.stringify(detail);
+  const publish = useCallback(async (payload: LiveDetail & { onAir: boolean }) => {
+    const key = JSON.stringify(payload);
     if (key === lastPublishRef.current) return;
     lastPublishRef.current = key;
     try {
-      await updateEventState(password, detail);
+      await updateEventState(password, payload);
     } catch (err) {
       if (err instanceof Error && /unauthorized/i.test(err.message)) onLock();
     }
@@ -152,12 +162,29 @@ function AdminShell({ password, onLock }: ShellProps) {
 
   useEffect(() => {
     const handler = (e: Event) => {
-      const ce = e as CustomEvent<{ current: string; nextUp: string[]; timerEndsAt: number | null }>;
-      if (ce.detail) publish(ce.detail);
+      const ce = e as CustomEvent<LiveDetail>;
+      if (!ce.detail) return;
+      lastDetailRef.current = ce.detail;
+      if (onAirRef.current) publish({ ...ce.detail, onAir: true });
     };
     window.addEventListener('pn:live-state', handler);
     return () => window.removeEventListener('pn:live-state', handler);
   }, [publish]);
+
+  const toggleOnAir = useCallback(async () => {
+    setAirBusy(true);
+    try {
+      if (onAir) {
+        await publish({ current: '', nextUp: [], timerEndsAt: null, onAir: false });
+        setOnAir(false);
+      } else {
+        await publish({ ...lastDetailRef.current, onAir: true });
+        setOnAir(true);
+      }
+    } finally {
+      setAirBusy(false);
+    }
+  }, [onAir, publish]);
 
   if (!hydrated) {
     return (
@@ -199,8 +226,37 @@ function AdminShell({ password, onLock }: ShellProps) {
           <button
             className="nav-link"
             type="button"
+            onClick={toggleOnAir}
+            disabled={airBusy}
+            style={{
+              marginTop: 'auto',
+              background: onAir ? 'rgba(255, 70, 70, 0.18)' : 'transparent',
+              border: onAir ? '1px solid rgba(255, 70, 70, 0.6)' : '1px solid transparent',
+              cursor: airBusy ? 'wait' : 'pointer',
+              textAlign: 'left',
+              color: 'inherit',
+              font: 'inherit',
+              borderRadius: 6,
+            }}
+          >
+            <span
+              style={{
+                display: 'inline-block',
+                width: 8,
+                height: 8,
+                borderRadius: '50%',
+                background: onAir ? '#ff4646' : 'rgba(255,255,255,0.25)',
+                marginRight: 8,
+                verticalAlign: 'middle',
+              }}
+            />
+            <span className="nav-label">{airBusy ? '…' : onAir ? 'On Air — End Show' : 'Off Air — Go Live'}</span>
+          </button>
+          <button
+            className="nav-link"
+            type="button"
             onClick={onLock}
-            style={{ marginTop: 'auto', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', color: 'inherit', font: 'inherit' }}
+            style={{ background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', color: 'inherit', font: 'inherit' }}
           >
             <span className="nav-label">Lock</span>
           </button>
