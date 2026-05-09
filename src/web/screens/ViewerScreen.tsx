@@ -12,11 +12,21 @@ export default function ViewerScreen() {
   const [state, setState] = useState<EventState | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const clockRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     let cancelled = false;
+    const successPollMs = 3000;
+    const errorPollMs = 10000;
+
+    const scheduleNextLoad = (delay: number) => {
+      if (cancelled) return;
+      if (pollRef.current) clearTimeout(pollRef.current);
+      pollRef.current = setTimeout(() => {
+        void load();
+      }, delay);
+    };
 
     const load = async () => {
       try {
@@ -24,19 +34,22 @@ export default function ViewerScreen() {
         if (!cancelled) {
           setState(next);
           setError(null);
+          scheduleNextLoad(successPollMs);
         }
       } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load');
+        if (!cancelled) {
+          setError(e instanceof Error ? e.message : 'Failed to load');
+          scheduleNextLoad(errorPollMs);
+        }
       }
     };
 
-    load();
-    pollRef.current = setInterval(load, 1000);
+    void load();
     clockRef.current = setInterval(() => setNow(Date.now()), 250);
 
     return () => {
       cancelled = true;
-      if (pollRef.current) clearInterval(pollRef.current);
+      if (pollRef.current) clearTimeout(pollRef.current);
       if (clockRef.current) clearInterval(clockRef.current);
     };
   }, []);
