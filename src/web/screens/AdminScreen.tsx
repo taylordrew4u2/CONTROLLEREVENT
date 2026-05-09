@@ -11,9 +11,6 @@ import { makeWebAudioSaver } from '../webAudioSaver';
 import { fetchEventState, updateEventState } from '../api';
 import '../../App.css';
 
-const SESSION_KEY = 'pn_admin_password';
-const UNLOCKED_KEY = 'pn_admin_unlocked';
-
 function NavIcon({ type }: { type: 'library' | 'builder' | 'live' | 'settings' }) {
   const props = { width: 22, height: 22, fill: 'none', stroke: 'currentColor', strokeWidth: 1.5, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
   switch (type) {
@@ -29,7 +26,7 @@ function NavIcon({ type }: { type: 'library' | 'builder' | 'live' | 'settings' }
 }
 
 function PasswordGate({ onUnlock }: { onUnlock: (password: string) => void }) {
-  const [password, setPassword] = useState(() => sessionStorage.getItem(SESSION_KEY) || '');
+  const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,8 +50,6 @@ function PasswordGate({ onUnlock }: { onUnlock: (password: string) => void }) {
         setError(text || `Auth failed (${res.status})`);
         return;
       }
-      sessionStorage.setItem(SESSION_KEY, password);
-      sessionStorage.setItem(UNLOCKED_KEY, '1');
       onUnlock(password);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Auth failed.');
@@ -283,15 +278,9 @@ function AdminShell({ password, onLock }: ShellProps) {
 }
 
 export default function AdminScreen() {
-  const [password, setPassword] = useState<string | null>(() => {
-    const stored = sessionStorage.getItem(SESSION_KEY);
-    const unlocked = sessionStorage.getItem(UNLOCKED_KEY) === '1';
-    return unlocked && stored ? stored : null;
-  });
+  const [password, setPassword] = useState<string | null>(null);
 
   const handleLock = useCallback(() => {
-    sessionStorage.removeItem(SESSION_KEY);
-    sessionStorage.removeItem(UNLOCKED_KEY);
     setPassword(null);
   }, []);
 
