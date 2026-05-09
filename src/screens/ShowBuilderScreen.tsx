@@ -44,10 +44,56 @@ function ShowBuilderScreen() {
   const getTotalDuration = () => lineup.reduce((sum, e) => sum + e.duration, 0);
 
   const formatTime = (minutes: number) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return `${hours}:${mins.toString().padStart(2, '0')}`;
+    const totalSec = Math.max(0, Math.round(minutes * 60));
+    const h = Math.floor(totalSec / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+    const mm = m.toString().padStart(2, '0');
+    const ss = s.toString().padStart(2, '0');
+    return h > 0 ? `${h}:${mm}:${ss}` : `${m}:${ss}`;
   };
+
+  const HOST_TRANSITION_NAME = 'Host Transition';
+  const HOST_TRANSITION_DURATION = 0.5;
+  const isHostTransition = (e: LineupEntry) =>
+    e.name.trim().toLowerCase() === HOST_TRANSITION_NAME.toLowerCase();
+
+  const handleAddHostTransitions = () => {
+    if (lineup.length < 2) {
+      showToast('Add at least two performers first', 'warning');
+      return;
+    }
+    const next: LineupEntry[] = [];
+    for (let i = 0; i < lineup.length; i++) {
+      next.push(lineup[i]);
+      const peek = lineup[i + 1];
+      if (peek && !isHostTransition(lineup[i]) && !isHostTransition(peek)) {
+        next.push({
+          name: HOST_TRANSITION_NAME,
+          duration: HOST_TRANSITION_DURATION,
+          orderIndex: 0,
+        });
+      }
+    }
+    next.forEach((e, idx) => (e.orderIndex = idx));
+    const added = next.length - lineup.length;
+    if (added === 0) {
+      showToast('Host transitions already in place', 'info');
+      return;
+    }
+    setLineup(next);
+    showToast(`Added ${added} host transition${added === 1 ? '' : 's'}`, 'success');
+  };
+
+  const handleRemoveHostTransitions = () => {
+    const filtered = lineup.filter((e) => !isHostTransition(e));
+    if (filtered.length === lineup.length) return;
+    filtered.forEach((e, idx) => (e.orderIndex = idx));
+    setLineup(filtered);
+    showToast('Host transitions removed', 'info');
+  };
+
+  const hasTransitions = lineup.some(isHostTransition);
 
   const getStartTime = (index: number) => {
     let t = 0;
@@ -304,10 +350,11 @@ function ShowBuilderScreen() {
                   <div className="col-duration">
                     <input
                       type="number"
-                      min="1"
-                      title="Set duration in minutes"
+                      min="0.5"
+                      step="0.5"
+                      title="Set duration in minutes (0.5 = 30 seconds)"
                       value={entry.duration}
-                      onChange={(e) => handleUpdateEntry(index, { duration: parseInt(e.target.value) || 1 })}
+                      onChange={(e) => handleUpdateEntry(index, { duration: parseFloat(e.target.value) || 0.5 })}
                       className="duration-input"
                     />
                     <span>min</span>
@@ -366,6 +413,14 @@ function ShowBuilderScreen() {
           <button className="btn-primary" onClick={() => setShowAddPerformerModal(true)}>Add from Library</button>
           <button className="btn-secondary btn-add-custom" onClick={handleAddCustomEntry}>Add Custom</button>
           <button className="btn-secondary btn-add-custom" onClick={openBulkModal}>Bulk Paste</button>
+          <button
+            className="btn-secondary btn-add-custom"
+            onClick={hasTransitions ? handleRemoveHostTransitions : handleAddHostTransitions}
+            title="Insert a 30-second host slot between every performer"
+            disabled={lineup.length < 2 && !hasTransitions}
+          >
+            {hasTransitions ? 'Remove Host Transitions' : 'Add Host Transitions (30s)'}
+          </button>
           <p className="builder-tip">Tap a name to rename. Audio assignments travel with each performer when reordered.</p>
         </div>
 
@@ -517,11 +572,12 @@ function ShowBuilderScreen() {
                   />
                   <input
                     type="number"
-                    min="1"
+                    min="0.5"
+                    step="0.5"
                     className="duration-input"
-                    title="Duration in minutes"
+                    title="Duration in minutes (0.5 = 30 seconds)"
                     value={item.duration}
-                    onChange={(e) => updateBulkPreview(i, { duration: parseInt(e.target.value) || 1 })}
+                    onChange={(e) => updateBulkPreview(i, { duration: parseFloat(e.target.value) || 0.5 })}
                   />
                   <span>min</span>
                   <button
