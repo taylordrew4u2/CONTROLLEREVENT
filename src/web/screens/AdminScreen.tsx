@@ -20,16 +20,18 @@ export default function AdminScreen() {
   const [message, setMessage] = useState<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (syncInputs: boolean) => {
     const next = await fetchEventState();
     setState(next);
-    setCurrent(next.current || '');
-    setNextUpText((next.nextUp || []).join('\n'));
+    if (syncInputs) {
+      setCurrent(next.current || '');
+      setNextUpText((next.nextUp || []).join('\n'));
+    }
   }, []);
 
   useEffect(() => {
-    load().catch(() => {});
-    pollRef.current = setInterval(() => load().catch(() => {}), 1000);
+    load(true).catch(() => {});
+    pollRef.current = setInterval(() => load(false).catch(() => {}), 1000);
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
     };
@@ -54,6 +56,8 @@ export default function AdminScreen() {
     try {
       const updated = await updateEventState(password, next);
       setState(updated);
+      setCurrent(updated.current || '');
+      setNextUpText((updated.nextUp || []).join('\n'));
       setMessage('Saved.');
     } catch (e) {
       setMessage(e instanceof Error ? e.message : 'Save failed');
@@ -162,4 +166,3 @@ export default function AdminScreen() {
     </div>
   );
 }
-
