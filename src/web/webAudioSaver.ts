@@ -16,6 +16,7 @@ export function makeWebAudioSaver(password: string) {
     }
     const data = await res.json();
     if (!data?.url) throw new Error('Upload response missing url');
-    return { id: data.url, name: file.name };
+    const name = typeof data.name === 'string' && data.name ? data.name : file.name;
+    return { id: data.url, name };
   };
 }

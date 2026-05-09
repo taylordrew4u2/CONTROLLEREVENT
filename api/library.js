@@ -74,9 +74,10 @@ function sanitizeLibrary(input) {
 }
 
 function checkAuth(req) {
-  const expected = process.env.ADMIN_PASSWORD || 'weed69';
+  const expected = process.env.ADMIN_PASSWORD;
+  if (!expected) return null;
   const provided = req.headers['x-admin-password'];
-  return provided && provided === expected;
+  return Boolean(provided && provided === expected);
 }
 
 module.exports = async (req, res) => {
@@ -91,9 +92,9 @@ module.exports = async (req, res) => {
     return;
   }
 
-  if (!checkAuth(req)) {
-    return json(res, 401, { error: 'Unauthorized' });
-  }
+  const auth = checkAuth(req);
+  if (auth === null) return json(res, 500, { error: 'Server misconfigured: ADMIN_PASSWORD not set' });
+  if (!auth) return json(res, 401, { error: 'Unauthorized' });
 
   if (req.method === 'GET') {
     try {
@@ -102,7 +103,10 @@ module.exports = async (req, res) => {
       return json(res, 200, {
         performers: Array.isArray(stored.performers) ? stored.performers : [],
         shows: Array.isArray(stored.shows) ? stored.shows : [],
-        settings: stored.settings && typeof stored.settings === 'object' ? stored.settings : {},
+        settings:
+          stored.settings && typeof stored.settings === 'object' && !Array.isArray(stored.settings)
+            ? stored.settings
+            : {},
         updatedAt: typeof stored.updatedAt === 'number' ? stored.updatedAt : Date.now(),
       });
     } catch (e) {

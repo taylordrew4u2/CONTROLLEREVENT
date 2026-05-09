@@ -109,7 +109,8 @@ module.exports = async (req, res) => {
   }
 
   if (req.method === 'POST') {
-    const expectedPassword = process.env.ADMIN_PASSWORD || 'weed69';
+    const expectedPassword = process.env.ADMIN_PASSWORD;
+    if (!expectedPassword) return json(res, 500, { error: 'Server misconfigured: ADMIN_PASSWORD not set' });
     const provided = req.headers['x-admin-password'];
     if (!provided || provided !== expectedPassword) {
       return json(res, 401, { error: 'Unauthorized' });
