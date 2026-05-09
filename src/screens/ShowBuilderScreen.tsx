@@ -6,6 +6,8 @@ import Modal from '../components/Modal';
 import EmptyState from '../components/EmptyState';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { showToast } from '../components/Toast';
+import { parseLineupText, ParsedLineupItem } from '../lineupParser';
+import { getLineupAiParser } from '../lineupAi';
 import './ShowBuilderScreen.css';
 
 function ShowBuilderScreen() {
@@ -23,6 +25,13 @@ function ShowBuilderScreen() {
   const [audioPickerIndex, setAudioPickerIndex] = useState<{ index: number; type: 'walkOn' | 'walkOff' } | null>(null);
   const [audioProcessing, setAudioProcessing] = useState(false);
   const audioRef = useRef<HTMLInputElement>(null);
+  const [showBulkModal, setShowBulkModal] = useState(false);
+  const [bulkText, setBulkText] = useState('');
+  const [bulkPreview, setBulkPreview] = useState<ParsedLineupItem[]>([]);
+  const [bulkUseAi, setBulkUseAi] = useState(false);
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [bulkError, setBulkError] = useState<string | null>(null);
+  const aiAvailable = getLineupAiParser() !== null;
 
   useEffect(() => {
     loadPerformers();
@@ -176,6 +185,73 @@ function ShowBuilderScreen() {
 
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
+  const openBulkModal = () => {
+    setBulkText('');
+    setBulkPreview([]);
+    setBulkError(null);
+    setBulkUseAi(aiAvailable);
+    setShowBulkModal(true);
+  };
+
+  const handleBulkParse = async () => {
+    setBulkError(null);
+    if (!bulkText.trim()) {
+      setBulkPreview([]);
+      return;
+    }
+    if (bulkUseAi) {
+      const ai = getLineupAiParser();
+      if (!ai) {
+        setBulkError('AI parser not available; using fallback.');
+        setBulkPreview(parseLineupText(bulkText));
+        return;
+      }
+      setBulkBusy(true);
+      try {
+        const items = await ai(bulkText);
+        setBulkPreview(items);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'AI parse failed';
+        setBulkError(`${msg}. Using fallback.`);
+        setBulkPreview(parseLineupText(bulkText));
+      } finally {
+        setBulkBusy(false);
+      }
+    } else {
+      setBulkPreview(parseLineupText(bulkText));
+    }
+  };
+
+  const updateBulkPreview = (idx: number, updates: Partial<ParsedLineupItem>) => {
+    setBulkPreview(bulkPreview.map((item, i) => (i === idx ? { ...item, ...updates } : item)));
+  };
+
+  const removeBulkPreview = (idx: number) => {
+    setBulkPreview(bulkPreview.filter((_, i) => i !== idx));
+  };
+
+  const applyBulkPreview = () => {
+    if (bulkPreview.length === 0) return;
+    const byName = new Map(performers.map((p) => [p.name.trim().toLowerCase(), p]));
+    const additions: LineupEntry[] = bulkPreview.map((item, i) => {
+      const match = byName.get(item.name.trim().toLowerCase());
+      const entry: LineupEntry = {
+        performerId: match?.id,
+        name: match?.name || item.name,
+        duration: item.duration,
+        walkOnAudioId: match?.walkOnAudioId,
+        walkOnAudioName: match?.walkOnAudioName,
+        walkOffAudioId: match?.walkOffAudioId,
+        walkOffAudioName: match?.walkOffAudioName,
+        orderIndex: lineup.length + i,
+      };
+      return entry;
+    });
+    setLineup([...lineup, ...additions]);
+    setShowBulkModal(false);
+    showToast(`Added ${additions.length} performer${additions.length === 1 ? '' : 's'} to lineup`, 'success');
+  };
+
   return (
     <div className="show-builder-screen">
       <div className="builder-header">
@@ -289,6 +365,7 @@ function ShowBuilderScreen() {
         <div className="add-performer-area">
           <button className="btn-primary" onClick={() => setShowAddPerformerModal(true)}>Add from Library</button>
           <button className="btn-secondary btn-add-custom" onClick={handleAddCustomEntry}>Add Custom</button>
+          <button className="btn-secondary btn-add-custom" onClick={openBulkModal}>Bulk Paste</button>
           <p className="builder-tip">Tap a name to rename. Audio assignments travel with each performer when reordered.</p>
         </div>
 
@@ -387,6 +464,87 @@ function ShowBuilderScreen() {
           />
           <div className="form-actions">
             <button className="btn-primary" onClick={() => setEditingNotesIndex(null)}>Done</button>
+          </div>
+        </Modal>
+      )}
+
+      {showBulkModal && (
+        <Modal title="Bulk Add Performers" onClose={() => setShowBulkModal(false)}>
+          <p className="notes-help">
+            Paste names with optional minutes — one per line. Examples: <code>Alex - 7</code>, <code>Sam, 5 min</code>, <code>Jordan</code> (defaults to 5).
+          </p>
+          <textarea
+            className="notes-textarea"
+            value={bulkText}
+            onChange={(e) => setBulkText(e.target.value)}
+            placeholder={"Alex - 7\nSam, 5 min\nJordan\nKim 8"}
+            rows={8}
+            autoFocus
+          />
+          <div className="bulk-options">
+            <label className={`bulk-ai-toggle${aiAvailable ? '' : ' disabled'}`}>
+              <input
+                type="checkbox"
+                checked={bulkUseAi && aiAvailable}
+                disabled={!aiAvailable || bulkBusy}
+                onChange={(e) => setBulkUseAi(e.target.checked)}
+              />
+              <span>Use AI parser (smart){aiAvailable ? '' : ' — not configured'}</span>
+            </label>
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={handleBulkParse}
+              disabled={bulkBusy || !bulkText.trim()}
+            >
+              {bulkBusy ? 'Parsing…' : 'Preview'}
+            </button>
+          </div>
+          {bulkError && <div className="web-message">{bulkError}</div>}
+          {bulkPreview.length > 0 && (
+            <div className="bulk-preview">
+              <div className="bulk-preview-header">
+                Preview ({bulkPreview.length}) — edit before adding:
+              </div>
+              {bulkPreview.map((item, i) => (
+                <div key={i} className="bulk-preview-row">
+                  <input
+                    type="text"
+                    className="bulk-preview-name"
+                    title="Performer name"
+                    value={item.name}
+                    onChange={(e) => updateBulkPreview(i, { name: e.target.value })}
+                  />
+                  <input
+                    type="number"
+                    min="1"
+                    className="duration-input"
+                    title="Duration in minutes"
+                    value={item.duration}
+                    onChange={(e) => updateBulkPreview(i, { duration: parseInt(e.target.value) || 1 })}
+                  />
+                  <span>min</span>
+                  <button
+                    type="button"
+                    className="btn-icon btn-danger"
+                    onClick={() => removeBulkPreview(i)}
+                    aria-label="Remove"
+                  >
+                    &#10005;
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="form-actions">
+            <button className="btn-secondary" onClick={() => setShowBulkModal(false)}>Cancel</button>
+            <button
+              className="btn-primary"
+              onClick={applyBulkPreview}
+              disabled={bulkPreview.length === 0}
+            >
+              Add {bulkPreview.length || ''} to Lineup
+            </button>
           </div>
         </Modal>
       )}
