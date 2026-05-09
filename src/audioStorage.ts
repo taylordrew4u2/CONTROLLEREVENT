@@ -11,6 +11,16 @@ const DB_NAME = "pn-controller-audio";
 const DB_VERSION = 1;
 const STORE_NAME = "audioFiles";
 
+// Web-admin remote-storage hooks. Installed by the web admin shell so the
+// existing screens can stay synchronous-looking while uploads go to /api/audio.
+type WebSaver = (file: File) => Promise<{ id: string; name: string }>;
+let webSaver: WebSaver | null = null;
+export function setWebAudioSaver(fn: WebSaver | null) { webSaver = fn; }
+
+function looksLikeUrl(id: string): boolean {
+  return /^https?:\/\//i.test(id);
+}
+
 interface AudioRecord {
   id: string;
   name: string;
@@ -37,6 +47,8 @@ function openDB(): Promise<IDBDatabase> {
 export async function saveAudioFile(
   file: File,
 ): Promise<{ id: string; name: string }> {
+  if (webSaver) return webSaver(file);
+
   // Process the audio to bake in fade-in and fade-out
   const processedBlob = await processAudioWithFades(file);
 
@@ -63,6 +75,7 @@ export async function saveAudioFile(
 /** Get a blob URL for playback. Caller must revoke when done. */
 export async function getAudioBlobURL(id: string): Promise<string | null> {
   if (!id) return null;
+  if (looksLikeUrl(id)) return id;
   const db = await openDB();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE_NAME, "readonly");
@@ -84,6 +97,7 @@ export async function getAudioBlobURL(id: string): Promise<string | null> {
 /** Check if an audio file exists in the store. */
 export async function hasAudioFile(id: string): Promise<boolean> {
   if (!id) return false;
+  if (looksLikeUrl(id)) return true;
   const db = await openDB();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE_NAME, "readonly");
