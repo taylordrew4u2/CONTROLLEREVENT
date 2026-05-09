@@ -2,6 +2,7 @@ import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 're
 import { EventState, fetchEventState, updateEventState } from '../api';
 
 const SESSION_KEY = 'pn_admin_password';
+const UNLOCKED_KEY = 'pn_admin_unlocked';
 
 function parseNextUp(text: string) {
   return text
@@ -12,6 +13,10 @@ function parseNextUp(text: string) {
 
 export default function AdminScreen() {
   const [password, setPassword] = useState(() => sessionStorage.getItem(SESSION_KEY) || '');
+  const [unlocked, setUnlocked] = useState(() => sessionStorage.getItem(UNLOCKED_KEY) === '1');
+  const [authBusy, setAuthBusy] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+
   const [state, setState] = useState<EventState | null>(null);
   const [current, setCurrent] = useState('');
   const [nextUpText, setNextUpText] = useState('');
@@ -34,28 +39,62 @@ export default function AdminScreen() {
   }, [initialLoadSucceeded]);
 
   useEffect(() => {
+    if (!unlocked) return;
     load(true).catch(() => {});
     pollRef.current = setInterval(() => load(false).catch(() => {}), 1000);
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
     };
-  }, [load]);
+  }, [load, unlocked]);
 
   const remaining = useMemo(() => {
     if (!state?.timerEndsAt) return null;
     return state.timerEndsAt - Date.now();
   }, [state?.timerEndsAt]);
 
-  const savePassword = (value: string) => {
-    setPassword(value);
-    sessionStorage.setItem(SESSION_KEY, value);
+  const handleUnlock = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!password) {
+      setAuthError('Enter password.');
+      return;
+    }
+    setAuthBusy(true);
+    setAuthError(null);
+    try {
+      const res = await fetch('/api/state', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-admin-password': password },
+        body: '{}',
+      });
+      if (res.status === 401) {
+        setAuthError('Wrong password.');
+        return;
+      }
+      if (!res.ok) {
+        const text = await res.text().catch(() => '');
+        setAuthError(text || `Auth failed (${res.status})`);
+        return;
+      }
+      sessionStorage.setItem(SESSION_KEY, password);
+      sessionStorage.setItem(UNLOCKED_KEY, '1');
+      setUnlocked(true);
+    } catch (err) {
+      setAuthError(err instanceof Error ? err.message : 'Auth failed.');
+    } finally {
+      setAuthBusy(false);
+    }
+  };
+
+  const handleLock = () => {
+    sessionStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem(UNLOCKED_KEY);
+    setPassword('');
+    setUnlocked(false);
+    setState(null);
+    setInitialLoadSucceeded(false);
   };
 
   const doUpdate = async (next: Partial<Pick<EventState, 'current' | 'nextUp' | 'timerEndsAt'>>) => {
-    if (!password) {
-      setMessage('Enter admin password first.');
-      return;
-    }
     setBusy(true);
     try {
       const updated = await updateEventState(password, next);
@@ -64,7 +103,11 @@ export default function AdminScreen() {
       setNextUpText((updated.nextUp || []).join('\n'));
       setMessage('Saved.');
     } catch (e) {
-      setMessage(e instanceof Error ? e.message : 'Save failed');
+      const msg = e instanceof Error ? e.message : 'Save failed';
+      setMessage(msg);
+      if (/unauthorized/i.test(msg)) {
+        handleLock();
+      }
     } finally {
       setBusy(false);
       setTimeout(() => setMessage(null), 2500);
@@ -96,22 +139,41 @@ export default function AdminScreen() {
     doUpdate({ timerEndsAt: null });
   };
 
+  if (!unlocked) {
+    return (
+      <div className="web-page">
+        <div className="web-card">
+          <div className="web-label">Admin Login</div>
+          <form onSubmit={handleUnlock} className="web-form">
+            <label className="web-field">
+              <div className="web-field-label">Password</div>
+              <input
+                className="web-input"
+                type="password"
+                autoFocus
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={authBusy}
+              />
+            </label>
+            <div className="web-actions">
+              <button className="web-btn" type="submit" disabled={authBusy || !password}>
+                {authBusy ? 'Checking…' : 'Unlock'}
+              </button>
+            </div>
+            {authError ? <div className="web-message">{authError}</div> : null}
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="web-page">
       <div className="web-card">
-        <div className="web-label">Admin</div>
-
-        <div className="web-row">
-          <label className="web-field">
-            <div className="web-field-label">Password</div>
-            <input
-              className="web-input"
-              type="password"
-              value={password}
-              onChange={(e) => savePassword(e.target.value)}
-              placeholder="weed69"
-            />
-          </label>
+        <div className="web-row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="web-label">Admin</div>
+          <button className="web-btn secondary" type="button" onClick={handleLock}>Lock</button>
         </div>
 
         <form onSubmit={onSave} className="web-form">
