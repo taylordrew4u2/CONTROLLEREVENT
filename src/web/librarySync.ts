@@ -64,9 +64,23 @@ export function hydrateFromRemote(lib: RemoteLibrary): void {
 }
 
 export async function hydrateAdmin(password: string): Promise<RemoteLibrary> {
-  const lib = await fetchRemoteLibrary(password);
-  hydrateFromRemote(lib);
-  return lib;
+  const remote = await fetchRemoteLibrary(password);
+  const local = readLocalLibrary();
+
+  const remoteEmpty =
+    (remote.performers?.length || 0) === 0 && (remote.shows?.length || 0) === 0;
+  const localHasData = local.performers.length > 0 || local.shows.length > 0;
+
+  // Don't let an empty server clobber locally-saved shows/performers.
+  // This protects against the race where a save was made but the debounced
+  // push hadn't fired before the next hydrate (page reload, re-unlock, etc.).
+  if (remoteEmpty && localHasData) {
+    const pushed = await pushRemoteLibrary(password, local);
+    return pushed;
+  }
+
+  hydrateFromRemote(remote);
+  return remote;
 }
 
 export interface SyncInstaller {
@@ -128,9 +142,42 @@ export function installSyncWriter(password: string, cb: SyncCallbacks = {}): Syn
 
   Storage.prototype.setItem = patched as typeof Storage.prototype.setItem;
 
+  // Cancel the debounce and flush immediately when the tab is hidden or
+  // unloaded so locally-saved data isn't lost if the user closes/refreshes
+  // before the 500ms debounce fires. fetch with keepalive: true survives
+  // unload and lets us keep the password in a header (not the URL).
+  const flushNowKeepalive = () => {
+    if (timer) {
+      clearTimeout(timer);
+      timer = null;
+    }
+    try {
+      void fetch('/api/library', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-admin-password': password },
+        body: JSON.stringify(readLocalLibrary()),
+        keepalive: true,
+      });
+    } catch {
+      flush();
+    }
+  };
+
+  const onPageHide = () => {
+    if (timer) flushNowKeepalive();
+  };
+  const onVisibilityChange = () => {
+    if (document.visibilityState === 'hidden' && timer) flushNowKeepalive();
+  };
+
+  window.addEventListener('pagehide', onPageHide);
+  document.addEventListener('visibilitychange', onVisibilityChange);
+
   return {
     uninstall: () => {
       if (timer) clearTimeout(timer);
+      window.removeEventListener('pagehide', onPageHide);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
       Storage.prototype.setItem = original;
     },
   };
