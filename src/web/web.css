@@ -1,0 +1,227 @@
+:root {
+  color-scheme: dark;
+}
+
+.web-shell {
+  min-height: 100vh;
+  background: #0c0f14;
+  color: #ffffff;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+}
+
+.web-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(12, 15, 20, 0.8);
+  backdrop-filter: blur(10px);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.web-brand {
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.web-links {
+  display: flex;
+  gap: 10px;
+}
+
+.web-link {
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.web-link:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.web-page {
+  padding: 22px 16px 44px;
+  display: flex;
+  justify-content: center;
+}
+
+.web-card {
+  width: min(860px, 100%);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+}
+
+.web-label {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: 8px;
+}
+
+.web-now {
+  font-size: 38px;
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: 14px;
+}
+
+.web-timer {
+  margin: 10px 0 18px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.web-timer-value {
+  font-size: 64px;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+}
+
+.web-timer-value.done {
+  color: #ff7b7b;
+}
+
+.web-timer-idle {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 16px;
+}
+
+.web-next {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.web-next-item {
+  padding: 12px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+  font-size: 18px;
+}
+
+.web-error,
+.web-message {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255, 70, 70, 0.12);
+  border: 1px solid rgba(255, 70, 70, 0.3);
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 13px;
+}
+
+.web-message {
+  background: rgba(120, 255, 170, 0.12);
+  border-color: rgba(120, 255, 170, 0.28);
+}
+
+.web-form {
+  display: grid;
+  gap: 12px;
+}
+
+.web-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.web-field {
+  display: grid;
+  gap: 6px;
+  flex: 1;
+  min-width: 220px;
+}
+
+.web-field.inline {
+  flex: 0 1 240px;
+}
+
+.web-field-label {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 13px;
+}
+
+.web-input,
+.web-textarea {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.25);
+  color: rgba(255, 255, 255, 0.95);
+  padding: 10px 12px;
+  outline: none;
+}
+
+.web-textarea {
+  resize: vertical;
+}
+
+.web-input:focus,
+.web-textarea:focus {
+  border-color: rgba(120, 190, 255, 0.8);
+  box-shadow: 0 0 0 3px rgba(120, 190, 255, 0.15);
+}
+
+.web-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.web-btn {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(120, 190, 255, 0.18);
+  color: rgba(255, 255, 255, 0.95);
+  padding: 10px 12px;
+  border-radius: 14px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.web-btn:hover {
+  background: rgba(120, 190, 255, 0.24);
+}
+
+.web-btn.secondary {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.web-btn.secondary:hover {
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.web-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.web-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 16px 0;
+}
+
+.web-small {
+  margin-top: 10px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+}
+
