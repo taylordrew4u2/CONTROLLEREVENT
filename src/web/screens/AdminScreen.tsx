@@ -155,7 +155,9 @@ function AdminShell({ password, onLock }: ShellProps) {
     try {
       await updateEventState(password, payload);
     } catch (err) {
+      lastPublishRef.current = '';
       if (err instanceof Error && /unauthorized/i.test(err.message)) onLock();
+      throw err;
     }
   }, [password, onLock]);
 
@@ -164,7 +166,11 @@ function AdminShell({ password, onLock }: ShellProps) {
       const ce = e as CustomEvent<LiveDetail>;
       if (!ce.detail) return;
       lastDetailRef.current = ce.detail;
-      if (onAirRef.current) publish({ ...ce.detail, onAir: true });
+      if (onAirRef.current) {
+        publish({ ...ce.detail, onAir: true }).catch((err) => {
+          setSyncError(err instanceof Error ? err.message : 'Live broadcast failed');
+        });
+      }
     };
     window.addEventListener('pn:live-state', handler);
     return () => window.removeEventListener('pn:live-state', handler);
@@ -172,6 +178,7 @@ function AdminShell({ password, onLock }: ShellProps) {
 
   const toggleOnAir = useCallback(async () => {
     setAirBusy(true);
+    setSyncError(null);
     try {
       if (onAir) {
         await publish({ current: '', nextUp: [], timerEndsAt: null, onAir: false });
@@ -179,6 +186,17 @@ function AdminShell({ password, onLock }: ShellProps) {
       } else {
         await publish({ ...lastDetailRef.current, onAir: true });
         setOnAir(true);
+      }
+      const confirmed = await fetchEventState();
+      setOnAir(Boolean(confirmed.onAir));
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to update live state';
+      setSyncError(msg);
+      try {
+        const fallback = await fetchEventState();
+        setOnAir(Boolean(fallback.onAir));
+      } catch {
+        /* ignore */
       }
     } finally {
       setAirBusy(false);

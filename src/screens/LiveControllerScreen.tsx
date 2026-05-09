@@ -175,17 +175,17 @@ function LiveControllerScreen() {
   useEffect(() => { elapsedRef.current = elapsedSeconds; }, [elapsedSeconds]);
 
   useEffect(() => {
-    const current = currentShow?.lineup[currentIndex]?.name || '';
+    if (!currentShow || currentShow.lineup.length === 0) return;
+    const current = currentShow.lineup[currentIndex]?.name || '';
     const nextUp: string[] = [];
-    if (currentShow) {
-      for (let i = currentIndex + 1; i < currentShow.lineup.length; i++) {
-        nextUp.push(currentShow.lineup[i].name);
-      }
+    for (let i = currentIndex + 1; i < currentShow.lineup.length; i++) {
+      nextUp.push(currentShow.lineup[i].name);
     }
-    const entry = currentShow?.lineup[currentIndex];
+    const entry = currentShow.lineup[currentIndex];
     let timerEndsAt: number | null = null;
     if (entry && isRunning) {
-      const entryStart = currentShow ? (() => { let t = 0; for (let i = 0; i < currentIndex; i++) t += currentShow.lineup[i].duration; return t; })() : 0;
+      let entryStart = 0;
+      for (let i = 0; i < currentIndex; i++) entryStart += currentShow.lineup[i].duration;
       const entryDuration = entry.duration * 60;
       const remaining = Math.max(0, (entryStart * 60 + entryDuration) - elapsedRef.current);
       timerEndsAt = Date.now() + remaining * 1000;
